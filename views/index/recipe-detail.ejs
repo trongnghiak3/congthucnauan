@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-device-width, initial-scale=1" />
+  <title><%= recipe.ten_ct %> | Công Thức Nấu Ăn</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css"
+  />
+  <style>
+    /* Responsive video and image styles */
+    .aspect-w-16 {
+      position: relative;
+      width: 100%;
+      padding-bottom: 56.25%; /* 16:9 aspect ratio */
+      height: 0;
+    }
+    .aspect-w-16 iframe,
+    .aspect-w-16 video {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border-radius: 0.75rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    /* Smooth scroll behavior */
+    html {
+      scroll-behavior: smooth;
+    }
+    /* Custom hover effects */
+    .hover-scale {
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .hover-scale:hover {
+      transform: scale(1.02);
+      box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-gray-100 text-gray-900 font-sans antialiased">
+  <div class="container mx-auto my-8 p-4 lg:p-8 max-w-5xl">
+    <!-- Header Section -->
+    <header class="bg-white rounded-2xl shadow-lg p-6 mb-8">
+      <div class="flex justify-between items-center border-b border-gray-200 pb-4">
+        <h1 class="text-3xl lg:text-4xl font-bold text-gray-800 leading-tight">
+          <%= recipe.ten_ct %>
+        </h1>
+        <% if (user) { %>
+          <form action="/recipe/<%= recipe.id_chinh %>/favorite" method="POST">
+            <button
+              type="submit"
+              aria-label="Yêu thích món ăn"
+              class="text-2xl transition-colors duration-300 <%= recipe.isFavorite ? 'text-red-500' : 'text-gray-400 hover:text-red-500' %>"
+            >
+              <i class="<%= recipe.isFavorite ? 'fa-solid fa-heart' : 'fa-regular fa-heart' %>"></i>
+            </button>
+          </form>
+        <% } else { %>
+          <a
+            href="/login"
+            class="text-gray-400 hover:text-red-500 text-2xl transition-colors duration-300"
+            aria-label="Đăng nhập để yêu thích"
+          >
+            <i class="fa-regular fa-heart"></i>
+          </a>
+        <% } %>
+      </div>
+    </header>
+
+    <!-- Main Image -->
+    <section class="mb-10">
+      <div class="bg-white rounded-2xl shadow-lg p-6 hover-scale">
+        <% if (recipe.hinh_anh) { %>
+          <a href="<%= recipe.hinh_anh %>" target="_blank" class="block rounded-lg overflow-hidden">
+            <img
+              src="<%= recipe.hinh_anh %>"
+              alt="Ảnh món ăn <%= recipe.ten_ct %>"
+              class="w-full h-[400px] md:h-[500px] object-cover rounded-lg"
+              onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
+            />
+            <span class="text-gray-400 italic text-center w-full hidden">Không có ảnh</span>
+          </a>
+        <% } else { %>
+          <span class="text-gray-400 italic text-center w-full block text-lg">Không có ảnh</span>
+        <% } %>
+      </div>
+    </section>
+
+    <!-- Description -->
+    <section class="mb-10">
+      <h2 class="text-2xl font-bold text-gray-800 mb-4">📝 Mô tả</h2>
+      <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-blue-500 hover-scale">
+        <p class="text-gray-700 text-base md:text-lg leading-relaxed">
+          <%= recipe.mo_ta %>
+        </p>
+      </div>
+    </section>
+
+    <!-- Recipe Info Table -->
+    <section class="mb-10">
+      <h2 class="text-2xl font-bold text-gray-800 mb-4">📋 Thông tin công thức</h2>
+      <div class="bg-white rounded-2xl shadow-lg overflow-hidden hover-scale">
+        <table class="w-full text-left text-base text-gray-700">
+          <tbody>
+            <tr class="border-b border-gray-200">
+              <th class="px-6 py-4 font-semibold bg-gray-50 w-1/3">⏰ Thời gian</th>
+              <td class="px-6 py-4"><%= recipe.thoi_gian_nau %> phút</td>
+            </tr>
+            <tr class="border-b border-gray-200">
+              <th class="px-6 py-4 font-semibold bg-gray-50">🔥 Độ khó</th>
+              <td class="px-6 py-4"><%= recipe.do_kho %></td>
+            </tr>
+            <tr class="border-b border-gray-200">
+              <th class="px-6 py-4 font-semibold bg-gray-50">🍽️ Phần ăn</th>
+              <td class="px-6 py-4"><%= recipe.so_phan_an %></td>
+            </tr>
+            <tr>
+              <th class="px-6 py-4 font-semibold bg-gray-50">📅 Ngày tạo</th>
+              <td class="px-6 py-4"><%= new Date(recipe.ngay_tao).toLocaleDateString('vi-VN') %></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Ingredients -->
+    <section class="mb-10">
+      <h2 class="text-2xl font-bold text-gray-800 mb-4">🥕 Nguyên liệu</h2>
+      <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-green-500 hover-scale">
+        <ul class="list-disc pl-6 space-y-3 text-base md:text-lg text-gray-700">
+          <% ingredients.forEach(i => { %>
+            <li>
+              <span class="font-semibold"><%= i.ten_nguyen_lieu %></span>: <%= i.so_luong %> <%= i.don_vi %>
+              <% if (i.ghi_chu) { %>
+                <span class="text-sm text-gray-500">(<%= i.ghi_chu %>)</span>
+              <% } %>
+            </li>
+          <% }) %>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Instructions -->
+    <section class="mb-10">
+      <h2 class="text-2xl font-bold text-gray-800 mb-4">📖 Hướng dẫn từng bước</h2>
+      <div class="space-y-6">
+        <% recipe.huong_dan.split("\n").forEach((buoc, index) => {
+          if (buoc.trim()) {
+            const parts = buoc.split("-");
+            const title = parts[0].replace(/^Bước\s*\d+\s*:\s*/i, '').trim();
+            const description = parts.slice(1).join("-").trim();
+        %>
+          <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-yellow-500 hover-scale">
+            <p class="font-semibold text-yellow-600 text-lg mb-2">Bước <%= index + 1 %>: <%= title %></p>
+            <% if(description) { %>
+              <p class="text-gray-700 text-base md:text-lg leading-relaxed"><%= description %></p>
+            <% } %>
+          </div>
+        <% } }) %>
+      </div>
+    </section>
+
+    <!-- Video -->
+    <section class="mb-10">
+      <h2 class="text-2xl font-bold text-gray-800 mb-4">🎥 Video hướng dẫn</h2>
+      <% if (recipe.video_url) { %>
+        <div class="aspect-w-16">
+          <video controls class="rounded-lg" preload="metadata">
+            <source src="<%= recipe.video_url %>" type="video/mp4" />
+            Trình duyệt của bạn không hỗ trợ video.
+          </video>
+        </div>
+      <% } else if (recipe.youtube_url) { %>
+        <div class="aspect-w-16">
+          <iframe
+            src="https://www.youtube.com/embed/<%= recipe.youtube_url.split('v=')[1] %>"
+            title="Video hướng dẫn <%= recipe.ten_ct %>"
+            allowfullscreen
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          ></iframe>
+        </div>
+      <% } else { %>
+        <p class="text-gray-500 text-base md:text-lg italic">Chưa có video hướng dẫn.</p>
+      <% } %>
+    </section>
+  </div>
+</body>
+</html>

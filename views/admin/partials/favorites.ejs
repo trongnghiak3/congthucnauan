@@ -1,0 +1,22 @@
+<!-- favorites.ejs -->
+<table class="table-auto w-full border-collapse border border-gray-300">
+    <thead>
+        <tr class="bg-gray-200">
+            <th class="border px-4 py-2">ID</th>
+            <th class="border px-4 py-2">Tên Món Ăn Yêu Thích</th>
+            <th class="border px-4 py-2">Hành động</th>
+        </tr>
+    </thead>
+    <tbody>
+        <% favorites.forEach(favorite => { %>
+        <tr>
+            <td class="border px-4 py-2"><%= favorite.id %></td>
+            <td class="border px-4 py-2"><%= favorite.ten_mon_an %></td>
+            <td class="border px-4 py-2">
+                <button class="bg-blue-500 text-white px-2 py-1 rounded">Sửa</button>
+                <button class="bg-red-500 text-white px-2 py-1 rounded">Xóa</button>
+            </td>
+        </tr>
+        <% }); %>
+    </tbody>
+</table>

@@ -1,0 +1,335 @@
+<body class="bg-gray-50 p-6 font-sans text-gray-800">
+  <div class="max-w-7xl mx-auto bg-white p-8 rounded-lg shadow-lg">
+
+    <!-- Tabs Navigation -->
+    <div class="mb-8 border-b border-gray-300">
+      <ul class="flex space-x-4">
+        <li>
+          <button onclick="showTab('categories')" id="tab-categories"
+            class="tab-button px-6 py-3 rounded-t-lg font-semibold bg-yellow-500 text-white shadow-md hover:bg-yellow-600 focus:outline-none"
+            aria-selected="true" role="tab">
+            Danh Sách Loại Món
+          </button>
+        </li>
+        <li>
+          <button onclick="showTab('recipe-categories')" id="tab-recipe-categories"
+            class="tab-button px-6 py-3 rounded-t-lg font-semibold bg-gray-200 text-gray-600 hover:bg-gray-300 focus:outline-none"
+            aria-selected="false" role="tab">
+            Danh Sách Công Thức Loại Món
+          </button>
+        </li>
+      </ul>
+    </div>
+
+    <h1 class="text-4xl font-extrabold mb-10">
+      <%= title %>
+    </h1>
+
+
+    <!-- Tab 1: Danh Sách Loại Món -->
+
+
+    <div id="categories" class="tab-content" role="tabpanel" aria-labelledby="tab-categories">
+      <button onclick="openAddModal()"
+        class="flex justify-end mb-4 px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600">Thêm Loại
+        Món</button>
+
+      <table class="min-w-full border border-gray-300 rounded-lg overflow-hidden shadow-sm">
+        <thead class="bg-gray-100 text-gray-700 uppercase text-sm font-medium select-none">
+          <tr>
+            <th class="px-6 py-3 border-r border-gray-300 text-left">ID</th>
+            <th class="px-6 py-3 border-r border-gray-300 text-left">Tên Loại Món</th>
+            <th class="px-6 py-3 border-r border-gray-300 text-left">Slug</th> <!-- Thêm cột slug -->
+            <th class="px-6 py-3 border-r border-gray-300 text-left">Hình Ảnh</th>
+            <th class="px-6 py-3 text-left">Hành động</th>
+          </tr>
+        </thead>
+        <tbody class="text-gray-800">
+          <% if (categories && categories.length> 0) { %>
+            <% categories.forEach(category=> { %>
+              <tr class="hover:bg-yellow-50 transition duration-200">
+                <td class="px-6 py-4 border-t border-gray-200">
+                  <%= category.id_chinh %>
+                </td>
+                <td class="px-6 py-4 border-t border-gray-200">
+                  <%= category.ten_loai %>
+                </td>
+                <td class="px-6 py-4 border-t border-gray-200">
+                  <%= category.slug %>
+                </td> <!-- Hiển thị slug -->
+                <td class="px-6 py-4 border-t border-gray-200">
+                  <% if (category.hinh_anh) { %>
+                    <img src="<%= category.hinh_anh %>" alt="<%= category.ten_loai %>" class="w-16 h-16 object-cover" />
+                    <% } else { %>
+                      Không có hình
+                      <% } %>
+                </td>
+                <td class="px-6 py-4 border-t border-gray-200 space-x-3">
+                 <button
+  onclick="openEditModal(
+    '<%= category.id_chinh %>',
+    '<%= encodeURIComponent(category.ten_loai) %>',
+    '<%= encodeURIComponent(category.slug) %>',
+    '<%= encodeURIComponent('/upload/images/loaimon/' + category.id_chinh + '/' + category.hinh_anh) %>'
+  )"
+  class="bg-yellow-400 hover:bg-yellow-500 text-white px-4 py-1 rounded shadow-sm transition duration-200"
+>
+  ✏ Sửa
+</button>
+
+
+
+
+
+                  <button onclick="confirmDeleteCategory('<%= category.id_chinh %>')"
+                    class="bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded shadow-sm transition duration-200">
+                    🗑 Xóa
+                  </button>
+                </td>
+              </tr>
+              <% }) %>
+                <% } else { %>
+                  <tr>
+                    <td colspan="5" class="text-center py-6 text-gray-400 italic">
+                      Không có loại món nào!
+                    </td>
+                  </tr>
+                  <% } %>
+        </tbody>
+      </table>
+    </div>
+
+
+
+
+    <!-- Tab 2: Danh Sách Công Thức Loại Món -->
+    <div id="recipe-categories" class="tab-content hidden" role="tabpanel" aria-labelledby="tab-recipe-categories">
+      <!-- Header -->
+      <div class="flex flex-col md:flex-row justify-between items-center px-6 py-4 bg-white border-b border-gray-200">
+        <div class="w-full md:w-1/2 mb-3 md:mb-0">
+          <input type="text" id="searchRecipe" onkeyup="filterRecipes()" placeholder="Tìm kiếm công thức..."
+            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-1 focus:ring-yellow-400 transition" />
+        </div>
+        <div class="text-gray-600 text-sm">
+          Tổng số công thức: <span id="totalRecipes" class="font-semibold text-gray-800">0</span>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="overflow-x-auto px-6 py-4 bg-white rounded-b-lg border border-t-0 border-gray-200">
+        <table class="min-w-full text-sm text-gray-700">
+          <thead>
+            <tr class="bg-gray-100 text-gray-700 uppercase text-sm font-medium select-none">
+              <th class="px-6 py-3 border-r border-gray-300 text-left">ID</th>
+              <th class="px-6 py-3 border-r border-gray-300 text-left">Tên Công Thức</th>
+              <th class="px-6 py-3 border-r border-gray-300 text-left">Tên Loại Món</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (groupedRecipes && Object.keys(groupedRecipes).length> 0) { %>
+              <% Object.keys(groupedRecipes).forEach(id=> { %>
+                <tr class="hover:bg-gray-50 transition" onclick="toggleRecipes('<%= id %>')" data-group-id="<%= id %>">
+                  <td colspan="3"
+                    class="py-3 px-4 text-center font-medium text-gray-900 border-t border-gray-100 bg-gray-50 rounded hover:bg-gray-100 cursor-pointer">
+                    <%= groupedRecipes[id].ten_loai %>
+                  </td>
+                </tr>
+                <% groupedRecipes[id].cong_thuc.forEach((recipe, index)=> { %>
+                  <tr class="recipe-row hidden border-b border-gray-100" data-group="<%= id %>">
+                    <td class="p-3 text-center">
+                      <%= recipe.id_chinh %>
+                    </td>
+                    <td class="p-3 text-left">
+                      <%= recipe.ten_ct %>
+                    </td>
+                    <td class="p-3 text-left">
+                      <%= groupedRecipes[id].ten_loai %>
+                    </td>
+                  </tr>
+                  <% }) %>
+                    <% }) %>
+                      <% } else { %>
+                        <tr>
+                          <td colspan="3" class="text-center py-6 text-gray-400 italic">
+                            Không có công thức loại món nào!
+                          </td>
+                        </tr>
+                        <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <% if (typeof totalPages !=='undefined' && totalPages> 1) { %>
+      <div class="mt-6 flex justify-center space-x-2">
+        <% if (currentPage> 1) { %>
+          <a href="#" onclick="loadPage('/admin/categories?page=<%= currentPage - 1 %>'); return false;"
+            class="px-4 py-2 rounded border bg-white text-gray-700 hover:bg-gray-100">
+            ‹ Trước
+          </a>
+          <% } %>
+
+            <% for (let i=1; i <=totalPages; i++) { %>
+              <a href="#" onclick="loadPage('/admin/categories?page=<%= i %>'); return false;"
+                class="px-4 py-2 rounded border text-sm <%= i === currentPage ? 'bg-yellow-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100' %>">
+                <%= i %>
+              </a>
+              <% } %>
+
+                <% if (currentPage < totalPages) { %>
+                  <a href="#" onclick="loadPage('/admin/categories?page=<%= currentPage + 1 %>'); return false;"
+                    class="px-4 py-2 rounded border bg-white text-gray-700 hover:bg-gray-100">
+                    Sau ›
+                  </a>
+                  <% } %>
+      </div>
+      <% } %>
+  </div>
+
+
+<!-- Modal Thêm Loại Món -->
+<div id="addModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+  <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+    <h2 class="text-2xl font-semibold mb-4">Thêm Loại Món</h2>
+    <form id="addCategoryForm" method="POST" action="/admin/categories" enctype="multipart/form-data">
+      <div class="mb-4">
+        <label for="addTenLoai" class="block text-sm font-medium text-gray-700">Tên Loại Món</label>
+        <input type="text" id="addTenLoai" name="ten_loai"
+          class="mt-1 p-2 w-full border rounded-lg focus:ring-yellow-500 focus:border-yellow-500" required />
+      </div>
+      <div class="mb-4">
+        <label for="addSlug" class="block text-sm font-medium text-gray-700">Slug</label>
+        <input type="text" id="addSlug" name="slug"
+          class="mt-1 p-2 w-full border rounded-lg focus:ring-yellow-500 focus:border-yellow-500" required />
+      </div>
+      <div class="mb-4">
+        <label for="addHinhAnh" class="block text-sm font-medium text-gray-700">Hình Ảnh</label>
+        <input type="file" id="addHinhAnh" name="hinh_anh" accept="image/*"
+          class="mt-1 p-2 w-full border rounded-lg focus:ring-yellow-500 focus:border-yellow-500" />
+        <img id="addImagePreview" src="#" alt="Image Preview" class="mt-2 w-32 h-32 object-cover hidden" />
+      </div>
+      <div class="flex justify-end space-x-2">
+        <button type="button" onclick="closeAddModal()"
+          class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">
+          Hủy
+        </button>
+        <button type="submit" class="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600">
+          Thêm
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Sửa Loại Món -->
+<div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+  <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+    <h2 class="text-2xl font-semibold mb-4">Sửa Loại Món</h2>
+    <form id="editCategoryForm">
+      <input type="hidden" id="editId" name="id_chinh" />
+      <div class="mb-4">
+        <label for="editTenLoai" class="block text-sm font-medium text-gray-700">Tên Loại Món</label>
+        <input type="text" id="editTenLoai" name="ten_loai"
+          class="mt-1 p-2 w-full border rounded-lg focus:ring-yellow-500 focus:border-yellow-500" required />
+      </div>
+      <div class="mb-4">
+        <label for="editSlug" class="block text-sm font-medium text-gray-700">Slug</label>
+        <input type="text" id="editSlug" name="slug"
+          class="mt-1 p-2 w-full border rounded-lg focus:ring-yellow-500 focus:border-yellow-500" required />
+      </div>
+      <div class="mb-4">
+        <label for="editHinhAnh" class="block text-sm font-medium text-gray-700">Hình Ảnh</label>
+        <input type="file" id="editHinhAnh" name="hinh_anh" accept="image/*"
+          class="mt-1 p-2 w-full border rounded-lg focus:ring-yellow-500 focus:border-yellow-500" />
+        <img id="currentHinhAnh" src="" alt="Current Image" class="mt-2 w-32 h-32 object-cover hidden" />
+        <img id="editImagePreview" src="#" alt="Image Preview" class="mt-2 w-32 h-32 object-cover hidden" />
+      </div>
+      <div class="flex justify-end space-x-2">
+        <button type="button" onclick="closeEditModal()"
+          class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">
+          Hủy
+        </button>
+        <button type="submit" class="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600">
+          Lưu
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+</body>
+
+<script>
+  function showTab(tabId) {
+    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
+    document.querySelectorAll('.tab-button').forEach(button => {
+      button.classList.remove('bg-yellow-500', 'text-white');
+      button.classList.add('bg-gray-200', 'text-gray-600');
+      button.setAttribute('aria-selected', 'false');
+    });
+    document.getElementById(tabId).classList.remove('hidden');
+    document.getElementById(`tab-${tabId}`).classList.remove('bg-gray-200', 'text-gray-600');
+    document.getElementById(`tab-${tabId}`).classList.add('bg-yellow-500', 'text-white');
+    document.getElementById(`tab-${tabId}`).setAttribute('aria-selected', 'true');
+  }
+
+  function openAddModal() {
+    document.getElementById('addModal').classList.remove('hidden');
+  }
+
+  function closeAddModal() {
+    document.getElementById('addModal').classList.add('hidden');
+    document.getElementById('addCategoryForm').reset();
+  }
+
+  function openEditModal(id, tenLoai, slug) {
+    document.getElementById('editModal').classList.remove('hidden');
+    document.getElementById('editId').value = id;
+    document.getElementById('editTenLoai').value = decodeURIComponent(tenLoai);
+    document.getElementById('editSlug').value = decodeURIComponent(slug);
+  }
+
+  function closeEditModal() {
+    document.getElementById('editModal').classList.add('hidden');
+    document.getElementById('editCategoryForm').reset();
+  }
+
+  function confirmDeleteCategory(id) {
+    if (confirm('Bạn có chắc chắn muốn xóa loại món này?')) {
+      window.location.href = `/admin/categories/delete/${id}`;
+    }
+  }
+
+  function filterRecipes() {
+    const input = document.getElementById('searchRecipe').value.toLowerCase();
+    const rows = document.querySelectorAll('#recipe-categories tbody tr.recipe-row');
+    let total = 0;
+    rows.forEach(row => {
+      const recipeName = row.querySelector('td:nth-child(2)')?.textContent.toLowerCase();
+      if (recipeName && recipeName.includes(input)) {
+        row.classList.remove('hidden');
+        total++;
+      } else {
+        row.classList.add('hidden');
+      }
+    });
+    document.getElementById('totalRecipes').textContent = total;
+  }
+
+  function toggleRecipes(groupId) {
+    const rows = document.querySelectorAll(`tr[data-group="${groupId}"]`);
+    rows.forEach(row => {
+      row.classList.toggle('hidden');
+    });
+  }
+
+  async function loadPage(url) {
+    try {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      window.location.href = url;
+    } catch (error) {
+      console.error('Lỗi fetch: ', error);
+    }
+  }
+</script>

@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Khám phá danh sách công thức nấu ăn ngon tại KemRecipe - từ món chính, món phụ đến tráng miệng." />
+  <meta name="keywords" content="công thức nấu ăn, KemRecipe, món chính, món phụ, tráng miệng" />
+  <meta name="author" content="KemRecipe Team" />
+  <title>Danh Sách Công Thức - KemRecipe</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    .recipe-card img {
+      transition: transform 0.3s ease;
+    }
+    .recipe-card:hover img {
+      transform: scale(1.05);
+    }
+    .placeholder {
+      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+      background-size: 200% 100%;
+      animation: loading 1.5s infinite;
+    }
+    @keyframes loading {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    /* Sidebar responsive */
+    #sidebar {
+      transition: transform 0.3s ease;
+    }
+    @media (max-width: 768px) {
+      #sidebar {
+        transform: translateX(-100%);
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100%;
+        z-index: 50;
+      }
+      #sidebar.open {
+        transform: translateX(0);
+      }
+      #mainContent {
+        width: 100% !important;
+      }
+    }
+  </style>
+</head>
+<body class="bg-gray-100 font-sans">
+  <div class="min-h-screen px-4 py-8">
+    <main class="max-w-7xl mx-auto">
+      <!-- Breadcrumb -->
+      <nav class="mb-4 text-sm text-gray-600">
+        <a href="/" class="hover:underline">Trang chủ</a> > 
+        <span>Danh Sách Công Thức</span>
+      </nav>
+
+      <!-- Nút mở sidebar trên mobile -->
+      <button id="toggleSidebar" class="md:hidden fixed top-4 left-4 z-50 p-2 bg-yellow-500 text-white rounded-full">
+        <i class="fas fa-filter"></i>
+      </button>
+
+      <div class="flex flex-col md:flex-row gap-6">
+        <!-- Sidebar (30%) -->
+        <aside id="sidebar" class="w-full md:w-[20%] bg-white p-6 rounded-xl shadow-lg">
+          <h3 class="text-xl font-semibold text-gray-800 mb-4">Bộ lọc nâng cao</h3>
+          
+          <!-- Số phần ăn -->
+          <div class="mb-6">
+            <label class="block text-gray-700 font-medium mb-2">Số phần ăn</label>
+            <div class="flex flex-wrap gap-2">
+              <button class="portion-btn px-4 py-2 rounded-full bg-gray-200 text-gray-700 hover:bg-yellow-500 hover:text-white transition" data-portion="1-2">1-2 người</button>
+              <button class="portion-btn px-4 py-2 rounded-full bg-gray-200 text-gray-700 hover:bg-yellow-500 hover:text-white transition" data-portion="3-4">3-4 người</button>
+              <button class="portion-btn px-4 py-2 rounded-full bg-gray-200 text-gray-700 hover:bg-yellow-500 hover:text-white transition" data-portion="5+">5+ người</button>
+              <button class="portion-btn px-4 py-2 rounded-full bg-gray-200 text-gray-700 hover:bg-yellow-500 hover:text-white transition" data-portion="">Tất cả</button>
+            </div>
+          </div>
+
+          <!-- Thời gian nấu -->
+          <div class="mb-6">
+            <label class="block text-gray-700 font-medium mb-2">Thời gian nấu</label>
+            <div class="flex flex-wrap gap-2">
+              <button class="time-btn px-4 py-2 rounded-full bg-gray-200 text-gray-700 hover:bg-yellow-500 hover:text-white transition" data-time="0-30">Dưới 30 phút</button>
+              <button class="time-btn px-4 py-2 rounded-full bg-gray-200 text-gray-700 hover:bg-yellow-500 hover:text-white transition" data-time="30-60">30-60 phút</button>
+              <button class="time-btn px-4 py-2 rounded-full bg-gray-200 text-gray-700 hover:bg-yellow-500 hover:text-white transition" data-time="60+">Trên 60 phút</button>
+              <button class="time-btn px-4 py-2 rounded-full bg-gray-200 text-gray-700 hover:bg-yellow-500 hover:text-white transition" data-time="">Tất cả</button>
+            </div>
+          </div>
+
+          <!-- Độ khó -->
+          <div class="mb-6">
+            <label class="block text-gray-700 font-medium mb-2">Độ khó</label>
+            <div class="flex flex-wrap gap-2">
+              <button class="difficulty-btn px-4 py-2 rounded-full bg-gray-200 text-gray-700 hover:bg-yellow-500 hover:text-white transition" data-difficulty="easy">Dễ</button>
+              <button class="difficulty-btn px-4 py-2 rounded-full bg-gray-200 text-gray-700 hover:bg-yellow-500 hover:text-white transition" data-difficulty="medium">Trung bình</button>
+              <button class="difficulty-btn px-4 py-2 rounded-full bg-gray-200 text-gray-700 hover:bg-yellow-500 hover:text-white transition" data-difficulty="hard">Khó</button>
+              <button class="difficulty-btn px-4 py-2 rounded-full bg-gray-200 text-gray-700 hover:bg-yellow-500 hover:text-white transition" data-difficulty="">Tất cả</button>
+            </div>
+          </div>
+
+          <!-- Nút reset bộ lọc -->
+          <button id="resetFilters" class="w-full px-4 py-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition">Xóa bộ lọc</button>
+        </aside>
+
+        <!-- Nội dung chính (70%) -->
+       <section id="mainContent" class="w-full md:w-[80%] bg-white p-6 md:p-8 rounded-xl shadow-lg">
+          <!-- <h2 class="text-3xl md:text-4xl font-bold text-yellow-600 text-center mb-6 md:mb-8">🍽️ Danh Sách Công Thức</h2> -->
+
+          <!-- Tìm kiếm và Sắp xếp -->
+          <div class="flex flex-col md:flex-row justify-center items-center gap-4 mb-6">
+            <div class="relative w-full md:w-2/3">
+              <input type="text" id="searchInput"
+                     placeholder=" Nhập tên công thức..."
+                     class="w-full p-4 pl-12 border border-gray-300 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 text-lg" />
+              <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+            </div>
+            <select id="sortSelect" class="p-2 border border-gray-300 rounded-full shadow-sm focus:outline-none">
+              <option value="default">Sắp xếp: Mặc định</option>
+              <option value="time-asc">Thời gian nấu: Tăng dần</option>
+              <option value="time-desc">Thời gian nấu: Giảm dần</option>
+              <option value="rating-desc">Đánh giá: Cao nhất</option>
+            </select>
+          </div>
+
+          <!-- Bộ lọc danh mục -->
+          <div class="flex flex-wrap justify-center gap-3 mb-8">
+            <button class="filter-btn px-5 py-2 rounded-full bg-gray-200 text-gray-700 hover:bg-yellow-500 hover:text-white transition" data-category="">Tất cả</button>
+            <button class="filter-btn px-5 py-2 rounded-full bg-gray-200 text-gray-700 hover:bg-yellow-500 hover:text-white transition" data-category="mon-chinh">Món Chính</button>
+            <button class="filter-btn px-5 py-2 rounded-full bg-gray-200 text-gray-700 hover:bg-yellow-500 hover:text-white transition" data-category="mon-phu">Món Phụ</button>
+            <button class="filter-btn px-5 py-2 rounded-full bg-gray-200 text-gray-700 hover:bg-yellow-500 hover:text-white transition" data-category="trang-mieng">Tráng Miệng</button>
+          </div>
+
+          <!-- Danh sách công thức -->
+         <div id="recipeList" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <% recipes.forEach(function(recipe) { %>
+              <div class="recipe-card bg-white shadow-lg rounded-xl overflow-hidden transition-all duration-300 hover:shadow-xl cursor-pointer"
+                   data-category-id="<%= recipe.category %>"
+                   data-portion="<%= recipe.so_phan_an || '1-2' %>"
+                   data-time="<%= recipe.thoi_gian_nau %>"
+                   data-difficulty="<%= recipe.do_kho || 'easy' %>">
+                <a href="/cong-thuc/<%= recipe.id_chinh %>">
+                  <div class="relative w-full h-48">
+                    <% if (recipe.hinh_anh) { %>
+                      <img src="<%= recipe.hinh_anh %>" alt="Ảnh <%= recipe.ten_ct %>"
+                           class="w-full h-full object-cover rounded-t-xl"
+                           onerror="this.onerror=null; this.classList.add('hidden'); this.nextElementSibling.classList.remove('hidden');"
+                           onload="this.classList.remove('hidden'); this.previousElementSibling.classList.add('hidden');">
+                      <div class="absolute inset-0 placeholder rounded-t-xl hidden"></div>
+                    <% } else { %>
+                      <div class="w-full h-full bg-gray-200 flex items-center justify-center rounded-t-xl">
+                        <span class="text-gray-500">Không có ảnh</span>
+                      </div>
+                    <% } %>
+                  </div>
+                  <div class="p-4">
+                    <h3 class="font-semibold text-gray-900 text-lg truncate mb-2"><%= recipe.ten_ct %></h3>
+                    <div class="flex justify-between items-center text-gray-600 text-sm">
+                      <div class="flex items-center space-x-1">
+                        <i class="fas fa-clock text-yellow-500"></i>
+                        <span><%= recipe.thoi_gian_nau %> phút</span>
+                      </div>
+                      <div class="flex items-center space-x-1 text-yellow-400">
+                        <% for(let i=0; i<5; i++) { %>
+                          <% if(i < recipe.rating) { %>
+                            <i class="fas fa-star"></i>
+                          <% } else { %>
+                            <i class="far fa-star"></i>
+                          <% } %>
+                        <% } %>
+                        <span class="ml-1 text-gray-500 text-xs">(<%= recipe.rating %>/5)</span>
+                      </div>
+                    </div>
+                  </div>
+                </a>
+              </div>
+            <% }); %>
+          </div>
+          <p id="noResults" class="text-center text-gray-500 mt-6 hidden">Không tìm thấy công thức nào phù hợp. Hãy thử từ khóa khác!</p>
+
+          <!-- Phân trang -->
+          <div class="flex justify-center mt-6">
+            <button id="showMoreBtn" class="px-6 py-2 bg-yellow-500 text-white rounded-full hover:bg-yellow-600 transition hidden">
+              Xem thêm
+            </button>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const searchInput = document.getElementById("searchInput");
+      const filterButtons = document.querySelectorAll(".filter-btn");
+      const portionButtons = document.querySelectorAll(".portion-btn");
+      const timeButtons = document.querySelectorAll(".time-btn");
+      const difficultyButtons = document.querySelectorAll(".difficulty-btn");
+      const sortSelect = document.getElementById("sortSelect");
+      const recipeList = document.getElementById("recipeList");
+      const noResults = document.getElementById("noResults");
+      const showMoreBtn = document.getElementById("showMoreBtn");
+      const resetFiltersBtn = document.getElementById("resetFilters");
+      const toggleSidebarBtn = document.getElementById("toggleSidebar");
+      const sidebar = document.getElementById("sidebar");
+
+      let recipeCards = Array.from(document.querySelectorAll(".recipe-card"));
+      let recipesPerPage = 8;
+      let selectedCategory = "";
+      let selectedPortion = "";
+      let selectedTime = "";
+      let selectedDifficulty = "";
+      let searchTerm = "";
+      let sortOption = "default";
+      let visibleCount = recipesPerPage;
+
+      // Debounce function để giảm tần suất xử lý tìm kiếm
+      function debounce(func, delay) {
+        let timeout;
+        return function (...args) {
+          clearTimeout(timeout);
+          timeout = setTimeout(() => func.apply(this, args), delay);
+        };
+      }
+
+      // Sắp xếp công thức
+      function sortRecipes(recipes) {
+        return recipes.sort((a, b) => {
+          const timeA = parseInt(a.querySelector("span").textContent) || 0;
+          const timeB = parseInt(b.querySelector("span").textContent) || 0;
+          const ratingA = parseFloat(a.querySelector(".text-xs").textContent.match(/\d+\.?\d*/)[0]) || 0;
+          const ratingB = parseFloat(b.querySelector(".text-xs").textContent.match(/\d+\.?\d*/)[0]) || 0;
+
+          if (sortOption === "time-asc") return timeA - timeB;
+          if (sortOption === "time-desc") return timeB - timeA;
+          if (sortOption === "rating-desc") return ratingB - ratingA;
+          return 0;
+        });
+      }
+
+      // Lọc công thức
+      function getFilteredRecipes() {
+        let filtered = recipeCards.filter(recipe => {
+          const title = recipe.querySelector("h3").textContent.toLowerCase();
+          const category = recipe.getAttribute("data-category-id") || "";
+          const portion = recipe.getAttribute("data-portion") || "";
+          const time = parseInt(recipe.getAttribute("data-time")) || 0;
+          const difficulty = recipe.getAttribute("data-difficulty") || "";
+
+          // Lọc theo từ khóa tìm kiếm và danh mục
+          const matchesSearch = title.includes(searchTerm);
+          const matchesCategory = selectedCategory === "" || category === selectedCategory;
+
+          // Lọc theo số phần ăn
+          let matchesPortion = true;
+          if (selectedPortion) {
+            if (selectedPortion === "1-2") matchesPortion = portion === "1-2";
+            else if (selectedPortion === "3-4") matchesPortion = portion === "3-4";
+            else if (selectedPortion === "5+") matchesPortion = portion === "5+";
+          }
+
+          // Lọc theo thời gian nấu
+          let matchesTime = true;
+          if (selectedTime) {
+            if (selectedTime === "0-30") matchesTime = time <= 30;
+            else if (selectedTime === "30-60") matchesTime = time > 30 && time <= 60;
+            else if (selectedTime === "60+") matchesTime = time > 60;
+          }
+
+          // Lọc theo độ khó
+          const matchesDifficulty = selectedDifficulty === "" || difficulty === selectedDifficulty;
+
+          return matchesSearch && matchesCategory && matchesPortion && matchesTime && matchesDifficulty;
+        });
+        return sortRecipes(filtered);
+      }
+
+      // Render công thức
+      function renderRecipes() {
+        const filteredRecipes = getFilteredRecipes();
+        recipeCards.forEach(r => r.classList.add("hidden"));
+
+        const toShow = filteredRecipes.slice(0, visibleCount);
+        toShow.forEach(recipe => recipe.classList.remove("hidden"));
+
+        noResults.classList.toggle("hidden", filteredRecipes.length > 0);
+        showMoreBtn.classList.toggle("hidden", visibleCount >= filteredRecipes.length);
+      }
+
+      function resetAndRender() {
+        visibleCount = recipesPerPage;
+        renderRecipes();
+      }
+
+      // Sự kiện cho nút "Xem thêm"
+      showMoreBtn.addEventListener("click", () => {
+        visibleCount += recipesPerPage;
+        renderRecipes();
+      });
+
+      // Tìm kiếm với debounce
+      searchInput.addEventListener("input", debounce(function () {
+        searchTerm = this.value.toLowerCase();
+        resetAndRender();
+      }, 300));
+
+      // Lọc theo danh mục
+      filterButtons.forEach(button => {
+        button.addEventListener("click", function () {
+          filterButtons.forEach(btn => btn.classList.remove("bg-yellow-500", "text-white"));
+          this.classList.add("bg-yellow-500", "text-white");
+          selectedCategory = this.getAttribute("data-category");
+          resetAndRender();
+        });
+      });
+
+      // Lọc theo số phần ăn
+      portionButtons.forEach(button => {
+        button.addEventListener("click", function () {
+          portionButtons.forEach(btn => btn.classList.remove("bg-yellow-500", "text-white"));
+          this.classList.add("bg-yellow-500", "text-white");
+          selectedPortion = this.getAttribute("data-portion");
+          resetAndRender();
+        });
+      });
+
+      // Lọc theo thời gian nấu
+      timeButtons.forEach(button => {
+        button.addEventListener("click", function () {
+          timeButtons.forEach(btn => btn.classList.remove("bg-yellow-500", "text-white"));
+          this.classList.add("bg-yellow-500", "text-white");
+          selectedTime = this.getAttribute("data-time");
+          resetAndRender();
+        });
+      });
+
+      // Lọc theo độ khó
+      difficultyButtons.forEach(button => {
+        button.addEventListener("click", function () {
+          difficultyButtons.forEach(btn => btn.classList.remove("bg-yellow-500", "text-white"));
+          this.classList.add("bg-yellow-500", "text-white");
+          selectedDifficulty = this.getAttribute("data-difficulty");
+          resetAndRender();
+        });
+      });
+
+      // Sắp xếp
+      sortSelect.addEventListener("change", function () {
+        sortOption = this.value;
+        resetAndRender();
+      });
+
+      // Reset bộ lọc
+      resetFiltersBtn.addEventListener("click", () => {
+        selectedPortion = "";
+        selectedTime = "";
+        selectedDifficulty = "";
+        selectedCategory = "";
+        searchTerm = "";
+        sortOption = "default";
+        searchInput.value = "";
+        filterButtons.forEach(btn => btn.classList.remove("bg-yellow-500", "text-white"));
+        portionButtons.forEach(btn => btn.classList.remove("bg-yellow-500", "text-white"));
+        timeButtons.forEach(btn => btn.classList.remove("bg-yellow-500", "text-white"));
+        difficultyButtons.forEach(btn => btn.classList.remove("bg-yellow-500", "text-white"));
+        sortSelect.value = "default";
+        resetAndRender();
+      });
+
+      // Toggle sidebar trên mobile
+      toggleSidebarBtn.addEventListener("click", () => {
+        sidebar.classList.toggle("open");
+      });
+
+      resetAndRender();
+    });
+  </script>
+</body>
+</html>

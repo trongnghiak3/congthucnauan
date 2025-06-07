@@ -1,0 +1,42 @@
+<div class="recipe-card bg-white shadow-lg rounded-xl overflow-hidden p-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:scale-105 cursor-pointer w-72 mx-auto"
+     onclick="window.location.href='/cong-thuc/<%= recipe.id_chinh %>'" 
+     data-category-id="<%= recipe.category %>">
+   
+  <!-- Hình ảnh -->
+  <div class="relative w-full h-40 rounded-lg overflow-hidden mb-4">
+    <% if (recipe.hinh_anh) { %>
+      <a href="<%= recipe.hinh_anh %>" target="_blank" class="block">
+        <img src="<%= recipe.hinh_anh %>" alt="Ảnh món ăn" class="w-full h-40 object-cover rounded shadow-md hover:scale-105 transition" 
+             onerror="this.onerror=null; this.parentElement.style.display='none'; this.parentElement.nextElementSibling.style.display='block';" />
+      </a>
+      <span class="text-gray-500 hidden">Không có ảnh</span>
+    <% } else { %>
+      <span class="text-gray-500">Không có ảnh</span>
+    <% } %>
+  </div>
+
+  <!-- Thông tin món ăn -->
+  <div class="flex flex-col space-y-2">
+    <h3 class="font-semibold text-gray-900 text-lg truncate mb-1"><%= recipe.ten_ct %></h3>
+  </div>
+
+  <!-- Icon thông tin dưới hình ảnh -->
+  <div class="flex justify-between items-center mt-2 text-gray-600 text-sm">
+    <div class="flex items-center space-x-1 ">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <span><%= recipe.thoi_gian_nau %> phút</span>
+    </div>
+    <div class="flex items-center space-x-2 text-yellow-400">
+      <% for(let i=0; i<5; i++) { %>
+        <% if(i < recipe.rating) { %>
+          <i class="fa-solid fa-star"></i>
+        <% } else { %>
+          <i class="fa-regular fa-star"></i>
+        <% } %>
+      <% } %>
+      <span class="ml-1 text-gray-500 text-xs">(<%= recipe.rating %>/5)</span>
+    </div>
+  </div>
+</div>

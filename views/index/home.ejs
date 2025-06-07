@@ -1,0 +1,34 @@
+<!-- Banner -->
+<section class="relative w-full h-[400px] bg-cover bg-center flex items-center justify-center text-center" style="background-image: url('https://images.pexels.com/photos/4551832/pexels-photo-4551832.jpeg');">
+    <div class="bg-black bg-opacity-50 p-8 rounded-lg">
+        <h2 class="text-white text-5xl font-bold">Chào mừng đến với Thế Giới Công Thức</h2>
+        <p class="text-lg text-gray-200 mt-2">Khám phá hàng ngàn công thức nấu ăn ngon</p>
+        <a href="#" class="mt-4 inline-block bg-yellow-500 text-white px-6 py-3 rounded-full text-lg font-semibold hover:bg-yellow-600 transition">Khám phá ngay</a>
+    </div>
+</section>
+
+<!-- Danh mục -->
+<section class="container mx-auto px-4 py-10">
+    <h2 class="text-3xl font-bold text-center mb-6">Danh mục nổi bật</h2>
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+        <% if (typeof categories !== 'undefined' && categories.length > 0) { %>
+            <% categories.forEach(category => { %>
+                <div class="bg-white shadow-md rounded-lg p-4 text-center hover:scale-105 transition">
+                    <img src="https://source.unsplash.com/150x150/?food,<%= category.ten_loai.replace(/\s+/g, '-') %>" class="mx-auto rounded-full">
+                    <h3 class="mt-3 font-semibold"><%= category.ten_loai %></h3>
+                </div>
+            <% }); %>
+        <% } else { %>
+            <p class="text-center col-span-5">Không có danh mục nào.</p>
+        <% } %>
+    </div>
+</section>
+
+<!-- Công thức nổi bật -->
+<section class="container mx-auto px-4 py-10">
+    <h2 class="text-3xl font-bold text-center mb-6">Công thức nổi bật</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Các công thức mẫu -->
+        ...
+    </div>
+</section>

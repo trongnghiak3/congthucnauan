@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trang Cá Nhân</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+<body class="bg-gray-100">
+  <%- include('partials/header') %>
+<div class="container mx-auto py-8">
+  <div class="bg-white p-8 rounded-2xl shadow-lg max-w-3xl mx-auto flex flex-col md:flex-row items-center gap-8">
+
+    <!-- Avatar -->
+    <div class="relative w-40 h-40">
+      <img id="avatarPreview" src="<%= user.avatar || 'https://i.imgur.com/2Nv5jJb.png' %>" 
+           alt="Avatar" 
+           class="w-full h-full rounded-full object-cover shadow-lg border-4 border-gray-300">
+      <!-- Icon cập nhật -->
+      <button class="absolute bottom-2 right-2 bg-blue-500 text-white p-2 rounded-full shadow-md hover:bg-blue-600 transition">
+        ✏️
+      </button>
+    </div>
+
+    <!-- Thông tin hồ sơ -->
+    <div class="flex flex-col justify-center">
+      <h1 class="text-3xl font-semibold text-gray-800"><%= user.username %></h1>
+      <p class="text-gray-600 text-lg mt-1">📧 <%= user.email %></p>
+      <button onclick="openModalPofile()" class="mt-4 bg-blue-500 text-white px-5 py-2 rounded-lg font-medium shadow-md hover:bg-blue-600 transition">
+        ✏️ Cập nhật hồ sơ
+      </button>
+    </div>
+  </div>
+
+  <!-- POST Section -->
+  <div class="bg-white shadow-lg rounded-lg p-6 mt-8">
+    <div class="flex justify-between">
+      <h1 class="text-4xl font-bold text-gray-800 mb-4">Công thức của bạn</h1>
+      <button onclick="openModal()" class="flex items-center bg-blue-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-blue-600 transition">
+        <span class="mr-2"></span>
+        <span class="text-xl font-bold">+</span>
+      </button>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5">
+      <% if (userRecipes && userRecipes.length > 0) { %>
+        <% userRecipes.forEach(function(recipe) { %>
+          <%- include('partials/recipeCard', { recipe: recipe }) %>
+        <% }); %>
+      <% } else { %>
+        <p class="text-gray-500 text-lg text-center col-span-full">Bạn chưa đăng công thức nào.</p>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- Công thức yêu thích -->
+  <div class="bg-white shadow-lg rounded-lg p-6 mt-8">
+    <h1 class="text-4xl font-bold text-gray-800 mb-4">Công thức yêu thích</h1>
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5">
+      <% if (favoriteRecipes && favoriteRecipes.length > 0) { %>
+        <% favoriteRecipes.forEach(function(recipe) { %>
+          <%- include('partials/recipeCard', { recipe: recipe }) %>
+        <% }); %>
+      <% } else { %>
+        <p class="text-gray-500 text-lg text-center col-span-full">Bạn chưa có công thức yêu thích nào.</p>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div id="updateProfileModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden">
+    <div class="bg-white p-6 rounded-2xl shadow-lg w-full max-w-lg relative">
+      <!-- Nút đóng -->
+      <button onclick="closeModalPofile()" class="absolute top-3 right-3 text-gray-500 hover:text-gray-800 text-xl">&times;</button>
+      <h2 class="text-2xl font-semibold text-gray-800 text-center mb-4">Cập nhật hồ sơ</h2>
+      <form id="updateProfileForm">
+        <!-- Avatar -->
+        <div class="flex flex-col items-center mb-4">
+          <img id="avatarPreview" src="<%= user.avatar || 'https://i.imgur.com/2Nv5jJb.png' %>" 
+               alt="Avatar" 
+               class="w-24 h-24 rounded-full object-cover shadow-md border">
+          <input type="file" id="avatarInput" class="mt-2 text-sm text-gray-500">
+        </div>
+
+        <!-- Tên người dùng -->
+        <div class="mb-4">
+          <label class="block text-gray-700 font-medium">Tên người dùng</label>
+          <input type="text" id="username" value="<%= user.username %>" 
+                 class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
+        </div>
+
+        <!-- Email -->
+        <div class="mb-4">
+          <label class="block text-gray-700 font-medium">Email</label>
+          <input type="email" id="email" value="<%= user.email %>" 
+                 class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
+        </div>
+
+        <!-- Nút hành động -->
+        <div class="flex justify-end gap-3">
+          <button type="button" onclick="closeModal()" class="px-5 py-2 rounded-lg bg-gray-300 hover:bg-gray-400 transition">
+            Hủy
+          </button>
+          <button type="submit" class="px-5 py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition">
+            💾 Lưu
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Recipe -->
+  <div id="recipeModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden">
+    <div class="bg-white p-6 rounded-lg w-full max-w-5xl shadow-lg flex flex-col gap-4 text-sm">
+      <div class="grid grid-cols-3 gap-3">
+        <!-- Cột 1: Hình ảnh -->
+        <div class="space-y-2">
+          <label class="font-medium block">Xem trước ảnh:</label>
+          <img id="image-preview" class="w-full h-28 rounded-lg border hidden">
+          <input type="file" id="image-input" accept="image/*" class="w-full p-2 border rounded text-sm">
+        </div>
+
+        <!-- Cột 2 & 3: Form nhập liệu -->
+        <div class="col-span-2 space-y-2">
+          <input type="text" placeholder="Tên công thức" class="w-full p-2 border rounded text-sm">
+          <textarea placeholder="Mô tả" class="w-full p-2 border rounded text-sm"></textarea>
+          <div id="category-list" class="grid grid-cols-3 gap-2 p-3 border rounded-lg bg-gray-50 text-sm">
+            <% categories.forEach(category => { %>
+              <label class="flex items-center gap-1 p-1 bg-white rounded-lg cursor-pointer">
+                <input type="checkbox" name="categories" value="<%= category.loai_mon_id %>" class="w-4 h-4">
+                <span><%= category.ten_loai %></span>
+              </label>
+            <% }) %>
+          </div>
+        </div>
+      </div>
+
+      <!-- Nguyên liệu -->
+      <div class="space-y-2">
+        <label class="font-medium">Nguyên liệu:</label>
+        <div class="grid grid-cols-5 gap-2">
+          <input type="text" id="new-ingredient" placeholder="Tên nguyên liệu" class="p-2 border rounded text-sm">
+          <input type="number" id="new-quantity" placeholder="Số lượng" class="p-2 border rounded text-sm">
+          <input type="text" id="new-unit" placeholder="Đơn vị (g, ml...)" class="p-2 border rounded text-sm">
+          <input type="text" id="new-note" placeholder="Ghi chú" class="p-2 border rounded text-sm">
+          <button type="button" class="bg-green-500 text-white px-3 py-1 rounded text-xs" onclick="addIngredient()">Thêm</button>
+        </div>
+        <div id="ingredient-list" class="mt-2 border p-2 rounded-lg bg-gray-50 text-sm overflow-auto"></div>
+      </div>
+
+      <!-- Thông tin bổ sung -->
+      <div class="grid grid-cols-3 gap-2">
+        <div>
+          <label class="font-medium">Thời gian nấu (phút):</label>
+          <input type="number" min="1" class="w-full p-2 border rounded text-sm">
+        </div>
+        <div>
+          <label class="font-medium">Số phần ăn:</label>
+          <input type="number" id="servings" min="1" class="w-full p-2 border rounded text-sm">
+        </div>
+        <div>
+          <label class="font-medium">Độ khó:</label>
+          <select id="difficulty" class="w-full p-2 border rounded text-sm">
+            <option value="Dễ">Dễ</option>
+            <option value="Trung bình">Trung bình</option>
+            <option value="Khó">Khó</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Hướng dẫn từng bước -->
+      <div class="space-y-2">
+        <label class="font-medium">Hướng dẫn làm:</label>
+        <div class="grid grid-cols-4 gap-2">
+          <input type="text" id="step-input" placeholder="Nhập bước hướng dẫn" class="p-2 border rounded text-sm col-span-3">
+          <button type="button" class="bg-green-500 text-white px-3 py-1 rounded text-xs" onclick="addStep()">Thêm</button>
+        </div>
+        <table class="w-full border rounded-lg text-sm">
+          <thead>
+            <tr class="bg-gray-100">
+              <th class="p-2 text-left">Bước</th>
+              <th class="p-2 text-left">Mô tả</th>
+              <th class="p-2 text-center">Hành động</th>
+            </tr>
+          </thead>
+          <tbody id="step-list" class="bg-white"></tbody>
+        </table>
+      </div>
+
+      <!-- Video hoặc YouTube -->
+      <div class="space-y-2">
+        <label class="font-medium">Chọn Video hoặc URL YouTube:</label>
+        <input type="file" id="video-input" accept="video/*" class="w-full p-2 border rounded text-sm">
+        <video id="video-preview" class="w-full rounded-lg border mt-2 hidden" controls></video>
+        <input type="text" id="youtube-url" placeholder="Nhập URL YouTube" class="w-full p-2 border rounded text-sm">
+        <div id="youtube-preview" class="hidden">
+          <iframe id="youtube-frame" class="w-full rounded-lg mt-2" height="200" frameborder="0" allowfullscreen></iframe>
+        </div>
+      </div>
+
+      <!-- Nút hành động -->
+      <div class="mt-2 flex justify-end gap-2">
+        <button type="button" class="bg-gray-300 px-3 py-1 rounded-lg text-xs" onclick="closeModal()">Hủy</button>
+        <button type="button" class="bg-blue-500 text-white px-3 py-1 rounded-lg text-xs" onclick="saveRecipe()">Lưu</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+  <script>
+    function showUpdateForm() {
+      document.getElementById("profileInfo").classList.add("hidden");
+      document.getElementById("updateForm").classList.remove("hidden");
+    }
+    function hideUpdateForm() {
+      document.getElementById("updateForm").classList.add("hidden");
+      document.getElementById("profileInfo").classList.remove("hidden");
+    }
+    function openModal() {
+        document.getElementById("recipeModal").classList.remove("hidden");
+      }
+      function closeModal() {
+        document.getElementById("recipeModal").classList.add("hidden");
+      }
+      // 
+            function addIngredient() {
+        const ingredient = document.getElementById("new-ingredient").value.trim();
+        const quantity = document.getElementById("new-quantity").value.trim();
+        const unit = document.getElementById("new-unit").value.trim();
+        const note = document.getElementById("new-note").value.trim();
+
+        if (!ingredient || !quantity || !unit) {
+          alert("Vui lòng nhập đầy đủ thông tin nguyên liệu!");
+          return;
+        }
+
+        const ingredientList = document.getElementById("ingredient-list");
+        const item = document.createElement("div");
+        item.classList.add("p-2", "border-b", "flex", "justify-between", "items-center");
+
+        item.innerHTML = `
+          <span class="flex-1">
+            <strong>${ingredient}</strong>: <span>${quantity} ${unit}</span> 
+            ${note ? `- (<span class="note">${note}</span>)` : ""}
+          </span>
+          <div class="flex gap-2">
+            <button class="text-blue-500 text-xs" onclick="editIngredient(this)">Sửa</button>
+            <button class="text-red-500 text-xs" onclick="this.parentElement.parentElement.remove()">Xóa</button>
+          </div>
+        `;
+
+        ingredientList.appendChild(item);
+
+        // Xóa nội dung ô nhập sau khi thêm
+        document.getElementById("new-ingredient").value = "";
+        document.getElementById("new-quantity").value = "";
+        document.getElementById("new-unit").value = "";
+        document.getElementById("new-note").value = "";
+      }
+
+      // Hàm chỉnh sửa nguyên liệu
+      function editIngredient(button) {
+        const item = button.parentElement.parentElement;
+        const name = item.querySelector("strong").innerText;
+        const quantityUnit = item.querySelector("span:nth-child(2)").innerText.split(" ");
+        const note = item.querySelector(".note") ? item.querySelector(".note").innerText : "";
+
+        document.getElementById("new-ingredient").value = name;
+        document.getElementById("new-quantity").value = quantityUnit[0];
+        document.getElementById("new-unit").value = quantityUnit.slice(1).join(" ");
+        document.getElementById("new-note").value = note;
+
+        item.remove(); // Xóa phần cũ để thay bằng bản chỉnh sửa
+      }
+
+
+
+      function addCategory() {
+        const categoryInput = document.getElementById("new-category");
+        const categoryList = document.getElementById("category-list");
+
+        const name = categoryInput.value.trim();
+        if (name !== "") {
+          const div = document.createElement("div");
+          div.classList.add("flex", "items-center", "gap-2");
+
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.name = "categories";
+          checkbox.value = name; // Gán trực tiếp tên loại món nếu chưa có ID
+
+          const textNode = document.createElement("span");
+          textNode.textContent = name;
+
+          div.appendChild(checkbox);
+          div.appendChild(textNode);
+          categoryList.appendChild(div);
+
+          categoryInput.value = "";
+        } else {
+          alert("Vui lòng nhập tên loại món!");
+        }
+      }
+
+      // xữ lí bước hướng dẫn làm
+      function addStep() {
+    let stepInput = document.getElementById("step-input");
+    let stepText = stepInput.value.trim();
+    if (stepText === "") return;
+
+    let stepList = document.getElementById("step-list");
+    let row = document.createElement("tr");
+
+    row.innerHTML = `
+        <td class="p-2">${stepList.children.length + 1}</td>
+        <td class="p-2">${stepText}</td>
+        <td class="p-2 text-center">
+            <button class="text-red-500 text-xs" onclick="removeStep(this)">Xóa</button>
+        </td>
+    `;
+
+    stepList.appendChild(row);
+    stepInput.value = "";
+}
+
+function removeStep(button) {
+    let row = button.parentElement.parentElement;
+    row.remove();
+
+    // Cập nhật lại số thứ tự bước
+    let stepList = document.getElementById("step-list");
+    [...stepList.children].forEach((row, index) => {
+        row.children[0].textContent = index + 1;
+    });
+}
+
+
+      //xem trước ảnh
+      document.getElementById("image-input").addEventListener("change", function (event) {
+        const file = event.target.files[0];
+        const preview = document.getElementById("image-preview");
+
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = function (e) {
+            preview.src = e.target.result;
+            preview.classList.remove("hidden");
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+      // hàm savesave
+  function saveRecipe() {
+  const name = document.getElementById("recipe-name").value.trim();
+  const description = document.getElementById("recipe-description").value.trim();
+  const imageInput = document.getElementById("image-input").files[0];
+
+  // Lấy danh sách nguyên liệu
+  const ingredients = [];
+  document.querySelectorAll("#ingredient-list div").forEach(div => {
+    const text = div.firstChild.textContent.split(" - ");
+    if (text.length >= 2) {
+      const [name, quantityUnit] = text;
+      const [quantity, unit] = quantityUnit.split(" ");
+      ingredients.push({ name, quantity, unit: unit || "", note: "" });
+    }
+  });
+
+  // Lấy danh sách danh mục món
+  const categories = [];
+  document.querySelectorAll("#category-list input:checked").forEach(checkbox => {
+    categories.push(checkbox.value);
+  });
+
+  // Lấy danh sách các bước hướng dẫn
+  const steps = [];
+  document.querySelectorAll("#step-list li").forEach(li => {
+    steps.push(li.firstChild.textContent.split(". ")[1]);
+  });
+
+  if (!name || !description) {
+    alert("Vui lòng nhập đầy đủ thông tin công thức!");
+    return;
+  }
+
+  // Chuẩn bị dữ liệu để gửi
+  const formData = new FormData();
+  formData.append("name", name);
+  formData.append("description", description);
+  formData.append("ingredients", JSON.stringify(ingredients));
+  formData.append("categories", JSON.stringify(categories));
+  formData.append("steps", JSON.stringify(steps));
+  if (imageInput) {
+    formData.append("image", imageInput);
+  }
+
+  fetch("/cong-thuc-cua-toi", {
+    method: "POST",
+    body: formData,
+  })
+    .then(response => response.json())
+    .then(data => {
+      alert(data.message);
+      document.getElementById("recipeModal").reset();
+      loadRecipes(); // Load lại danh sách công thức
+    })
+    .catch(error => console.error("Lỗi:", error));
+}
+
+  </script>
+</body>
+</html>

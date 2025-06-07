@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quản lý Công Thức</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+</head>
+<body class="bg-[#FAF3E0] font-sans">
+
+  <div class="flex h-screen overflow-hidden">
+    <!-- Sidebar -->
+    <aside class="w-64 bg-gradient-to-b from-[#FFD700] to-[#DAA520] text-white p-6 shadow-xl flex flex-col justify-between fixed h-full rounded-r-2xl">
+      <!-- Logo và menu -->
+      <div>
+        <h2 class="text-3xl font-extrabold mb-8 text-center drop-shadow-md">🥘 Admin</h2>
+        <ul class="space-y-2">
+         <li><a href="/admin/recipes" onclick="event.preventDefault(); loadPage('/admin/recipes', this)" class="sidebar-item">🍽 Công Thức</a></li>
+        <li><a href="/admin/ingredients" onclick="event.preventDefault(); loadPage('/admin/ingredients', this)" class="sidebar-item">🥑 Nguyên Liệu</a></li>
+        <li><a href="/admin/categories" onclick="event.preventDefault(); loadPage('/admin/categories', this)" class="sidebar-item">🍜 Loại Món</a></li>
+        <li li><a href="/admin/users" onclick="event.preventDefault(); loadPage('/admin/users', this)" class="sidebar-item">👨‍🍳 Người Dùng</a></li>
+
+          </ul>
+      </div>
+
+      <!-- Footer người dùng -->
+      <div class="border-t border-white/30 pt-4 mt-6">
+        <div class="flex items-center space-x-3">
+          <img src="<%= user && user.avatar ? user.avatar : '/default-avatar.png' %>" alt="User Avatar" class="w-10 h-10 rounded-full border-2 border-white object-cover" />
+          <span class="text-white font-semibold text-base"><%= user && user.username ? user.username : 'Guest' %></span>
+        </div>
+        <p class="text-xs text-white/70 mt-3 text-center">© 2025 Công thức nấu ăn</p>
+      </div>
+    </aside>
+
+    <!-- Nội dung chính -->
+    <main class="flex-1 ml-64 p-8 overflow-y-auto ">
+      <div class="bg-white shadow-xl rounded-xl p-6 h-full border h-full w-full">
+       
+        <div id="content" class="w-full max-w-full overflow-x-auto h-full"></div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Custom CSS -->
+  <style>
+    .sidebar-item {
+      display: block;
+      padding: 12px 16px;
+      border-radius: 12px;
+      transition: 0.3s ease;
+      font-size: 16px;
+      font-weight: 500;
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    .sidebar-item:hover,
+    .sidebar-item.active {
+      background: rgba(255, 255, 255, 0.25);
+      transform: translateX(6px);
+      color: #FFF8DC;
+      font-weight: bold;
+    }
+  </style>
+
+  <!-- JS -->
+ 
+    <script src="/admin/categories.js"></script>
+    <script src="/admin/ingredients.js"></script>
+  <script src="/admin/script.js"></script>
+ 
+</body>
+</html>
