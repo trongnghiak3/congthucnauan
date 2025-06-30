@@ -1,0 +1,162 @@
+<body class="p-6 font-sans text-gray-800">
+  <div class="max-w-8xl mx-auto bg-white p-8 rounded-lg shadow-lg">
+    <!-- Danh Sách Loại Món -->
+    <div id="categories" role="tabpanel">
+      <button onclick="openAddModal()" class="flex float-end mb-4 px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600">
+        Thêm Loại Món
+      </button>
+
+      <table class="min-w-full border border-gray-300 rounded-lg overflow-hidden shadow-sm">
+        <thead class="bg-gray-100 text-gray-700 uppercase text-sm font-medium select-none">
+          <tr>
+            <th class="px-6 py-3 border-r border-gray-300 text-left">ID</th>
+            <th class="px-6 py-3 border-r border-gray-300 text-left">Tên Loại Món</th>
+            <th class="px-6 py-3 border-r border-gray-300 text-left">Slug</th>
+            <th class="px-6 py-3 border-r border-gray-300 text-left">Hình Ảnh</th>
+            <th class="px-6 py-3 text-left">Hành động</th>
+          </tr>
+        </thead>
+        <tbody class="text-gray-800">
+          <% if (categories && categories.length > 0) { %>
+            <% categories.forEach(category => { %>
+              <tr class="hover:bg-yellow-50 transition duration-200">
+                <td class="px-6 py-4 border-t border-gray-200">
+                  <%= category.ID_CHINH_LM %>
+                </td>
+                <td class="px-6 py-4 border-t border-gray-200">
+                  <%= category.TEN_LM %>
+                </td>
+                <td class="px-6 py-4 border-t border-gray-200">
+                  <%= category.SLUG_LM %>
+                </td>
+                <td class="p-2 border-r">
+                  <% if (category.HINH_ANH_LM_URL) { %>
+                    <a href="<%= category.HINH_ANH_LM_URL %>" target="_blank">
+                      <img src="<%= category.HINH_ANH_LM_URL %>" alt="Ảnh món ăn"
+                        class="w-14 h-14 object-cover rounded shadow-md hover:scale-105 transition" />
+                    </a>
+                  <% } else { %>
+                    <span class="text-gray-500">Không có</span>
+                  <% } %>
+                </td>
+                <td class="px-6 py-4 border-t border-gray-200 space-x-3">
+                  <a href="#"
+                    onclick="event.preventDefault(); loadEditCategoryPage('<%= category.ID_CHINH_LM %>', this)"
+                    class="bg-yellow-400 hover:bg-yellow-500 text-white px-4 py-1 rounded shadow-sm transition duration-200"
+                    title="Sửa">
+                    ✏ Sửa
+                  </a>
+                  <button onclick="confirmDeleteCategory('<%= category.ID_CHINH_LM %>')"
+                    class="bg-red-600 hover:bg-red-700 text-white px-4 py-1 rounded shadow-sm transition duration-200">
+                    🗑 Xóa
+                  </button>
+                </td>
+              </tr>
+            <% }) %>
+          <% } else { %>
+            <tr>
+              <td colspan="5" class="text-center py-6 text-gray-400 italic">
+                Không có loại món nào!
+              </td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+
+    <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
+      <div class="mt-6 flex justify-center space-x-2">
+        <% if (currentPage > 1) { %>
+          <a href="#" onclick="loadPage('/admin/loai-mon?page=<%= currentPage - 1 %>'); return false;"
+            class="px-4 py-2 rounded border bg-white text-gray-700 hover:bg-gray-100">
+            ‹ Trước
+          </a>
+        <% } %>
+        <% for (let i = 1; i <= totalPages; i++) { %>
+          <a href="#" onclick="loadPage('/admin/loai-mon?page=<%= i %>'); return false;"
+            class="px-4 py-2 rounded border text-sm <%= i === currentPage ? 'bg-yellow-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100' %>">
+            <%= i %>
+          </a>
+        <% } %>
+        <% if (currentPage < totalPages) { %>
+          <a href="#" onclick="loadPage('/admin/loai-mon?page=<%= currentPage + 1 %>'); return false;"
+            class="px-4 py-2 rounded border bg-white text-gray-700 hover:bg-gray-100">
+            Sau ›
+          </a>
+        <% } %>
+      </div>
+    <% } %>
+  </div>
+
+  <!-- Modal Thêm Loại Món -->
+  <div id="addModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+    <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+      <h2 class="text-2xl font-semibold mb-4">Thêm Loại Món</h2>
+      <form id="addCategoryForm" method="POST" action="/admin/loai-mon" enctype="multipart/form-data">
+        <div class="mb-4">
+          <label for="addTenLoai" class="-surface-contrast block text-sm font-medium">Tên Loại Món</label>
+          <input type="text" id="addTenLoai" name="TEN_LM"
+            class="mt-1 p-2 w-full border rounded-lg focus:ring-yellow-500 focus:border-yellow-500" required />
+        </div>
+        <div class="mb-4">
+          <label for="addSlug" class="surface-contrast block text-sm font-medium">Slug</label>
+          <input type="text" id="addSlug" name="SLUG_LM"
+            class="mt-1 p-2 w-full border rounded-lg focus:ring-yellow-500 focus:border-yellow-500" />
+        </div>
+        <div class="mb-4">
+          <label class="surface-contrast block text-sm font-medium mb-1">Hình Ảnh</label>
+          <img id="addImagePreview" src="/default.jpg"
+            class="mt-2 w-40 h-40 object-cover rounded-lg border cursor-pointer"
+            onclick="document.getElementById('addHinhAnh').click()" />
+          <input type="file" id="addHinhAnh" name="hinh_anh" accept="image/*" class="hidden" />
+        </div>
+        <div class="flex justify-end space-x-2">
+          <button type="button" onclick="closeAddModal()"
+            class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">
+            Hủy
+          </button>
+          <button type="submit" class="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600">
+            Thêm
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Sửa Loại Món -->
+  <div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+    <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+      <h2 class="text-2xl font-semibold mb-4">Sửa Loại Món</h2>
+      <form id="editCategoryForm" enctype="multipart/form-data">
+        <input type="hidden" name="_method" value="PUT" />
+        <input type="hidden" id="editId" name="id_chinh" />
+        <div class="mb-4">
+          <label for="editTenLoai" class="surface-contrast block text-sm font-medium">Tên Loại Món</label>
+          <input type="text" id="editTenLoai" name="TEN_LM"
+            class="mt-1 p-2 w-full border rounded-lg focus:ring-yellow-500 focus:border-yellow-500" required />
+        </div>
+        <div class="mb-4">
+          <label for="editSlug" class="surface-contrast block text-sm font-medium">Slug</label>
+          <input type="text" id="editSlug" name="SLUG_LM"
+            class="mt-1 p-2 w-full border rounded-lg focus:ring-yellow-500 focus:border-yellow-500" />
+        </div>
+        <div class="mb-4">
+          <label for="editHinhAnh" class="surface-contrast block text-sm font-medium">Hình Ảnh</label>
+          <input type="file" id="editHinhAnh" name="hinh_anh" accept="image/*"
+            class="mt-1 p-2 w-full border rounded-lg focus:ring-yellow-500 focus:border-yellow-500" />
+          <img id="currentHinhAnh" src="" alt="Current Image" class="mt-2 w-32 h-32 object-cover hidden" />
+          <img id="editImagePreview" src="#" alt="Image Preview" class="mt-2 w-32 h-32 object-cover hidden" />
+        </div>
+        <div class="flex justify-end space-x-2">
+          <button type="button" onclick="closeEditModal()"
+            class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">
+            Hủy
+          </button>
+          <button type="submit" class="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600">
+            Lưu
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</body>

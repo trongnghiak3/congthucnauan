@@ -1,0 +1,295 @@
+<body class="p-6 font-sans text-gray-800">
+  <div class="max-w-8xl mx-auto bg-white p-8 rounded-lg shadow-lg">
+    <!-- Tabs Navigation -->
+    <div class="mb-8 border-b border-gray-300">
+      <ul class="flex space-x-4">
+        <li>
+          <button onclick="showTab('dishes')" id="tab-dishes"
+            class="tab-button px-6 py-3 rounded-t-lg font-semibold bg-yellow-500 text-white shadow-md hover:bg-yellow-600 focus:outline-none"
+            aria-selected="true" role="tab">
+            Danh Sách Món Ăn
+          </button>
+        </li>
+        <li>
+          <button onclick="showTab('dishes-by-category')" id="tab-dishes-by-category"
+            class="tab-button px-6 py-3 rounded-t-lg font-semibold bg-gray-200 text-gray-600 hover:bg-gray-300 focus:outline-none"
+            aria-selected="false" role="tab">
+            Danh Sách Món Ăn Theo Loại Món
+          </button>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Tab 1: Danh Sách Món Ăn -->
+    <div id="dishes" class="tab-content" role="tabpanel" aria-labelledby="tab-dishes">
+      <button onclick="openAddModal()"
+        class="flex float-end mb-4 px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600">
+        Thêm Món Ăn
+      </button>
+      <table class="min-w-full border border-gray-300 rounded-lg overflow-hidden shadow-sm">
+        <thead class="bg-gray-100 text-gray-700 uppercase text-sm font-medium select-none">
+          <tr>
+            <th class="px-6 py-3 border-r border-gray-300 text-left">ID</th>
+            <th class="px-6 py-3 border-r border-gray-300 text-left">Tên Món Ăn</th>
+            <th class="px-6 py-3 border-r border-gray-300 text-left">Loại Món</th>
+            <th class="px-6 py-3 border-r border-gray-300 text-left">Mô Tả</th>
+            <th class="px-6 py-3 border-r border-gray-300 text-left">Hình Ảnh</th>
+            <th class="px-6 py-3 text-left">Hành Động</th>
+          </tr>
+        </thead>
+        <tbody class="text-gray-800">
+          <% if (monAnList && monAnList.length> 0) { %>
+            <% monAnList.forEach((dish)=> { %>
+              <tr class="hover:bg-yellow-50 transition duration-200">
+                <td class="px-6 py-4 border-t border-gray-200">
+                  <%= dish.ID_CHINH_MA %>
+                </td>
+                <td class="px-6 py-4 border-t border-gray-200">
+                  <%= dish.TEN_MON_AN %>
+                </td>
+                <td class="px-6 py-4 border-t border-gray-200">
+                  <% if (groupedLoaiMon[dish.ID_CHINH_MA] && groupedLoaiMon[dish.ID_CHINH_MA].loai_mon.length> 0) { %>
+                    <%= groupedLoaiMon[dish.ID_CHINH_MA].loai_mon.map(lm=> lm.TEN_LM).join(', ') %>
+                      <% } else { %>
+                        Không rõ
+                        <% } %>
+                </td>
+                <td class="px-6 py-4 border-t border-gray-200 line-clamp-2">
+                  <%= dish.MO_TA_MA || 'Không có' %>
+                </td>
+                <td class="px-6 py-4 border-t border-gray-200">
+                  <% if (dish.HINH_ANH_MA) { %>
+                    <a href="<%= dish.HINH_ANH_MA %>" target="_blank">
+                      <img src="<%= dish.HINH_ANH_MA %>" alt="Ảnh món ăn"
+                        class="w-14 h-14 object-cover rounded shadow-md hover:scale-105 transition" />
+                    </a>
+                    <% } else { %>
+                      <span class="text-gray-500">Không có</span>
+                      <% } %>
+                </td>
+                <td class="px-6 py-4 border-t border-gray-200 space-x-3">
+                  <button class="btn-edit" data-id="<%= dish.ID_CHINH_MA %>"
+                    data-ten="<%= encodeURIComponent(dish.TEN_MON_AN) %>"
+                    data-loai="<%= encodeURIComponent(JSON.stringify(groupedLoaiMon[dish.ID_CHINH_MA]?.loai_mon?.map(lm => lm.ID_CHINH_LM) || [])) %>"
+                    data-mota="<%= encodeURIComponent(dish.MO_TA_MA || '') %>"
+                    data-hinh="<%= encodeURIComponent(dish.HINH_ANH_MA || '') %>">
+                    ✏ Sửa
+                  </button>
+                  <button onclick="confirmDeleteDish('<%= dish.ID_CHINH_MA %>')"
+                    class="bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded shadow-sm transition duration-200">
+                    🗑 Xóa
+                  </button>
+                </td>
+              </tr>
+              <% }) %>
+                <% } else { %>
+                  <tr>
+                    <td colspan="6" class="text-center py-6 text-gray-400 italic">Không có món ăn nào để hiển thị.</td>
+                  </tr>
+                  <% } %>
+        </tbody>
+      </table>
+      <% if (typeof totalPages !=='undefined' && totalPages> 1) { %>
+        <div class="mt-6 flex justify-center space-x-2">
+          <% if (currentPage> 1) { %>
+            <a href="#"
+              onclick="loadPage('/admin/mon-an?page=<%= currentPage %>&pageCategories=<%= currentPageCategories %>'); return false;"
+              class="px-4 py-2 rounded border bg-white text-gray-700 hover:bg-gray-100">‹ Trước</a>
+            <% } %>
+              <% for (let i=1; i <=totalPages; i++) { %>
+                <a href="#"
+                  onclick="loadPage('/admin/mon-an?page=<%= i %>&pageCategories=<%= currentPageCategories %>'); return false;"
+                  class="px-4 py-2 rounded border text-sm <%= i === currentPage ? 'bg-yellow-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100' %>">
+                  <%= i %>
+                </a>
+                <% } %>
+                  <% if (currentPage < totalPages) { %>
+                    <a href="#"
+                      onclick="loadPage('/admin/mon-an?page=<%= currentPage + 1 %>&pageCategories=<%= currentPageCategories %>'); return false;"
+                      class="px-4 py-2 rounded border bg-white text-gray-700 hover:bg-gray-100">Sau ›</a>
+                    <% } %>
+        </div>
+        <% } %>
+    </div>
+
+    <!-- Tab 2: Danh Sách Món Ăn Theo Loại Món -->
+    <div id="dishes-by-category" class="tab-content hidden" role="tabpanel" aria-labelledby="tab-dishes-by-category">
+      <div class="flex flex-col md:flex-row justify-between items-center px-6 py-4 bg-white border-b border-gray-200">
+        <div class="w-full md:w-1/2 mb-3 md:mb-0">
+          <input type="text" id="searchDish" onkeyup="filterDishes()" placeholder="Tìm kiếm món ăn..."
+            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-1 focus:ring-yellow-400 transition" />
+        </div>
+        <div class="text-gray-600 text-sm">
+          Tổng số món ăn: <span id="totalDishes" class="font-semibold text-gray-800">
+            <%= Object.values(groupedLoaiMon).reduce((sum, g)=> sum + g.loai_mon.length, 0) %>
+          </span>
+        </div>
+      </div>
+      <div class="overflow-x-auto px-6 py-4 bg-white rounded-b-lg border border-t-0 border-gray-200">
+        <table class="min-w-full text-sm text-gray-700">
+          <thead>
+            <tr class="bg-gray-100 text-gray-700 uppercase text-sm font-medium select-none">
+              <th class="px-6 py-3 border-r border-gray-300 text-center">STT</th>
+              <th class="px-6 py-3 border-r border-gray-300 text-left">Tên Món Ăn</th>
+              <th class="px-6 py-3 border-r border-gray-300 text-left">Loại Món</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (groupedLoaiMon && Object.keys(groupedLoaiMon).length> 0) { %>
+              <% Object.keys(groupedLoaiMon).forEach((id, index)=> { %>
+                <tr class="hover:bg-gray-50 transition" onclick="toggleDishes('<%= id %>')" data-group-id="<%= id %>">
+                  <td colspan="3"
+                    class="py-3 px-4 text-center font-medium text-gray-900 border-t border-gray-100 bg-gray-50 rounded hover:bg-gray-100 cursor-pointer">
+                    <%= groupedLoaiMon[id].TEN_MON_AN %>
+                  </td>
+                </tr>
+                <% groupedLoaiMon[id].loai_mon.forEach((lm, lmIndex)=> { %>
+                  <tr class="dish-row hidden border-b border-gray-100" data-group="<%= id %>">
+                    <td class="p-3 text-center">
+                      <%= lmIndex + 1 %>
+                    </td>
+                    <td class="p-3 text-left">
+                      <%= groupedLoaiMon[id].TEN_MON_AN %>
+                    </td>
+                    <td class="p-3 text-left">
+                      <%= lm.TEN_LM %>
+                    </td>
+                  </tr>
+                  <% }) %>
+                    <% }) %>
+                      <% } else { %>
+                        <tr>
+                          <td colspan="3" class="text-center py-6 text-gray-400 italic">Không có món ăn nào trong loại
+                            món!</td>
+                        </tr>
+                        <% } %>
+          </tbody>
+        </table>
+      </div>
+      <% if (typeof totalPagesCategories !=='undefined' && totalPagesCategories> 1) { %>
+        <div class="mt-6 flex justify-center space-x-2">
+          <% if (currentPageCategories> 1) { %>
+            <a href="#"
+              onclick="loadPage('/admin/mon-an?page=<%= currentPage %>&pageCategories=<%= currentPageCategories - 1 %>'); return false;"
+              class="px-4 py-2 rounded border bg-white text-gray-700 hover:bg-gray-100">‹ Trước</a>
+            <% } %>
+              <% for (let i=1; i <=totalPagesCategories; i++) { %>
+                <a href="#"
+                  onclick="loadPage('/admin/mon-an?page=<%= currentPage %>&pageCategories=<%= i %>'); return false;"
+                  class="px-4 py-2 rounded border text-sm <%= i === currentPageCategories ? 'bg-yellow-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100' %>">
+                  <%= i %>
+                </a>
+                <% } %>
+                  <% if (currentPageCategories < totalPagesCategories) { %>
+                    <a href="#"
+                      onclick="loadPage('/admin/mon-an?page=<%= currentPage %>&pageCategories=<%= currentPageCategories + 1 %>'); return false;"
+                      class="px-4 py-2 rounded border bg-white text-gray-700 hover:bg-gray-100">Sau ›</a>
+                    <% } %>
+        </div>
+        <% } %>
+    </div>
+
+
+    <!-- Modal Thêm Món Ăn -->
+    <div id="addModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+      <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+        <h2 class="text-2xl font-semibold mb-4">Thêm Món Ăn</h2>
+        <form id="addDishForm" method="post" enctype="multipart/form-data">
+          <div class="mb-4">
+            <label for="addTenMonAn" class="block text-sm font-medium text-gray-700">Tên Món Ăn</label>
+            <input type="text" id="addTenMonAn" name="TEN_MON_AN"
+              class="mt-1 p-2 w-full border rounded-lg focus:ring-yellow-500 focus:border-yellow-500" required />
+          </div>
+          <div class="mb-4">
+            <label for="addLoaiMon" class="block text-sm font-medium text-gray-700">Loại Món</label>
+            <select id="addLoaiMon" name="ID_CHINH_LM" multiple
+              class="mt-1 p-2 w-full border rounded-lg focus:ring-yellow-500 focus:border-yellow-500" required>
+              <option value="">Chọn loại món</option>
+              <% if (categories && categories.length> 0) { %>
+                <% categories.forEach(category=> { %>
+                  <option value="<%= category.ID_CHINH_LM %>">
+                    <%= category.TEN_LM %>
+                  </option>
+                  <% }) %>
+                    <% } %>
+            </select>
+          </div>
+          <div class="mb-4">
+            <label for="addMota" class="block text-sm font-medium text-gray-700">Mô Tả</label>
+            <textarea id="addMota" name="MO_TA_MA"
+              class="mt-1 p-2 w-full border rounded-lg focus:ring-yellow-500 focus:border-yellow-500"></textarea>
+          </div>
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Hình Ảnh</label>
+            <img id="addImagePreview" src="/default.jpg"
+              class="mt-2 w-40 h-40 object-cover rounded-lg border cursor-pointer"
+              onclick="document.getElementById('addHinhAnh').click()" />
+            <input type="file" id="addHinhAnh" name="hinh_anh" accept="image/*" class="hidden" />
+          </div>
+          <div class="flex justify-end space-x-2">
+            <button type="button" onclick="closeAddModal()"
+              class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">Hủy</button>
+            <button type="submit" class="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600">Thêm</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal Sửa Món Ăn (unchanged) -->
+    <div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+      <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+        <h2 class="text-2xl font-semibold mb-4">Sửa Món Ăn</h2>
+        <form id="editDishForm" method="post" enctype="multipart/form-data">
+          <input type="hidden" id="editId" name="ID_CHINH_MA" />
+          <div class="mb-4">
+            <label for="editTenMonAn" class="block text-sm font-medium text-gray-700">Tên Món Ăn</label>
+            <input type="text" id="editTenMonAn" name="TEN_MON_AN"
+              class="mt-1 p-2 w-full border rounded-lg focus:ring-yellow-500 focus:border-yellow-500" required />
+          </div>
+          <div class="mb-4">
+            <label for="editLoaiMon" class="block text-sm font-medium text-gray-700">Loại Món</label>
+            <select id="editLoaiMon" name="ID_CHINH_LM" multiple
+              class="mt-1 p-2 w-full border rounded-lg focus:ring-yellow-500 focus:border-yellow-500" required>
+              <option value="">Chọn loại món</option>
+              <% if (categories && categories.length> 0) { %>
+                <% categories.forEach(category=> { %>
+                  <option value="<%= category.ID_CHINH_LM %>">
+                    <%= category.TEN_LM %>
+                  </option>
+                  <% }) %>
+                    <% } %>
+            </select>
+          </div>
+          <div class="mb-4">
+            <label for="editMota" class="block text-sm font-medium text-gray-700">Mô Tả</label>
+            <textarea id="editMota" name="MO_TA_MA"
+              class="mt-1 p-2 w-full border rounded-lg focus:ring-yellow-500 focus:border-yellow-500"></textarea>
+          </div>
+          <div class="mb-4">
+            <label for="editHinhAnh" class="block text-sm font-medium text-gray-700">Hình Ảnh</label>
+            <input type="file" id="editHinhAnh" name="hinh_anh" accept="image/*"
+              class="mt-1 p-2 w-full border rounded-lg focus:ring-yellow-500 focus:border-yellow-500" />
+            <img id="currentHinhAnh" src="" alt="Current Image" class="mt-2 w-32 h-32 object-cover hidden" />
+            <img id="editImagePreview" src="#" alt="Image Preview" class="mt-2 w-32 h-32 object-cover hidden" />
+          </div>
+          <div class="flex justify-end space-x-2">
+            <button type="button" onclick="closeEditModal()"
+              class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">Hủy</button>
+            <button type="submit" class="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600">Lưu</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .line-clamp-2 {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  </style>
+
+</body>

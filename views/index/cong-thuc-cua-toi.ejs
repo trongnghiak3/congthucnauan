@@ -1,0 +1,96 @@
+<div class="bg-gradient-to-br from-white to-gray-50 rounded-3xl shadow-xl p-8 card-hover mt-8 transform transition-all duration-300 hover:shadow-2xl">
+  <!-- Tiêu đề và số lượng công thức -->
+  <div class="flex items-center justify-between mb-8">
+    <h2 class="text-3xl font-extrabold text-gray-800 flex items-center gap-3 animate-fade-in">
+      <i class="fas fa-utensils text-yellow-600 text-2xl"></i> Công Thức Của Bạn
+    </h2>
+    <span class="badge bg-yellow-100 text-yellow-700 px-4 py-2 rounded-full font-semibold text-sm shadow-sm">
+      <%= userRecipes ? userRecipes.length : 0 %> công thức
+    </span>
+  </div>
+
+  <!-- Grid công thức -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+
+    <% if (userRecipes && userRecipes.length > 0) { %>
+      <% userRecipes.forEach(function(recipe) { %>
+       <div class="relative group animate-slide-up min-w-[250px] w-full">
+          <!-- Include recipeCard với thêm trạng thái duyệt -->
+          <%- include('../partials/recipeCard.ejs', { recipe: recipe }) %>
+          
+          <!-- Overlay với nút chỉnh sửa/xóa -->
+          <div class="absolute inset-0 bg-black bg-opacity-50 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-4">
+            <a href="/" class="bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 transition transform hover:scale-105">
+              <i class="fas fa-edit mr-1"></i> Sửa
+            </a>
+            <button onclick="deleteRecipe('<%= recipe.ID_CHINH_CT %>')" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition transform hover:scale-105">
+              <i class="fas fa-trash mr-1"></i> Xóa
+            </button>
+          </div>
+
+          <!-- Badge trạng thái duyệt -->
+          <span class="absolute top-2 right-2 badge <%= recipe.TRANG_THAI_DUYET_ === 'Đã duyệt' ? 'bg-green-100 text-green-700' : recipe.TRANG_THAI_DUYET_ === 'Đang chờ duyệt' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700' %> px-3 py-1 rounded-full text-xs font-medium shadow-sm">
+            <%= recipe.TRANG_THAI_DUYET_ %>
+          </span>
+        </div>
+      <% }); %>
+    <% } else { %>
+      <div class="text-center col-span-full py-20 animate-fade-in">
+        <i class="fas fa-utensils text-gray-300 text-7xl mb-6 animate-pulse"></i>
+        <p class="text-gray-700 text-2xl font-semibold">Bạn chưa đăng công thức nào!</p>
+        <a href="/dang-cong-thuc" class="mt-4 inline-block bg-yellow-500 text-white px-6 py-3 rounded-lg hover:bg-yellow-600 transition transform hover:scale-105 font-semibold text-lg" onclick="document.getElementById('openAddRecipeForm').click()">
+          <i class="fas fa-plus mr-2"></i> Đăng công thức ngay
+        </a>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<!-- JavaScript để xử lý xóa công thức -->
+<script>
+  async function deleteRecipe(recipeId) {
+    if (!confirm('Bạn có chắc muốn xóa công thức này?')) return;
+    
+    try {
+      const response = await fetch(`/delete-recipe/${recipeId}`, {
+        method: 'DELETE',
+      });
+      const data = await response.json();
+      
+      if (response.ok) {
+        alert(data.message || 'Xóa công thức thành công!');
+        window.location.reload();
+      } else {
+        alert(data.message || 'Có lỗi xảy ra khi xóa công thức!');
+      }
+    } catch (error) {
+      console.error('Lỗi:', error);
+      alert('Không thể kết nối đến server!');
+    }
+  }
+</script>
+
+<!-- CSS tùy chỉnh -->
+<style>
+  .card-hover:hover {
+    transform: translateY(-5px);
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.6s ease-in-out;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.6s ease-in-out;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+</style>

@@ -1,0 +1,241 @@
+<div class="max-w-7xl mx-auto px-4 py-12 bg-gray-50">
+  <!-- Header Recipe -->
+  <div class="bg-white rounded-3xl shadow-xl overflow-hidden mb-8">
+    <div class="relative">
+      <% if (recipe.HINH_ANH_CT) { %>
+        <img src="<%= recipe.HINH_ANH_CT %>" alt="<%= recipe.TEN_CT %>"
+          class="w-full h-[500px] object-cover transition-transform duration-500 hover:scale-105" />
+        <% } else { %>
+          <div
+            class="w-full h-[500px] bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center text-gray-500">
+            <i class="fas fa-image text-4xl"></i> Không có ảnh
+          </div>
+          <% } %>
+            <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-6">
+              <h1 class="text-4xl md:text-5xl font-bold text-white drop-shadow-lg">
+                <%= recipe.TEN_CT %>
+              </h1>
+            </div>
+    </div>
+    <div class="p-6">
+      <p class="text-gray-600 text-lg leading-relaxed mb-4">
+        <%= recipe.MOTA %>
+      </p>
+      <div class="flex flex-wrap gap-4 text-sm text-gray-500">
+        <% let minutes=0; if (recipe.THOI_GIAN_NAU) { minutes=parseInt(recipe.THOI_GIAN_NAU); } let timeDisplay='' ; if
+          (minutes>= 60) {
+          const hours = Math.floor(minutes / 60);
+          const remainingMinutes = minutes % 60;
+          timeDisplay = `${hours} giờ${remainingMinutes > 0 ? ` ${remainingMinutes} phút` : ''}`;
+          } else {
+          timeDisplay = `${minutes} phút`;
+          }
+          %>
+          <span class="flex items-center">
+            <i class="fas fa-clock mr-2 text-amber-500"></i>
+            <%= timeDisplay %>
+          </span>
+
+
+          <span class="flex items-center"><i class="fas fa-fire mr-2 text-amber-500"></i>
+            <%= recipe.DO_KHO %>
+          </span>
+          <span class="flex items-center"><i class="fas fa-utensils mr-2 text-amber-500"></i>
+            <%= recipe.SO_PHAN_AN %> người
+          </span>
+          <span class="flex items-center"><i class="fas fa-star mr-2 text-amber-500"></i>
+            <%= ratings.average %> (<%= ratings.total %> lượt)
+          </span>
+          <span class="flex items-center"><i class="fas fa-heart mr-2 text-amber-500"></i>
+            <%= likes %> lượt yêu thích
+          </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content and Sidebar -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- Main Content -->
+    <div class="lg:col-span-2">
+      <!-- Ingredients -->
+      <div class="bg-white rounded-3xl shadow-lg p-6 mb-8">
+        <h3 class="text-2xl font-semibold text-amber-600 mb-4 flex items-center">
+          <i class="fas fa-carrot mr-2 text-amber-500"></i> Nguyên liệu
+        </h3>
+        <ul class="list-disc pl-6 space-y-2 text-gray-700">
+          <% ingredients.forEach(ingredient=> { %>
+           <li>
+  <div class="flex justify-between">
+    <span>
+      <%= ingredient.TEN_NL %>
+      <%= ingredient.GHI_CHU ? `(${ingredient.GHI_CHU})` : '' %>
+    </span>
+    <span class="font-medium">
+      <%= ingredient.SO_LUONG %> <%= ingredient.DON_VI %>
+    </span>
+  </div>
+</li>
+
+            <% }) %>
+        </ul>
+      </div>
+
+      <!-- Instructions -->
+      <div class="bg-white rounded-3xl shadow-lg p-6 mb-8">
+        <h3 class="text-2xl font-semibold text-amber-600 mb-4 flex items-center">
+          <i class="fas fa-book-open mr-2 text-amber-500"></i> Hướng dẫn
+        </h3>
+        <p class="text-gray-700 leading-relaxed whitespace-pre-line">
+          <%= recipe.HUONG_DAN %>
+        </p>
+      </div>
+
+      <!-- Video -->
+      <% if (recipe.VIDEO) { %>
+        <div class="bg-white rounded-3xl shadow-lg p-6 mb-8">
+          <h3 class="text-2xl font-semibold text-amber-600 mb-4 flex items-center">
+            <i class="fas fa-video mr-2 text-amber-500"></i> Video hướng dẫn
+          </h3>
+          <video controls class="w-full rounded-xl">
+            <source src="<%= recipe.VIDEO %>" type="video/mp4">
+          </video>
+        </div>
+        <% } %>
+
+          <!-- Comments -->
+          <div class="bg-white rounded-3xl shadow-lg p-6 mb-8">
+            <h3 class="text-2xl font-semibold text-amber-600 mb-4 flex items-center">
+              <i class="fas fa-comments mr-2 text-amber-500"></i> Bình luận
+            </h3>
+            <% if (user) { %>
+              <form action="/cong-thuc/<%= recipe.ID_CHINH_CT %>/binh-luan" method="POST" class="mb-6">
+                <textarea name="noi_dung"
+                  class="w-full p-4 border rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent transition"
+                  placeholder="Viết bình luận của bạn..." required rows="4"></textarea>
+                <button type="submit"
+                  class="mt-2 px-6 py-2 bg-amber-500 text-white rounded-full hover:bg-amber-600 transition">Gửi bình
+                  luận</button>
+              </form>
+              <% } else { %>
+                <p class="text-gray-600 mb-4">Vui lòng <a href="/login" class="text-amber-600 hover:underline">đăng
+                    nhập</a> để bình luận.</p>
+                <% } %>
+
+                  <% comments.forEach(comment=> { %>
+                    <div class="border-t border-gray-200 py-4">
+                      <div class="flex items-start">
+                        <img src="<%= comment.AVARTAR_URL %>" alt="Avatar"
+                          class="w-12 h-12 rounded-full mr-4 object-cover" />
+                        <div class="flex-1">
+                          <div class="flex justify-between items-center">
+                            <p class="font-semibold text-gray-800">
+                              <%= comment.TEN_NGUOI_DUNG %>
+                            </p>
+                            <p class="text-sm text-gray-400">
+                              <%= new Date(comment.NGAY_TAO_BL).toLocaleDateString('vi-VN') %>
+                            </p>
+                          </div>
+                          <p class="text-gray-600 mt-1">
+                            <%= comment.NOI_DUNG_BL %>
+                          </p>
+                          <% if (user) { %>
+                            <form action="/binh-luan/<%= comment.ID_CHINH_BL %>/phan-hoi" method="POST" class="mt-4">
+                              <textarea name="noi_dung"
+                                class="w-full p-3 border rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent transition"
+                                placeholder="Phản hồi..." required rows="2"></textarea>
+                              <button type="submit"
+                                class="mt-2 px-4 py-1 bg-amber-500 text-white rounded-full hover:bg-amber-600 transition">Gửi
+                                phản hồi</button>
+                            </form>
+                            <% } %>
+                              <% comment.replies.forEach(reply=> { %>
+                                <div class="ml-8 mt-4 border-l-2 border-amber-200 pl-4">
+                                  <div class="flex justify-between items-center">
+                                    <p class="font-semibold text-gray-800">
+                                      <%= reply.TEN_NGUOI_DUNG %>
+                                    </p>
+                                    <p class="text-sm text-gray-400">
+                                      <%= new Date(reply.NGAY_TAO_PH).toLocaleDateString('vi-VN') %>
+                                    </p>
+                                  </div>
+                                  <p class="text-gray-600 mt-1">
+                                    <%= reply.NOI_DUNG_PH %>
+                                  </p>
+                                </div>
+                                <% }) %>
+                        </div>
+                      </div>
+                    </div>
+                    <% }) %>
+          </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="lg:col-span-1">
+      <div class="bg-white rounded-3xl shadow-lg p-6 sticky top-24">
+        <h3 class="text-xl font-semibold text-amber-600 mb-4">Thông tin công thức</h3>
+        <div class="space-y-3 text-gray-700">
+          <p class="flex items-center"><i class="fas fa-folder mr-2 text-amber-500"></i>Danh mục: <%= categories.map(c=>
+              c.TEN_LM).join(', ') %></p>
+          <p class="flex items-center"><i class="fas fa-user mr-2 text-amber-500"></i>Tác giả: <%= recipe.tac_gia %>
+          </p>
+        </div>
+        <% if (user) { %>
+          <div class="mt-6">
+            <h3 class="text-xl font-semibold text-amber-600 mb-4">Đánh giá</h3>
+            <form action="/cong-thuc/<%= recipe.ID_CHINH_CT %>/danh-gia" method="POST">
+              <select name="danh_gia"
+                class="w-full p-2 border rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent mb-4"
+                required>
+                <option value="1">1 sao</option>
+                <option value="2">2 sao</option>
+                <option value="3">3 sao</option>
+                <option value="4">4 sao</option>
+                <option value="5">5 sao</option>
+              </select>
+              <textarea name="noi_dung"
+                class="w-full p-3 border rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                placeholder="Nội dung đánh giá (tùy chọn)" rows="3"></textarea>
+              <button type="submit"
+                class="mt-2 px-6 py-2 bg-amber-500 text-white rounded-full hover:bg-amber-600 transition w-full">Gửi
+                đánh giá</button>
+            </form>
+            <form action="/cong-thuc/<%= recipe.ID_CHINH_CT %>/yeu-thich" method="POST" class="mt-4">
+              <button type="submit"
+                class="px-6 py-2 bg-<%= recipe.isFavorite ? 'red' : 'amber' %>-500 text-white rounded-full hover:bg-<%= recipe.isFavorite ? 'red' : 'amber' %>-600 transition w-full flex items-center justify-center">
+                <i class="fas fa-heart mr-2"></i>
+                <%= recipe.isFavorite ? 'Bỏ yêu thích' : 'Yêu thích' %>
+              </button>
+            </form>
+          </div>
+          <% } else { %>
+            <p class="text-gray-600 mt-4">Vui lòng <a href="/login" class="text-amber-600 hover:underline">đăng
+                nhập</a> để đánh giá hoặc yêu thích.</p>
+            <% } %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scroll to Top Button -->
+  <button id="scrollTopBtn"
+    class="fixed bottom-6 right-6 bg-amber-500 text-white p-3 rounded-full shadow-lg hover:bg-amber-600 transition opacity-0 invisible">
+    <i class="fas fa-arrow-up"></i>
+  </button>
+</div>
+
+<script>
+  // Scroll to top button functionality
+  const scrollTopBtn = document.getElementById('scrollTopBtn');
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 300) {
+      scrollTopBtn.classList.remove('opacity-0', 'invisible');
+      scrollTopBtn.classList.add('opacity-100', 'visible');
+    } else {
+      scrollTopBtn.classList.remove('opacity-100', 'visible');
+      scrollTopBtn.classList.add('opacity-0', 'invisible');
+    }
+  });
+  scrollTopBtn.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+</script>

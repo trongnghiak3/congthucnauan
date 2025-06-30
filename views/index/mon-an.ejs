@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Danh Sách Món Ăn - KemRecipe</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" />
+</head>
+<body class="bg-gray-100 font-sans text-gray-800">
+
+  <div class="max-w-7xl mx-auto px-4 py-12">
+    <!-- Tiêu đề -->
+    <!-- <div class="text-center mb-12">
+      <h1 class="text-5xl font-extrabold text-amber-600 mb-4">
+        <i class="fas fa-utensils mr-3"></i>Khám Phá Món Ngon
+      </h1>
+      <p class="text-lg text-gray-600">Thưởng thức những công thức tuyệt vời từ KemRecipe</p>
+    </div> -->
+
+    <!-- Bộ lọc -->
+    <div class="flex justify-between items-center mb-8">
+      <div class="relative w-64">
+        <input type="text" 
+               placeholder="Tìm món ăn..." 
+               class="w-full pl-10 pr-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-amber-500">
+        <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+      </div>
+      <select class="px-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-amber-500">
+        <option>Sắp xếp: Mới nhất</option>
+        <option>Phổ biến nhất</option>
+        <option>Đánh giá cao</option>
+      </select>
+    </div>
+
+    <!-- Danh sách món ăn -->
+   <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+  <% monAnList.forEach(mon => { %>
+    <div class="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 group cursor-pointer transform hover:-translate-y-2"
+         onclick="window.location.href='/cong-thuc?monAnId=<%= mon.ID_CHINH_MA %>'">
+
+      <!-- Phần hình ảnh -->
+      <div class="relative h-56 overflow-hidden">
+        <% if (mon.HINH_ANH_MA) { %>
+            <img src="<%= mon.HINH_ANH_MA %>" 
+                 alt="<%= mon.TEN_MON_AN %>" 
+                 class="w-full h-full object-cover transition-transform duration-500"/>
+        <% } else { %>
+            <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 text-gray-500 text-sm animate-pulse">
+                <i class="fas fa-image mr-2"></i>Không có ảnh
+            </div>
+        <% } %>
+
+        <!-- Thẻ danh mục (tạm ẩn nếu không có) -->
+        <% if (mon.LOAI_MON) { %>
+        <span class="absolute top-3 left-3 bg-amber-500 text-white text-xs font-semibold px-2 py-1 rounded-full">
+          <%= mon.LOAI_MON %>
+        </span>
+        <% } %>
+      </div>
+
+      <!-- Phần nội dung -->
+      <div class="p-5 space-y-3">
+        <h3 class="text-xl font-bold text-gray-800 group-hover:text-amber-600 transition-colors truncate">
+          <%= mon.TEN_MON_AN %>
+        </h3>
+        <p class="text-sm text-gray-600 line-clamp-2 leading-relaxed">
+          <%= mon.MO_TA_MA %>
+        </p>
+      </div>
+    </div>
+  <% }) %>
+</div>
+
+
+    <!-- Phân trang -->
+ <div class="flex justify-center mt-12 space-x-2">
+  <% if (pagination.currentPage > 1) { %>
+    <a href="?page=<%= pagination.currentPage - 1 %>&search=<%= filters.search %>&category=<%= filters.category %>"
+       class="px-4 py-2 bg-amber-500 rounded-full text-white font-semibold hover:bg-amber-600">
+      <i class="fas fa-chevron-left"></i>
+    </a>
+  <% } %>
+
+  <% for (let i = 1; i <= pagination.totalPages; i++) { %>
+    <a href="?page=<%= i %>&search=<%= filters.search %>&category=<%= filters.category %>"
+       class="px-4 py-2 rounded-full 
+              <%= i === pagination.currentPage ? 'bg-amber-500 text-white font-semibold' : 'hover:bg-gray-300' %>">
+      <%= i %>
+    </a>
+  <% } %>
+
+  <% if (pagination.currentPage < pagination.totalPages) { %>
+    <a href="?page=<%= pagination.currentPage + 1 %>&search=<%= filters.search %>&category=<%= filters.category %>"
+       class="px-4 py-2 bg-amber-500 rounded-full text-white font-semibold hover:bg-amber-600">
+      <i class="fas fa-chevron-right"></i>
+    </a>
+  <% } %>
+</div>
+
+  </div>
+
+</body>
+</html>

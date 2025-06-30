@@ -7,7 +7,7 @@ function bindEventListeners() {
             const formData = new FormData(e.target);
             const data = Object.fromEntries(formData);
             try {
-                const response = await fetch('/admin/ingredients', {
+                const response = await fetch('/admin/nguyen-lieu', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data),
@@ -16,7 +16,7 @@ function bindEventListeners() {
                 if (response.ok) {
                     alert('Thêm nguyên liệu thành công!');
                     closeAddModal();
-                    loadPage('/admin/ingredients?page=1', document.querySelector('#content'));
+                    loadPage('/admin/nguyen-lieu?page=1', document.querySelector('#content'));
                 } else {
                     alert(result.message);
                 }
@@ -26,46 +26,60 @@ function bindEventListeners() {
             }
         });
     } else {
-        console.error('addIngredientForm not found');
+        // console.error('addIngredientForm not found');
     }
 
     const editForm = document.getElementById('editIngredientForm');
-    if (editForm) {
-        console.log('Gắn sự kiện submit cho editIngredientForm');
-        editForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            console.log('Form submit được gọi');
-            const formData = new FormData(e.target);
-            const data = Object.fromEntries(formData);
-            const id = data.id_chinh;
-            console.log('Yêu cầu PUT tới:', `/admin/ingredients/${id}`);
-            console.log('Dữ liệu gửi:', { ten_nguyen_lieu: data.ten_nguyen_lieu, don_vi: data.don_vi });
-       try {
-    const response = await fetch(`/admin/ingredients/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            ten_nguyen_lieu: data.ten_nguyen_lieu,
-            don_vi: data.don_vi,
-        }),
-    });
+      if (editForm) {
+    console.log('Gắn sự kiện submit cho editIngredientForm');
+    editForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      console.log('Form submit được gọi');
+      const formData = new FormData(e.target);
+      const data = Object.fromEntries(formData);
+      const id = data.id_chinh;
+      const ten_nguyen_lieu = data.ten_nguyen_lieu;
+      const don_vi = data.don_vi;
 
-    const result = await response.json(); // chỉ dùng một lần
-    if (response.ok) {
-        alert('Cập nhật nguyên liệu thành công!');
-        closeEditModal();
-        loadPage('/admin/ingredients?page=1', document.querySelector('#content'));
-    } else {
-        alert(result.message);
-    }
-} catch (err) {
-    console.error('Lỗi:', err);
-    alert('Lỗi server: ' + err.message);
-}
+      // Kiểm tra dữ liệu
+      if (!id || isNaN(id)) {
+        alert('ID nguyên liệu không hợp lệ');
+        return;
+      }
+      if (!ten_nguyen_lieu || !don_vi) {
+        alert('Vui lòng điền đầy đủ tên nguyên liệu và đơn vị');
+        return;
+      }
+
+      console.log('Yêu cầu PUT tới:', `/admin/nguyen-lieu/${id}`);
+      console.log('Dữ liệu gửi:', { TEN_NL: ten_nguyen_lieu, DON_VI: don_vi });
+
+      try {
+        const response = await fetch(`/admin/nguyen-lieu/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            TEN_NL: ten_nguyen_lieu, // Sử dụng key khớp với backend
+            DON_VI: don_vi,
+          }),
         });
-    } else {
-        console.error('editIngredientForm not found');
-    }
+
+        const result = await response.json();
+        if (response.ok) {
+          alert('Cập nhật nguyên liệu thành công!');
+          closeEditModal();
+          loadPage('/admin/nguyen-lieu?page=1', document.querySelector('#content'));
+        } else {
+          alert(result.message);
+        }
+      } catch (err) {
+        console.error('Lỗi:', err);
+        alert('Lỗi server: ' + err.message);
+      }
+    });
+  } else {
+    // console.error('editIngredientForm not found');
+  }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -112,7 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
 async function confirmDeleteIngredient(id) {
   if (confirm('Bạn có chắc muốn xóa nguyên liệu này?')) {
     try {
-      const res = await fetch(`/admin/ingredients/${id}`, {
+      const res = await fetch(`/admin/nguyen-lieu/${id}`, {
         method: 'DELETE',
         headers: {
           'X-Requested-With': 'XMLHttpRequest'
@@ -129,7 +143,7 @@ async function confirmDeleteIngredient(id) {
       if (!res.ok) throw new Error(result.message || 'Có lỗi từ server.');
 
       alert('Xóa nguyên liệu thành công!');
-      loadPage('/admin/ingredients?page=1', document.querySelector('#content'));
+      loadPage('/admin/nguyen-lieu?page=1', document.querySelector('#content'));
     } catch (err) {
       console.error('Lỗi xóa nguyên liệu:', err);
       showError('Đã xảy ra lỗi: ' + err.message);
@@ -165,5 +179,5 @@ function filterRecipes() {
 
 
 
-// Gọi updateStats sau khi load dữ liệu hoặc khi thay đổi
-updateStats();
+// // Gọi updateStats sau khi load dữ liệu hoặc khi thay đổi
+// updateStats();

@@ -21,36 +21,115 @@ function previewImage(input, previewElementId) {
     preview.classList.add('hidden');
   }
 }
+   document.getElementById('hinh_anh')?.addEventListener('change', (event) => {
+        const file = event.target.files[0];
+        if (file?.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const preview = document.getElementById('image_preview');
+                preview.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+    });
 
-// Cập nhật bindEventListeners để thêm sự kiện xem trước hình ảnh
+// Cập nhật hàm loadEditCategoryPage để sử dụng editCategoryForm
+async function loadEditCategoryPage(id, element) {
+  console.log('loadEditCategoryPage called with ID:', id);
+
+  try {
+    const response = await fetch(`/admin/loai-mon/edit/${id}`, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+      },
+    });
+
+    const result = await response.json();
+    console.log('Server response:', result);
+
+    if (!response.ok) {
+      alert(result.message || `Lỗi khi lấy dữ liệu loại món (Mã lỗi: ${response.status})`);
+      return;
+    }
+
+    const modal = document.getElementById('editModal');
+    const editCategoryForm = document.getElementById('editCategoryForm');
+    if (!modal || !editCategoryForm) {
+      console.error('Edit modal or form not found!');
+      alert('Lỗi: Không tìm thấy modal hoặc form sửa!');
+      return;
+    }
+
+    // Set form action and method for PUT request
+    editCategoryForm.action = `/admin/loai-mon/${id}`;
+    editCategoryForm.method = 'POST'; // Use POST in HTML, override with _method in formData
+    modal.classList.remove('hidden');
+
+    const editIdInput = document.getElementById('editId');
+    const editTenLoaiInput = document.getElementById('editTenLoai');
+    const editSlugInput = document.getElementById('editSlug');
+    const currentHinhAnh = document.getElementById('currentHinhAnh');
+    const editImagePreview = document.getElementById('editImagePreview');
+
+    if (!editIdInput || !editTenLoaiInput || !editSlugInput || !currentHinhAnh || !editImagePreview) {
+      console.error('Form fields not found!');
+      alert('Lỗi: Không tìm thấy các trường form!');
+      return;
+    }
+
+    editIdInput.value = result.ID_CHINH_LM || '';
+    editTenLoaiInput.value = result.TEN_LM || '';
+    editSlugInput.value = result.SLUG_LM || '';
+
+    if (result.HINH_ANH_LM_URL && result.HINH_ANH_LM_URL.trim()) {
+      currentHinhAnh.src = result.HINH_ANH_LM_URL;
+      currentHinhAnh.classList.remove('hidden');
+    } else {
+      currentHinhAnh.src = '';
+      currentHinhAnh.classList.add('hidden');
+    }
+    editImagePreview.src = '#';
+    editImagePreview.classList.add('hidden');
+
+    console.log('Form values set:', {
+      id: editIdInput.value,
+      TEN_LM: editTenLoaiInput.value,
+      SLUG_LM: editSlugInput.value,
+      hinh_anh: currentHinhAnh.src,
+    });
+  } catch (error) {
+    console.error('Lỗi khi tải dữ liệu loại món:', error);
+    alert('Lỗi server: ' + (error.message || 'Không thể kết nối tới server'));
+  }
+}
+
 function bindEventListeners() {
   // Form thêm loại món
   const addCategoryForm = document.getElementById('addCategoryForm');
   if (addCategoryForm) {
     addCategoryForm.addEventListener('submit', async (e) => {
       e.preventDefault();
+      console.log('addCategoryForm submitted');
 
       const formData = new FormData(addCategoryForm);
-
-      const ten_loai = formData.get('ten_loai')?.trim();
-      const slug = formData.get('slug')?.trim();
-      if (!ten_loai || !slug) {
-        alert('Vui lòng nhập đầy đủ tên loại món và slug!');
+      const ten_lm = formData.get('TEN_LM')?.trim();
+      if (!ten_lm) {
+        alert('Vui lòng nhập tên loại món!');
         return;
       }
 
       try {
-        const response = await fetch('/admin/categories', {
+        const response = await fetch('/admin/loai-mon', {
           method: 'POST',
-          body: formData, // Gửi FormData để hỗ trợ file upload
+          body: formData,
         });
 
         const result = await response.json();
-
         if (response.ok) {
           alert('Thêm loại món thành công!');
-          closeAddModal?.();
-          loadPage('/admin/categories?page=1', document.querySelector('#content'));
+          closeAddModal();
+          loadPage('/admin/loai-mon?page=1', document.querySelector('#content'));
         } else {
           alert(result.message || 'Đã xảy ra lỗi');
         }
@@ -60,7 +139,6 @@ function bindEventListeners() {
       }
     });
 
-    // Xem trước hình ảnh cho form thêm
     const addHinhAnhInput = document.getElementById('addHinhAnh');
     if (addHinhAnhInput) {
       addHinhAnhInput.addEventListener('change', () => {
@@ -71,56 +149,69 @@ function bindEventListeners() {
     console.error('addCategoryForm not found');
   }
 
-  // Form sửa loại món
-  const editCategoryForm = document.getElementById('editCategoryForm');
-  if (editCategoryForm) {
-    editCategoryForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const formData = new FormData(e.target);
-      const id = formData.get('id_chinh');
+  // Form sửa/thêm loại món (sử dụng cùng modal)
+const editCategoryForm = document.getElementById('editCategoryForm');
+if (editCategoryForm) {
+  console.log('Gắn sự kiện submit cho editCategoryForm');
+  editCategoryForm.addEventListener('submit', async (e) => {
+    e.preventDefault(); // Ngăn hành vi mặc định của form
+    console.log('Form submit được gọi cho editCategoryForm');
 
-      console.log('Edit Form Data:', {
-        id: id,
-        ten_loai: formData.get('ten_loai'),
-        slug: formData.get('slug'),
-        hinh_anh: formData.get('hinh_anh'),
-      });
+    const formData = new FormData(editCategoryForm);
+    const id = formData.get('id_chinh');
+    const ten_lm = formData.get('TEN_LM')?.trim();
+    const slug_lm = formData.get('SLUG_LM')?.trim();
 
-      try {
-        const response = await fetch(`/admin/categories/${id}`, {
-          method: 'PUT',
-          body: formData,
-        });
+    if (!ten_lm) {
+      alert('Vui lòng nhập tên loại món!');
+      return;
+    }
 
-        const result = await response.json();
-        console.log('Server Response:', result);
+    if (!id || isNaN(id)) {
+      alert('ID loại món không hợp lệ!');
+      return;
+    }
 
-        if (response.ok) {
-          alert('Cập nhật loại món thành công!');
-          closeEditModal();
-          loadPage('/admin/categories?page=1', document.querySelector('#content'));
-        } else {
-          alert(result.message || 'Lỗi khi cập nhật loại món');
-        }
-      } catch (err) {
-        console.error('Lỗi khi cập nhật loại món:', err);
-        alert('Lỗi server: ' + err.message);
-      }
+    const url = `/admin/loai-mon/${id}`;
+    console.log(`Gửi yêu cầu PUT tới: ${url}`);
+    console.log('Dữ liệu gửi:', {
+      TEN_LM: ten_lm,
+      SLUG_LM: slug_lm,
+      hinh_anh: formData.get('hinh_anh') ? formData.get('hinh_anh').name : 'No file selected',
     });
 
-    // Xem trước hình ảnh cho form sửa
-    const editHinhAnhInput = document.getElementById('editHinhAnh');
-    if (editHinhAnhInput) {
-      editHinhAnhInput.addEventListener('change', () => {
-        previewImage(editHinhAnhInput, 'editImagePreview');
+    try {
+      const response = await fetch(url, {
+        method: 'PUT', // Luôn gửi PUT
+        body: formData,
       });
+
+      const result = await response.json();
+      console.log('Server Response:', result);
+      if (response.ok) {
+        alert('Cập nhật loại món thành công!');
+        closeEditModal();
+        loadPage('/admin/loai-mon?page=1', document.querySelector('#content'));
+      } else {
+        alert(result.message || 'Lỗi khi cập nhật loại món');
+      }
+    } catch (err) {
+      console.error('Lỗi:', err);
+      alert('Lỗi server: ' + err.message);
     }
-  } else {
-    console.error('editCategoryForm not found');
+  });
+
+  const editHinhAnhInput = document.getElementById('editHinhAnh');
+  if (editHinhAnhInput) {
+    editHinhAnhInput.addEventListener('change', () => {
+      previewImage(editHinhAnhInput, 'editImagePreview');
+    });
   }
+} else {
+  console.error('editCategoryForm not found');
+}
 }
 
-// Cập nhật closeAddModal để reset ảnh xem trước
 function closeAddModal() {
   document.getElementById('addModal').classList.add('hidden');
   document.getElementById('addCategoryForm').reset();
@@ -129,7 +220,6 @@ function closeAddModal() {
   addImagePreview.classList.add('hidden');
 }
 
-// Cập nhật closeEditModal để reset ảnh xem trước
 function closeEditModal() {
   document.getElementById('editModal').classList.add('hidden');
   document.getElementById('editCategoryForm').reset();
@@ -139,56 +229,52 @@ function closeEditModal() {
   editImagePreview.classList.add('hidden');
 }
 
-// Cập nhật openEditModal để đảm bảo ảnh xem trước được reset
-function openEditModal(id, tenLoaiEncoded, slugEncoded, hinhAnhEncoded) {
-  document.getElementById('editModal').classList.remove('hidden');
-
-  const tenLoai = decodeURIComponent(tenLoaiEncoded);
-  const slug = decodeURIComponent(slugEncoded);
-  const hinhAnh = decodeURIComponent(hinhAnhEncoded);
-
-  document.getElementById('editId').value = id;
-  document.getElementById('editTenLoai').value = tenLoai;
-  document.getElementById('editSlug').value = slug;
-
-  const currentHinhAnh = document.getElementById('currentHinhAnh');
-  const editImagePreview = document.getElementById('editImagePreview');
-  if (hinhAnh) {
-    currentHinhAnh.src = hinhAnh;
-    currentHinhAnh.classList.remove('hidden');
-  } else {
-    currentHinhAnh.classList.add('hidden');
+function confirmDeleteCategory(id) {
+  if (confirm('Bạn có chắc muốn xóa loại món này?')) {
+    fetch(`/admin/loai-mon/${id}`, {
+      method: 'DELETE',
+    })
+      .then(response => response.json())
+      .then(result => {
+        if (result.message) {
+          alert(result.message);
+          loadPage('/admin/loai-mon?page=1', document.querySelector('#content'));
+        } else {
+          alert('Lỗi khi xóa loại món');
+        }
+      })
+      .catch(error => {
+        console.error('Lỗi khi xóa loại món:', error);
+        alert('Lỗi server: ' + error.message);
+      });
   }
-  // Reset ảnh xem trước khi mở modal
-  editImagePreview.src = '#';
-  editImagePreview.classList.add('hidden');
 }
+// tìm món ăn Ẩn/hiện danh sách món ăn theo loại món
+function toggleRecipes(groupId) {
+    const rows = document.querySelectorAll(`.recipe-row[data-group="${groupId}"]`);
+    rows.forEach(row => {
+      row.classList.toggle("hidden");
+    });
+  }
+ function filterRecipes() {
+    const input = document.getElementById("searchRecipe").value.toLowerCase().trim();
+    const allRows = document.querySelectorAll(".recipe-row");
+    let count = 0;
 
-// Gọi khi trang đã load xong
+    allRows.forEach(row => {
+      const tenMonAn = row.cells[1].textContent.toLowerCase(); // cột Tên Món Ăn
+      if (tenMonAn.includes(input)) {
+        row.classList.remove("hidden");
+        count++;
+      } else {
+        row.classList.add("hidden");
+      }
+    });
+
+    document.getElementById("totalRecipes").textContent = count;
+  }
+
 document.addEventListener('DOMContentLoaded', () => {
   bindEventListeners();
+  console.log('DOM loaded, event listeners bound');
 });
-
-// Hàm filterRecipes và toggleRecipes giữ nguyên
-function filterRecipes() {
-  const input = document.getElementById('searchRecipe').value.toLowerCase();
-  const rows = document.querySelectorAll('#recipe-categories tbody tr.recipe-row');
-  let total = 0;
-  rows.forEach(row => {
-    const recipeName = row.querySelector('td:nth-child(2)')?.textContent.toLowerCase();
-    if (recipeName && recipeName.includes(input)) {
-      row.classList.remove('hidden');
-      total++;
-    } else {
-      row.classList.add('hidden');
-    }
-  });
-  document.getElementById('totalRecipes').textContent = total;
-}
-
-function toggleRecipes(groupId) {
-  const rows = document.querySelectorAll(`tr[data-group="${groupId}"]`);
-  rows.forEach(row => {
-    row.classList.toggle('hidden');
-  });
-}

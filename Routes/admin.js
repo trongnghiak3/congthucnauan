@@ -6,7 +6,7 @@ const multer = require("multer");
 const path = require("path");
 const fs = require("fs").promises;
 
-// Cấu hình multer để lưu file
+// Cấu hình multer (giữ nguyên từ mã gốc)
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     if (file.fieldname === "hinh_anh") {
@@ -38,46 +38,60 @@ const upload = multer({
   limits: { fileSize: 50 * 1024 * 1024 }, // 50MB
 });
 
+// hàm xóa thư mục id
+const deleteDirectory = async (dirPath) => {
+  try {
+    await fs.access(dirPath); // Kiểm tra thư mục tồn tại
+    await fs.rm(dirPath, { recursive: true, force: true }); // Xóa thư mục và tất cả tệp bên trong
+    console.log(`Đã xóa thư mục: ${dirPath}`);
+  } catch (error) {
+    if (error.code === "ENOENT") {
+      console.log(`Thư mục không tồn tại, bỏ qua: ${dirPath}`);
+    } else {
+      console.error(`Lỗi khi xóa thư mục ${dirPath}:`, error);
+      throw new Error(`Xóa thư mục thất bại: ${error.message}`);
+    }
+  }
+};
 // Trang quản lý admin
 router.get("/admin", ensureAdmin, (req, res) => {
   res.render("admin/admin", { title: "Trang Quản Lý", user: req.session.user });
-});
-
+})
 // Danh sách công thức
-router.get("/admin/recipes", ensureAdmin, async (req, res) => {
+router.get("/admin/cong-thuc", ensureAdmin, async (req, res) => {
   try {
-    // Lấy page và limit từ query, mặc định page=1, limit=8
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 8;
     const offset = (page - 1) * limit;
 
-    // Lấy tổng số công thức để tính tổng trang
     const countResult = await query(`SELECT COUNT(*) AS total FROM cong_thuc`);
     const total = countResult[0]?.total || 0;
     const totalPages = Math.ceil(total / limit);
 
-    // Lấy danh sách công thức với phân trang
     const recipes = await query(`
       SELECT 
-        ct.id_chinh,
-        ct.ten_ct,
-        ct.mo_ta,
-        ct.huong_dan,
-        ct.thoi_gian_nau,
-        ct.do_kho,
-        ct.so_phan_an,
-        ct.video_url,
-        ct.hinh_anh,
-        ct.ngay_tao,
-        ct.status,
-        nd.ten_dang_nhap AS user
+        ct.ID_CHINH_CT,
+        ct.TEN_CT,
+        ct.MOTA,
+        ct.HUONG_DAN,
+        ct.THOI_GIAN_NAU,
+        ct.DO_KHO,
+        ct.SO_PHAN_AN,
+        ct.VIDEO,
+        ct.HINH_ANH_CT,
+        ct.NGAY_TAO_CT,
+        ct.NGAY_CAP_NHAT_CT,
+        ct.TRANG_THAI_DUYET_,
+        nd.TEN_NGUOI_DUNG AS user,
+        ma.TEN_MON_AN
       FROM cong_thuc ct
-      LEFT JOIN nguoi_dung nd ON ct.nguoi_dung_id = nd.id_chinh
-      ORDER BY ct.ngay_tao DESC
+      LEFT JOIN nguoi_dung nd ON ct.ID_CHINH_ND = nd.ID_CHINH_ND
+      LEFT JOIN mon_an ma ON ct.ID_CHINH_MA = ma.ID_CHINH_MA
+      ORDER BY ct.NGAY_TAO_CT DESC
       LIMIT ? OFFSET ?
     `, [limit, offset]);
 
-    res.render("admin/partials/recipes", {
+    res.render("admin/cong-thuc", {
       title: "Danh Sách Công Thức",
       recipes: recipes || [],
       currentPage: page,
@@ -90,16 +104,20 @@ router.get("/admin/recipes", ensureAdmin, async (req, res) => {
   }
 });
 
-router.get("/admin/recipes/add", ensureLoggedIn, async (req, res) => {
+// Trang thêm công thức
+router.get("/admin/cong-thuc/add", ensureLoggedIn, async (req, res) => {
   try {
     const loai_mon = await query("SELECT * FROM loai_mon");
     const nguyen_lieu = await query("SELECT * FROM nguyen_lieu");
-    res.render("admin/partials/add-recipe", {
-      recipe: null, // Đã thêm từ câu trả lời trước
+    const mon_an = await query("SELECT * FROM mon_an");
+    res.render("admin/partials/them-cong-thuc", {
+      recipe: null,
       loai_mon: loai_mon || [],
       nguyen_lieu: nguyen_lieu || [],
-      selectedLoaiMon: [], // Thêm mảng rỗng vì không có loại món được chọn
-      selectedNguyenLieu: [], // Thêm mảng rỗng vì không có nguyên liệu được chọn
+      mon_an: mon_an || [],
+      selectedLoaiMon: [],
+      selectedNguyenLieu: [],
+      selectedMonAn: null,
       title: "Thêm Công Thức",
       user: req.session.user,
       layout: false,
@@ -113,17 +131,18 @@ router.get("/admin/recipes/add", ensureLoggedIn, async (req, res) => {
     });
   }
 });
-// Trang chi tiết công thức
-router.get("/admin/recipes/edit/:id", ensureLoggedIn, async (req, res) => {
+
+// Trang chỉnh sửa công thức
+router.get("/admin/cong-thuc/edit/:id", ensureLoggedIn, async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Lấy chi tiết công thức
     const [recipe] = await query(
-      `SELECT ct.*, nd.ten_dang_nhap AS user
+      `SELECT ct.*, nd.TEN_NGUOI_DUNG AS user, ma.TEN_MON_AN
        FROM cong_thuc ct
-       LEFT JOIN nguoi_dung nd ON ct.nguoi_dung_id = nd.id_chinh
-       WHERE ct.id_chinh = ?`,
+       LEFT JOIN nguoi_dung nd ON ct.ID_CHINH_ND = nd.ID_CHINH_ND
+       LEFT JOIN mon_an ma ON ct.ID_CHINH_MA = ma.ID_CHINH_MA
+       WHERE ct.ID_CHINH_CT = ?`,
       [id]
     );
 
@@ -135,35 +154,34 @@ router.get("/admin/recipes/edit/:id", ensureLoggedIn, async (req, res) => {
       });
     }
 
-    // Lấy loại món đã chọn của công thức
     const selectedLoaiMon = await query(
-      `SELECT lm.id_chinh, lm.ten_loai
-       FROM cong_thuc_loai_mon ctlm
-       JOIN loai_mon lm ON ctlm.loai_mon_id = lm.id_chinh
-       WHERE ctlm.cong_thuc_id = ?`,
-      [id]
+      `SELECT lm.ID_CHINH_LM, lm.TEN_LM
+       FROM mon_an_loai_mon malm
+       JOIN loai_mon lm ON malm.ID_CHINH_LM = lm.ID_CHINH_LM
+       WHERE malm.ID_CHINH_MA = ?`,
+      [recipe.ID_CHINH_MA]
     );
 
-    // Lấy nguyên liệu đã chọn của công thức
     const selectedNguyenLieu = await query(
-      `SELECT ctnl.nguyen_lieu_id, nl.ten_nguyen_lieu, ctnl.so_luong, ctnl.ghi_chu, nl.don_vi
+      `SELECT ctnl.ID_CHINH_NL, nl.TEN_NL, ctnl.SO_LUONG, ctnl.GHI_CHU, nl.DON_VI
        FROM cong_thuc_nguyen_lieu ctnl
-       JOIN nguyen_lieu nl ON ctnl.nguyen_lieu_id = nl.id_chinh
-       WHERE ctnl.cong_thuc_id = ?`,
+       JOIN nguyen_lieu nl ON ctnl.ID_CHINH_NL = nl.ID_CHINH_NL
+       WHERE ctnl.ID_CHINH_CT = ?`,
       [id]
     );
 
-    // Lấy danh sách tất cả loại món và nguyên liệu
     const loai_mon = await query("SELECT * FROM loai_mon");
     const nguyen_lieu = await query("SELECT * FROM nguyen_lieu");
+    const mon_an = await query("SELECT * FROM mon_an");
 
-    // Render nội dung partial cho AJAX
-    res.render("admin/partials/add-recipe", {
+    res.render("admin/partials/them-cong-thuc", {
       recipe: recipe || null,
       loai_mon: loai_mon || [],
       nguyen_lieu: nguyen_lieu || [],
-      selectedLoaiMon: selectedLoaiMon ? selectedLoaiMon.map(lm => lm.id_chinh.toString()) : [],
+      mon_an: mon_an || [],
+      selectedLoaiMon: selectedLoaiMon ? selectedLoaiMon.map(lm => lm.ID_CHINH_LM.toString()) : [],
       selectedNguyenLieu: selectedNguyenLieu || [],
+      selectedMonAn: recipe.ID_CHINH_MA ? recipe.ID_CHINH_MA.toString() : null,
       title: "Chỉnh sửa Công Thức",
       user: req.session.user,
       layout: false,
@@ -177,218 +195,10 @@ router.get("/admin/recipes/edit/:id", ensureLoggedIn, async (req, res) => {
     });
   }
 });
-// Thêm công thức mới, upload ảnh và video
+
+// Thêm công thức mới
 router.post(
-  '/admin/recipes',
-  ensureAdmin,
-  upload.fields([
-    { name: 'hinh_anh', maxCount: 1 },
-    { name: 'video_file', maxCount: 1 },
-  ]),
-  async (req, res) => {
-    try {
-      console.log('req.body:', JSON.stringify(req.body, null, 2));
-      console.log('req.files:', req.files);
-
-      const normalizeArray = (input) => {
-        if (!input) return [];
-        if (Array.isArray(input)) return input;
-        if (typeof input === 'string') return [input];
-        return [];
-      };
-
-      const {
-        ten_ct,
-        mo_ta,
-        thoi_gian_nau,
-        do_kho,
-        so_phan_an,
-        loai_mon,
-        nguyen_lieu_id,
-        ten_nguyen_lieu_khac,
-        don_vi_khac,
-        so_luong,
-        ghi_chu,
-        ten_buoc,
-        buoc_nau,
-      } = req.body;
-
-      const nguyenLieuIds = normalizeArray(nguyen_lieu_id);
-      const tenNguyenLieuKhacs = normalizeArray(ten_nguyen_lieu_khac);
-      const donViKhacs = normalizeArray(don_vi_khac);
-      const soLuongs = normalizeArray(so_luong);
-      const ghiChus = normalizeArray(ghi_chu);
-
-      console.log('Nguyên liệu ID:', nguyenLieuIds);
-      console.log('Tên nguyên liệu khác:', tenNguyenLieuKhacs);
-      console.log('Đơn vị khác:', donViKhacs);
-      console.log('Số lượng:', soLuongs);
-      console.log('Ghi chú:', ghiChus);
-
-      if (!ten_ct?.trim() || !mo_ta?.trim()) {
-        return res.status(400).json({ message: 'Tên công thức và mô tả là bắt buộc!' });
-      }
-
-      const tenBuoc = normalizeArray(ten_buoc);
-      const buocNau = normalizeArray(buoc_nau);
-
-      if (
-        tenBuoc.length === 0 ||
-        buocNau.length === 0 ||
-        tenBuoc.length !== buocNau.length ||
-        tenBuoc.some((t) => !t.trim()) ||
-        buocNau.some((b) => !b.trim())
-      ) {
-        return res.status(400).json({ message: 'Tên bước và mô tả bước là bắt buộc!' });
-      }
-
-      if (soLuongs.length === 0) {
-        return res.status(400).json({ message: 'Vui lòng thêm ít nhất một nguyên liệu!' });
-      }
-
-      const userId = req.session.user.id_chinh;
-
-      // Thêm công thức (với video_url, hinh_anh tạm để null)
-      const result = await query(
-        `INSERT INTO cong_thuc 
-         (nguoi_dung_id, ten_ct, mo_ta, huong_dan, thoi_gian_nau, do_kho, so_phan_an, video_url, hinh_anh, status)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Đã duyệt')`,
-        [
-          userId,
-          ten_ct.trim(),
-          mo_ta.trim(),
-          tenBuoc.map((ten, i) => `Bước ${i + 1}: ${ten.trim()} - ${buocNau[i].trim()}`).join('\n\n'),
-          thoi_gian_nau || null,
-          do_kho || null,
-          so_phan_an || null,
-          null,
-          null,
-        ]
-      );
-
-      const recipeId = result.insertId;
-
-      // Tạo thư mục lưu file
-      const imageDir = path.join(__dirname, '..', 'public', 'uploads', 'images', 'congthuc', String(recipeId));
-      const videoDir = path.join(__dirname, '..', 'public', 'uploads', 'videos', 'congthuc', String(recipeId));
-
-      await fs.mkdir(imageDir, { recursive: true });
-      await fs.mkdir(videoDir, { recursive: true });
-
-      const getUniqueFileName = async (dir, filename) => {
-        const ext = path.extname(filename);
-        const name = path.basename(filename, ext);
-        let newName = filename,
-          i = 1;
-        while (true) {
-          try {
-            await fs.access(path.join(dir, newName));
-            newName = `${name}_${i++}${ext}`;
-          } catch {
-            return newName;
-          }
-        }
-      };
-
-      const processFileUpload = async (type, dir, fileField) => {
-        if (!req.files[fileField]) return null;
-        const file = req.files[fileField][0];
-        const uniqueName = await getUniqueFileName(dir, file.originalname);
-        await fs.rename(file.path, path.join(dir, uniqueName));
-       return `/uploads/${type}/congthuc/${recipeId}/${uniqueName}`;
-      };
-
-      const finalImagePath = await processFileUpload('images', imageDir, 'hinh_anh');
-      const finalVideoPath = await processFileUpload('videos', videoDir, 'video_file');
-
-      await query(`UPDATE cong_thuc SET hinh_anh = ?, video_url = ? WHERE id_chinh = ?`, [
-        finalImagePath,
-        finalVideoPath,
-        recipeId,
-      ]);
-
-      // Xử lý loại món
-      const loaiMonArray = normalizeArray(loai_mon);
-      if (loaiMonArray.length > 0) {
-        const values = loaiMonArray.flatMap((lm) => [recipeId, lm]);
-        const placeholders = loaiMonArray.map(() => '(?, ?)').join(', ');
-        await query(
-          `INSERT INTO cong_thuc_loai_mon (cong_thuc_id, loai_mon_id) VALUES ${placeholders}`,
-          values
-        );
-      }
-
-      // Xử lý nguyên liệu
-      const nguyenLieuData = [];
-      const maxLen = Math.max(
-        nguyenLieuIds.length,
-        tenNguyenLieuKhacs.length,
-        donViKhacs.length,
-        soLuongs.length,
-        ghiChus.length
-      );
-
-      for (let i = 0; i < maxLen; i++) {
-        const idRaw = nguyenLieuIds[i] || '';
-        const id = idRaw === '' || idRaw === undefined ? null : idRaw;
-        const ten = tenNguyenLieuKhacs[i] || '';
-        const donVi = donViKhacs[i] || '';
-        const sl = parseFloat(soLuongs[i]) || 0;
-        const ghiChu = ghiChus[i] || '';
-
-        if (sl <= 0) continue;
-
-        let nguyenLieuId = id;
-
-        if (!id && ten.trim()) {
-          // Kiểm tra nguyên liệu khác đã tồn tại chưa
-          const existing = await query(
-            'SELECT id_chinh FROM nguyen_lieu WHERE ten_nguyen_lieu = ? LIMIT 1',
-            [ten.trim()]
-          );
-          if (existing.length > 0) {
-            // Xóa công thức vừa thêm và trả lỗi để tránh dữ liệu rác
-            await query('DELETE FROM cong_thuc WHERE id_chinh = ?', [recipeId]);
-            return res.status(400).json({
-              message: `Nguyên liệu "${ten.trim()}" đã tồn tại, vui lòng nhập tên nguyên liệu khác!`,
-            });
-          }
-
-          // Thêm nguyên liệu mới
-          const insertResult = await query(
-            'INSERT INTO nguyen_lieu (ten_nguyen_lieu, don_vi) VALUES (?, ?)',
-            [ten.trim(), donVi.trim()]
-          );
-          nguyenLieuId = insertResult.insertId;
-        }
-
-        if (nguyenLieuId) {
-          nguyenLieuData.push([recipeId, nguyenLieuId, sl, ghiChu]);
-        }
-      }
-
-      if (nguyenLieuData.length > 0) {
-        const placeholders = nguyenLieuData.map(() => '(?, ?, ?, ?)').join(', ');
-        const flatValues = nguyenLieuData.flat();
-        await query(
-          `INSERT INTO cong_thuc_nguyen_lieu (cong_thuc_id, nguyen_lieu_id, so_luong, ghi_chu) VALUES ${placeholders}`,
-          flatValues
-        );
-      }
-
-      return res.status(201).json({ message: 'Thêm công thức thành công!' });
-    } catch (err) {
-      console.error('Lỗi server:', err);
-      return res.status(500).json({ message: 'Lỗi server: ' + err.message });
-    }
-  }
-);
-
-
-
-// Cập nhật công thức
-router.put(
-  "/admin/recipes/:id",
+  "/admin/cong-thuc",
   ensureAdmin,
   upload.fields([
     { name: "hinh_anh", maxCount: 1 },
@@ -396,54 +206,39 @@ router.put(
   ]),
   async (req, res) => {
     try {
-      const recipeId = req.params.id;
-      console.log("req.body:", JSON.stringify(req.body, null, 2));
-      console.log("req.files:", req.files);
+      if (!req.session.user || !req.session.user.ID_CHINH_ND) {
+        return res.status(401).json({ message: "Vui lòng đăng nhập lại!" });
+      }
 
-      // Chuẩn hóa mảng đầu vào
-      const normalizeArray = (input) => {
-        if (!input) return [];
-        if (Array.isArray(input)) return input;
-        if (typeof input === "string") return [input];
-        return [];
-      };
+      const normalizeArray = (input) => Array.isArray(input) ? input : (input ? [input] : []);
 
       const {
-        ten_ct,
-        mo_ta,
-        thoi_gian_nau,
-        do_kho,
-        so_phan_an,
-        loai_mon,
-        nguyen_lieu_id,
-        ten_nguyen_lieu_khac,
-        don_vi_khac,
-        so_luong,
-        ghi_chu,
-        ten_buoc,
-        buoc_nau,
+        TEN_CT, MOTA, THOI_GIAN_NAU, DO_KHO, SO_PHAN_AN,
+        ID_CHINH_MA, nguyen_lieu_id, ten_nguyen_lieu_khac,
+        don_vi_khac, so_luong, ghi_chu,
+        ten_buoc, buoc_nau
       } = req.body;
 
+      const userId = req.session.user.ID_CHINH_ND;
+
+      // Normalize các trường
       const nguyenLieuIds = normalizeArray(nguyen_lieu_id);
       const tenNguyenLieuKhacs = normalizeArray(ten_nguyen_lieu_khac);
       const donViKhacs = normalizeArray(don_vi_khac);
       const soLuongs = normalizeArray(so_luong);
       const ghiChus = normalizeArray(ghi_chu);
+      const tenBuocArray = normalizeArray(ten_buoc);
+      const buocNauArray = normalizeArray(buoc_nau);
 
-      // Kiểm tra các trường bắt buộc
-      if (!ten_ct?.trim() || !mo_ta?.trim()) {
-        return res.status(400).json({ message: "Tên công thức và mô tả là bắt buộc!" });
+      // Validate bắt buộc
+      if (!TEN_CT?.trim() || !MOTA?.trim() || !ID_CHINH_MA) {
+        return res.status(400).json({ message: "Tên công thức, mô tả và món ăn là bắt buộc!" });
       }
 
-      const tenBuoc = normalizeArray(ten_buoc);
-      const buocNau = normalizeArray(buoc_nau);
-
       if (
-        tenBuoc.length === 0 ||
-        buocNau.length === 0 ||
-        tenBuoc.length !== buocNau.length ||
-        tenBuoc.some((t) => !t.trim()) ||
-        buocNau.some((b) => !b.trim())
+        tenBuocArray.length === 0 || buocNauArray.length === 0 ||
+        tenBuocArray.length !== buocNauArray.length ||
+        tenBuocArray.some(t => !t.trim()) || buocNauArray.some(b => !b.trim())
       ) {
         return res.status(400).json({ message: "Tên bước và mô tả bước là bắt buộc!" });
       }
@@ -452,91 +247,71 @@ router.put(
         return res.status(400).json({ message: "Vui lòng thêm ít nhất một nguyên liệu!" });
       }
 
-      // Kiểm tra công thức có tồn tại không
-      const [existingRecipe] = await query(`SELECT * FROM cong_thuc WHERE id_chinh = ?`, [recipeId]);
-      if (!existingRecipe) {
-        return res.status(404).json({ message: "Công thức không tồn tại." });
-      }
+      // Kiểm tra món ăn tồn tại
+      const [monAn] = await query(`SELECT ID_CHINH_MA FROM mon_an WHERE ID_CHINH_MA = ?`, [ID_CHINH_MA]);
+      if (!monAn) return res.status(400).json({ message: "Món ăn không tồn tại!" });
 
-      // Xử lý tải lên tệp
-     const imageDir = path.join(__dirname, '..', 'public', 'uploads', 'images', 'congthuc', String(recipeId));
-      const videoDir = path.join(__dirname, '..', 'public', 'uploads', 'videos', 'congthuc', String(recipeId));
-      await fs.mkdir(imageDir, { recursive: true });
-      await fs.mkdir(videoDir, { recursive: true });
+      const huongDan = tenBuocArray.map((ten, i) =>
+        `Bước ${i + 1}: ${ten.trim()} - ${buocNauArray[i].trim()}`
+      ).join("\n\n");
 
-      const getUniqueFileName = async (dir, filename) => {
-        const ext = path.extname(filename);
-        const name = path.basename(filename, ext);
-        let newName = filename,
-          i = 1;
+      // Insert công thức trước
+      const result = await query(`
+        INSERT INTO cong_thuc 
+        (ID_CHINH_ND, ID_CHINH_MA, TEN_CT, MOTA, HUONG_DAN, THOI_GIAN_NAU, DO_KHO, SO_PHAN_AN, VIDEO, HINH_ANH_CT, NGAY_TAO_CT, TRANG_THAI_DUYET_)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, CURDATE(), 'Đã duyệt')
+      `, [
+        userId, ID_CHINH_MA, TEN_CT.trim(), MOTA.trim(),
+        huongDan, THOI_GIAN_NAU || null, DO_KHO || null, SO_PHAN_AN || null
+      ]);
+
+      const recipeId = result.insertId;
+
+      // Upload file
+      const createDir = async (type) => {
+        const dir = path.join(__dirname, "..", "public", "Uploads", type, "congthuc", String(recipeId));
+        await fs.mkdir(dir, { recursive: true });
+        return dir;
+      };
+
+      const getUniqueFileName = async (dir, original) => {
+        const ext = path.extname(original);
+        const name = path.basename(original, ext);
+        let filename = original;
+        let i = 1;
         while (true) {
           try {
-            await fs.access(path.join(dir, newName));
-            newName = `${name}_${i++}${ext}`;
+            await fs.access(path.join(dir, filename));
+            filename = `${name}_${i++}${ext}`;
           } catch {
-            return newName;
+            return filename;
           }
         }
       };
 
-      const processFileUpload = async (type, dir, fileField) => {
+      const saveFile = async (fileField, type) => {
         if (!req.files[fileField]) return null;
         const file = req.files[fileField][0];
+        const dir = await createDir(type);
         const uniqueName = await getUniqueFileName(dir, file.originalname);
         await fs.rename(file.path, path.join(dir, uniqueName));
         return `/uploads/${type}/congthuc/${recipeId}/${uniqueName}`;
       };
 
-      const finalImagePath = await processFileUpload("images", imageDir, "hinh_anh") || existingRecipe.hinh_anh;
-      const finalVideoPath = await processFileUpload("videos", videoDir, "video_file") || existingRecipe.video_url;
+      const finalImagePath = await saveFile("hinh_anh", "images");
+      const finalVideoPath = await saveFile("video_file", "videos");
 
-      // Cập nhật công thức
-      await query(
-        `UPDATE cong_thuc 
-         SET ten_ct = ?, mo_ta = ?, huong_dan = ?, thoi_gian_nau = ?, do_kho = ?, so_phan_an = ?, hinh_anh = ?, video_url = ?, status = 'Đã duyệt'
-         WHERE id_chinh = ?`,
-        [
-          ten_ct.trim(),
-          mo_ta.trim(),
-          tenBuoc.map((ten, i) => `Bước ${i + 1}: ${ten.trim()} - ${buocNau[i].trim()}`).join("\n\n"),
-          thoi_gian_nau || null,
-          do_kho || null,
-          so_phan_an || null,
-          finalImagePath,
-          finalVideoPath,
-          recipeId,
-        ]
+      await query(`UPDATE cong_thuc SET HINH_ANH_CT = ?, VIDEO = ? WHERE ID_CHINH_CT = ?`,
+        [finalImagePath, finalVideoPath, recipeId]
       );
-
-      // Xóa dữ liệu liên quan hiện có
-      await query(`DELETE FROM cong_thuc_loai_mon WHERE cong_thuc_id = ?`, [recipeId]);
-      await query(`DELETE FROM cong_thuc_nguyen_lieu WHERE cong_thuc_id = ?`, [recipeId]);
-
-      // Xử lý loại món
-      const loaiMonArray = normalizeArray(loai_mon);
-      if (loaiMonArray.length > 0) {
-        const values = loaiMonArray.flatMap((lm) => [recipeId, lm]);
-        const placeholders = loaiMonArray.map(() => "(?, ?)").join(", ");
-        await query(
-          `INSERT INTO cong_thuc_loai_mon (cong_thuc_id, loai_mon_id) VALUES ${placeholders}`,
-          values
-        );
-      }
 
       // Xử lý nguyên liệu
       const nguyenLieuData = [];
-      const maxLen = Math.max(
-        nguyenLieuIds.length,
-        tenNguyenLieuKhacs.length,
-        donViKhacs.length,
-        soLuongs.length,
-        ghiChus.length
-      );
+      const seenIngredients = new Set();
 
-      for (let i = 0; i < maxLen; i++) {
-        const idRaw = nguyenLieuIds[i] || "";
-        const id = idRaw === "" || idRaw === undefined ? null : idRaw;
-        const ten = tenNguyenLieuKhacs[i] || "";
+      for (let i = 0; i < soLuongs.length; i++) {
+        const id = nguyenLieuIds[i] || null;
+        const ten = (tenNguyenLieuKhacs[i] || "").trim();
         const donVi = donViKhacs[i] || "";
         const sl = parseFloat(soLuongs[i]) || 0;
         const ghiChu = ghiChus[i] || "";
@@ -545,39 +320,217 @@ router.put(
 
         let nguyenLieuId = id;
 
-        if (!id && ten.trim()) {
-          const existing = await query(
-            "SELECT id_chinh FROM nguyen_lieu WHERE ten_nguyen_lieu = ? LIMIT 1",
-            [ten.trim()]
-          );
-          if (existing.length > 0) {
+        if (!id && ten) {
+          const [existing] = await query("SELECT ID_CHINH_NL FROM nguyen_lieu WHERE TEN_NL = ?", [ten]);
+          if (existing) {
+            // Xoá công thức vừa tạo để tránh rác DB
+            await query("DELETE FROM cong_thuc WHERE ID_CHINH_CT = ?", [recipeId]);
             return res.status(400).json({
-              message: `Nguyên liệu "${ten.trim()}" đã tồn tại, vui lòng nhập tên nguyên liệu khác!`,
+              message: `Nguyên liệu "${ten}" đã tồn tại, vui lòng chọn từ danh sách!`
             });
           }
-
-          const insertResult = await query(
-            "INSERT INTO nguyen_lieu (ten_nguyen_lieu, don_vi) VALUES (?, ?)",
-            [ten.trim(), donVi.trim()]
-          );
-          nguyenLieuId = insertResult.insertId;
+          const insert = await query("INSERT INTO nguyen_lieu (TEN_NL, DON_VI) VALUES (?, ?)", [ten, donVi]);
+          nguyenLieuId = insert.insertId;
         }
 
-        if (nguyenLieuId) {
-          nguyenLieuData.push([recipeId, nguyenLieuId, sl, ghiChu]);
+        if (!nguyenLieuId) continue;
+
+        // NGĂN CHẶN TRÙNG LẶP nguyên liệu trong cùng công thức
+        const key = `${recipeId}-${nguyenLieuId}`;
+        if (seenIngredients.has(key)) {
+          console.warn(`Trùng lặp nguyên liệu: ID_CHINH_CT=${recipeId}, ID_CHINH_NL=${nguyenLieuId}`);
+          continue;
         }
+        seenIngredients.add(key);
+
+        nguyenLieuData.push([recipeId, nguyenLieuId, sl, ghiChu]);
       }
 
-      if (nguyenLieuData.length > 0) {
-        const placeholders = nguyenLieuData.map(() => "(?, ?, ?, ?)").join(", ");
-        const flatValues = nguyenLieuData.flat();
-        await query(
-          `INSERT INTO cong_thuc_nguyen_lieu (cong_thuc_id, nguyen_lieu_id, so_luong, ghi_chu) VALUES ${placeholders}`,
-          flatValues
-        );
+      // Ghi log để debug
+      console.log("Dữ liệu nguyên liệu sẽ chèn:", nguyenLieuData);
+
+      // Kiểm tra dữ liệu nguyên liệu
+      if (nguyenLieuData.length === 0) {
+        // Xoá công thức vừa tạo để tránh rác DB
+        await query("DELETE FROM cong_thuc WHERE ID_CHINH_CT = ?", [recipeId]);
+        return res.status(400).json({ message: "Không có nguyên liệu hợp lệ để thêm!" });
       }
 
-      return res.json({ message: "Cập nhật công thức thành công!" });
+      // Chèn nguyên liệu với ON DUPLICATE KEY UPDATE
+      const placeholders = nguyenLieuData.map(() => "(?, ?, ?, ?)").join(", ");
+      const values = nguyenLieuData.flat();
+      await query(`
+        INSERT INTO cong_thuc_nguyen_lieu (ID_CHINH_CT, ID_CHINH_NL, SO_LUONG, GHI_CHU)
+        VALUES ${placeholders}
+        ON DUPLICATE KEY UPDATE SO_LUONG = VALUES(SO_LUONG), GHI_CHU = VALUES(GHI_CHU)
+      `, values);
+
+      return res.status(201).json({ message: "Thêm công thức thành công!" });
+
+    } catch (err) {
+      console.error("Lỗi server:", err);
+      // Xoá công thức nếu có lỗi để tránh rác DB
+      if (recipeId) {
+        await query("DELETE FROM cong_thuc WHERE ID_CHINH_CT = ?", [recipeId]);
+      }
+      return res.status(500).json({ message: "Lỗi server: " + err.message });
+    }
+  }
+);
+
+
+// Cập nhật công thức
+router.put(
+  "/admin/cong-thuc/:id",
+  ensureAdmin,
+  upload.fields([
+    { name: "hinh_anh", maxCount: 1 },
+    { name: "video_file", maxCount: 1 },
+  ]),
+  async (req, res) => {
+    try {
+      const recipeId = req.params.id;
+
+      if (!req.session.user || !req.session.user.ID_CHINH_ND) {
+        return res.status(401).json({ message: "Vui lòng đăng nhập lại!" });
+      }
+
+      const normalizeArray = (input) => Array.isArray(input) ? input : (input ? [input] : []);
+
+      const {
+        TEN_CT, MOTA, THOI_GIAN_NAU, DO_KHO, SO_PHAN_AN,
+        ID_CHINH_MA, nguyen_lieu_id, ten_nguyen_lieu_khac,
+        don_vi_khac, so_luong, ghi_chu,
+        ten_buoc, buoc_nau
+      } = req.body;
+
+      const nguyenLieuIds = normalizeArray(nguyen_lieu_id);
+      const tenNguyenLieuKhacs = normalizeArray(ten_nguyen_lieu_khac);
+      const donViKhacs = normalizeArray(don_vi_khac);
+      const soLuongs = normalizeArray(so_luong);
+      const ghiChus = normalizeArray(ghi_chu);
+      const tenBuocArray = normalizeArray(ten_buoc);
+      const buocNauArray = normalizeArray(buoc_nau);
+
+      if (!TEN_CT?.trim() || !MOTA?.trim() || !ID_CHINH_MA) {
+        return res.status(400).json({ message: "Tên công thức, mô tả và món ăn là bắt buộc!" });
+      }
+
+      if (
+        tenBuocArray.length === 0 || buocNauArray.length === 0 ||
+        tenBuocArray.length !== buocNauArray.length ||
+        tenBuocArray.some(t => !t.trim()) || buocNauArray.some(b => !b.trim())
+      ) {
+        return res.status(400).json({ message: "Tên bước và mô tả bước là bắt buộc!" });
+      }
+
+      if (soLuongs.length === 0) {
+        return res.status(400).json({ message: "Vui lòng thêm ít nhất một nguyên liệu!" });
+      }
+
+      const [monAn] = await query("SELECT ID_CHINH_MA FROM mon_an WHERE ID_CHINH_MA = ?", [ID_CHINH_MA]);
+      if (!monAn) return res.status(400).json({ message: "Món ăn không tồn tại!" });
+
+      const huongDan = tenBuocArray.map((ten, i) =>
+        `Bước ${i + 1}: ${ten.trim()} - ${buocNauArray[i].trim()}`
+      ).join("\n\n");
+
+      await query(`
+          UPDATE cong_thuc SET 
+          TEN_CT = ?, MOTA = ?, HUONG_DAN = ?, 
+          THOI_GIAN_NAU = ?, DO_KHO = ?, SO_PHAN_AN = ?, 
+          ID_CHINH_MA = ?, NGAY_CAP_NHAT_CT = NOW()
+        WHERE ID_CHINH_CT = ?
+      `, [
+        TEN_CT.trim(), MOTA.trim(), huongDan,
+        THOI_GIAN_NAU || null, DO_KHO || null, SO_PHAN_AN || null,
+        ID_CHINH_MA, recipeId
+      ]);
+
+      const createDir = async (type) => {
+        const dir = path.join(__dirname, "..", "public", "Uploads", type, "congthuc", String(recipeId));
+        await fs.mkdir(dir, { recursive: true });
+        return dir;
+      };
+
+      const getUniqueFileName = async (dir, original) => {
+        const ext = path.extname(original);
+        const name = path.basename(original, ext);
+        let filename = original;
+        let i = 1;
+        while (true) {
+          try {
+            await fs.access(path.join(dir, filename));
+            filename = `${name}_${i++}${ext}`;
+          } catch {
+            return filename;
+          }
+        }
+      };
+
+      const saveFile = async (fileField, type) => {
+        if (!req.files[fileField]) return null;
+        const file = req.files[fileField][0];
+        const dir = await createDir(type);
+        const uniqueName = await getUniqueFileName(dir, file.originalname);
+        await fs.rename(file.path, path.join(dir, uniqueName));
+        return `/uploads/${type}/congthuc/${recipeId}/${uniqueName}`;
+      };
+
+      const finalImagePath = await saveFile("hinh_anh", "images");
+      const finalVideoPath = await saveFile("video_file", "videos");
+
+      await query(`
+        UPDATE cong_thuc 
+        SET HINH_ANH_CT = COALESCE(?, HINH_ANH_CT),
+            VIDEO = COALESCE(?, VIDEO)
+        WHERE ID_CHINH_CT = ?
+      `, [finalImagePath, finalVideoPath, recipeId]);
+
+      // Xóa nguyên liệu cũ
+      // Xóa nguyên liệu cũ
+      // Xóa nguyên liệu cũ
+      await query("DELETE FROM cong_thuc_nguyen_lieu WHERE ID_CHINH_CT = ?", [recipeId]);
+
+      const nguyenLieuData = [];
+      for (let i = 0; i < soLuongs.length; i++) {
+        const id = nguyenLieuIds[i] || null;
+        const ten = (tenNguyenLieuKhacs[i] || "").trim();
+        const donVi = donViKhacs[i] || "";
+        const sl = parseFloat(soLuongs[i]) || 0;
+        const ghiChu = ghiChus[i] || "";
+
+        if (sl <= 0) continue;
+
+        let nguyenLieuId = id;
+        if (!id && ten) {
+          const [existing] = await query("SELECT ID_CHINH_NL FROM nguyen_lieu WHERE TEN_NL = ?", [ten]);
+          if (existing) {
+            nguyenLieuId = existing.ID_CHINH_NL;
+          } else {
+            const insert = await query("INSERT INTO nguyen_lieu (TEN_NL, DON_VI) VALUES (?, ?)", [ten, donVi]);
+            nguyenLieuId = insert.insertId;
+          }
+        }
+
+        if (!nguyenLieuId) continue;
+
+        nguyenLieuData.push([recipeId, nguyenLieuId, sl, ghiChu]);
+      }
+
+      if (nguyenLieuData.length === 0) {
+        return res.status(400).json({ message: "Không có nguyên liệu hợp lệ để cập nhật!" });
+      }
+
+      const placeholders = nguyenLieuData.map(() => "(?, ?, ?, ?)").join(", ");
+      const values = nguyenLieuData.flat();
+      await query(`
+  INSERT INTO cong_thuc_nguyen_lieu (ID_CHINH_CT, ID_CHINH_NL, SO_LUONG, GHI_CHU)
+  VALUES ${placeholders}
+`, values);
+
+      return res.status(200).json({ message: "Cập nhật công thức thành công!" });
+
     } catch (err) {
       console.error("Lỗi server:", err);
       return res.status(500).json({ message: "Lỗi server: " + err.message });
@@ -587,67 +540,65 @@ router.put(
 
 
 
-// Xóa công thức (kèm xóa file ảnh, video)
-
-router.delete("/admin/recipes/:id", ensureAdmin, async (req, res) => {
-  const recipeId = req.params.id;
+// Xóa công thức
+router.delete("/admin/cong-thuc/:id", ensureAdmin, async (req, res) => {
+  const { id } = req.params;
 
   try {
-    // Kiểm tra xem công thức có tồn tại không
-    const [recipe] = await query(
-      `SELECT hinh_anh, video_url FROM cong_thuc WHERE id_chinh = ?`,
-      [recipeId]
-    );
+    // Lấy thông tin công thức
+    const [recipe] = await query("SELECT ID_CHINH_CT, HINH_ANH_CT, VIDEO FROM cong_thuc WHERE ID_CHINH_CT = ?", [id]);
     if (!recipe) {
-      return res.status(404).json({ message: "Công thức không tồn tại." });
+      return res.status(404).json({ message: "Công thức không tồn tại!" });
     }
 
-    // Bắt đầu transaction
-    await query("BEGIN");
+    // Xóa bản ghi
+    await query("DELETE FROM cong_thuc_nguyen_lieu WHERE ID_CHINH_CT = ?", [id]);
+    await query("DELETE FROM cong_thuc WHERE ID_CHINH_CT = ?", [id]);
 
-    // Xóa các bản ghi liên quan
-    await query(`DELETE FROM cong_thuc_loai_mon WHERE cong_thuc_id = ?`, [recipeId]);
-    await query(`DELETE FROM cong_thuc_nguyen_lieu WHERE cong_thuc_id = ?`, [recipeId]);
-    
-    // Xóa công thức chính
-    await query(`DELETE FROM cong_thuc WHERE id_chinh = ?`, [recipeId]);
+    // Xóa tệp hình ảnh và video nếu có
+    if (recipe.HINH_ANH_CT) {
+      const imagePath = path.join(__dirname, "..", "public", recipe.HINH_ANH_CT);
+      await fs.unlink(imagePath).catch((err) => console.error(`Lỗi xóa tệp ảnh ${imagePath}:`, err));
+    }
+    if (recipe.VIDEO) {
+      const videoPath = path.join(__dirname, "..", "public", recipe.VIDEO);
+      await fs.unlink(videoPath).catch((err) => console.error(`Lỗi xóa tệp video ${videoPath}:`, err));
+    }
 
-    // Commit nếu mọi thứ ok
-    await query("COMMIT");
+    // Xóa thư mục (để đảm bảo không còn tệp rác)
+    const imageDir = path.join(__dirname, "..", "public", "Uploads", "images", "congthuc", String(id));
+    const videoDir = path.join(__dirname, "..", "public", "Uploads", "videos", "congthuc", String(id));
+    await deleteDirectory(imageDir);
+    await deleteDirectory(videoDir);
 
-    res.status(200).json({ message: "Xóa công thức thành công." });
+    return res.status(200).json({ message: "Xóa công thức thành công!" });
   } catch (error) {
-    // Rollback nếu có lỗi
-    await query("ROLLBACK");
     console.error("Lỗi khi xóa công thức:", error);
-    res.status(500).json({ message: "Đã xảy ra lỗi khi xóa công thức." });
+    return res.status(500).json({ message: "Lỗi server: " + error.message });
   }
 });
 
-router.put("/admin/recipes/approve/:id", ensureAdmin, async (req, res) => {
+// Duyệt công thức
+router.put("/admin/cong-thuc/approve/:id", ensureAdmin, async (req, res) => {
   const recipeId = req.params.id;
 
   try {
-    // Kiểm tra xem công thức có tồn tại không
     const [recipe] = await query(
-      `SELECT status FROM cong_thuc WHERE id_chinh = ?`,
+      `SELECT TRANG_THAI_DUYET_ FROM cong_thuc WHERE ID_CHINH_CT = ?`,
       [recipeId]
     );
     if (!recipe) {
       return res.status(404).json({ message: "Công thức không tồn tại." });
     }
 
-    // Chỉ duyệt nếu trạng thái là "Đang chờ duyệt"
-    if (recipe.status !== 'Đang chờ duyệt') {
+    if (recipe.TRANG_THAI_DUYET_ !== "Đang chờ duyệt") {
       return res.status(400).json({ message: "Công thức này không thể được duyệt (không phải trạng thái chờ duyệt)." });
     }
 
-    // Cập nhật trạng thái thành "Đã duyệt"
-   await query(
-  `UPDATE cong_thuc SET status = 'Đã duyệt' WHERE id_chinh = ?`,
-  [recipeId]
-);
-
+    await query(
+      `UPDATE cong_thuc SET TRANG_THAI_DUYET_ = 'Đã duyệt' WHERE ID_CHINH_CT = ?`,
+      [recipeId]
+    );
 
     return res.json({ message: "Duyệt công thức thành công!" });
   } catch (err) {
@@ -656,10 +607,9 @@ router.put("/admin/recipes/approve/:id", ensureAdmin, async (req, res) => {
   }
 });
 
-// NGUYÊN LIỆU 
-router.get("/admin/ingredients", ensureAdmin, async (req, res) => {
+// Danh sách nguyên liệu
+router.get("/admin/nguyen-lieu", ensureAdmin, async (req, res) => {
   try {
-    // ===== PHÂN TRANG NGUYÊN LIỆU =====
     const page = parseInt(req.query.page) || 1;
     const limit = 8;
     const offset = (page - 1) * limit;
@@ -669,13 +619,12 @@ router.get("/admin/ingredients", ensureAdmin, async (req, res) => {
     const totalPages = Math.ceil(total / limit);
 
     const ingredients = await query(`
-      SELECT id_chinh, ten_nguyen_lieu, don_vi
+      SELECT ID_CHINH_NL, TEN_NL, DON_VI
       FROM nguyen_lieu
-      ORDER BY id_chinh DESC
+      ORDER BY ID_CHINH_NL DESC
       LIMIT ? OFFSET ?
     `, [limit, offset]);
 
-    // ===== PHÂN TRANG CÔNG THỨC =====
     const pageRecipes = parseInt(req.query.pageRecipes) || 1;
     const limitRecipes = 8;
     const offsetRecipes = (pageRecipes - 1) * limitRecipes;
@@ -685,61 +634,60 @@ router.get("/admin/ingredients", ensureAdmin, async (req, res) => {
     const totalPagesRecipes = Math.ceil(totalRecipes / limitRecipes);
 
     const recipes = await query(`
-      SELECT id_chinh, ten_ct
-      FROM cong_thuc
-      ORDER BY id_chinh DESC
+      SELECT ct.ID_CHINH_CT, ct.TEN_CT, ct.NGAY_CAP_NHAT_CT, ma.TEN_MON_AN
+      FROM cong_thuc ct
+      LEFT JOIN mon_an ma ON ct.ID_CHINH_MA = ma.ID_CHINH_MA
+      ORDER BY ct.ID_CHINH_CT DESC
       LIMIT ? OFFSET ?
     `, [limitRecipes, offsetRecipes]);
 
-    // ===== LẤY NGUYÊN LIỆU CỦA CÔNG THỨC =====
-    const recipeIds = recipes.map(r => r.id_chinh);
+    const recipeIds = recipes.map((r) => r.ID_CHINH_CT);
     let ingredientRecipes = [];
 
     if (recipeIds.length > 0) {
       ingredientRecipes = await query(`
         SELECT 
-          ctnl.cong_thuc_id,
-          nl.ten_nguyen_lieu,
-          nl.don_vi,
-          ctnl.so_luong,
-          ctnl.ghi_chu,
-          ct.ten_ct AS ten_cong_thuc
+          ctnl.ID_CHINH_CT,
+          nl.TEN_NL AS ten_nl,
+          nl.DON_VI AS don_vi,
+          ctnl.SO_LUONG AS so_luong,
+          ctnl.GHI_CHU AS ghi_chu,
+          ct.TEN_CT AS ten_ct,
+          ct.NGAY_CAP_NHAT_CT AS ngay_cap_nhat_ct
         FROM cong_thuc_nguyen_lieu ctnl
-        JOIN nguyen_lieu nl ON ctnl.nguyen_lieu_id = nl.id_chinh
-        JOIN cong_thuc ct ON ct.id_chinh = ctnl.cong_thuc_id
-        WHERE ctnl.cong_thuc_id IN (?)
-        ORDER BY ctnl.cong_thuc_id DESC
+        JOIN nguyen_lieu nl ON ctnl.ID_CHINH_NL = nl.ID_CHINH_NL
+        JOIN cong_thuc ct ON ctnl.ID_CHINH_CT = ct.ID_CHINH_CT
+        WHERE ctnl.ID_CHINH_CT IN (?)
+        ORDER BY ctnl.ID_CHINH_CT DESC
       `, [recipeIds]);
     }
 
-    // ===== GỘP NGUYÊN LIỆU THEO CÔNG THỨC =====
     const groupedRecipes = {};
-    ingredientRecipes.forEach(row => {
-      if (!groupedRecipes[row.cong_thuc_id]) {
-        groupedRecipes[row.cong_thuc_id] = {
-          ten_cong_thuc: row.ten_cong_thuc,
-          nguyen_lieu: []
+    ingredientRecipes.forEach((row) => {
+      if (!groupedRecipes[row.ID_CHINH_CT]) {
+        groupedRecipes[row.ID_CHINH_CT] = {
+          ten_ct: row.ten_ct,
+          ngay_cap_nhat_ct: row.ngay_cap_nhat_ct,
+          nguyen_lieu: [],
         };
       }
-      groupedRecipes[row.cong_thuc_id].nguyen_lieu.push({
-        ten_nguyen_lieu: row.ten_nguyen_lieu,
+      groupedRecipes[row.ID_CHINH_CT].nguyen_lieu.push({
+        ten_nl: row.ten_nl,
         so_luong: row.so_luong,
         don_vi: row.don_vi,
-        ghi_chu: row.ghi_chu
+        ghi_chu: row.ghi_chu || '',
       });
     });
 
-    // ===== RENDER VIEW =====
-    res.render("admin/ingredients", {
+    res.render("admin/nguyen-lieu", {
       title: "Danh Sách Nguyên Liệu & Công Thức",
       ingredients,
       currentPage: page,
       totalPages,
-
       recipes,
       groupedRecipes,
       currentPageRecipes: pageRecipes,
-      totalPagesRecipes
+      totalPagesRecipes,
     });
   } catch (err) {
     console.error("Lỗi khi lấy dữ liệu:", err);
@@ -747,92 +695,95 @@ router.get("/admin/ingredients", ensureAdmin, async (req, res) => {
   }
 });
 
-// Thêm nguyên liệu mới (POST)
-router.post('/admin/ingredients', async (req, res) => {
-    const { ten_nguyen_lieu, don_vi } = req.body;
-    try {
-        // Kiểm tra xem nguyên liệu đã tồn tại chưa
-        const [existing] = await query(
-            'SELECT id_chinh FROM nguyen_lieu WHERE ten_nguyen_lieu = ?',
-            [ten_nguyen_lieu.trim()]
-        );
-        if (existing) {
-            return res.status(400).json({ message: `Nguyên liệu "${ten_nguyen_lieu.trim()}" đã tồn tại.` });
-        }
-
-        // Thêm nguyên liệu mới
-        const result = await query(
-            'INSERT INTO nguyen_lieu (ten_nguyen_lieu, don_vi) VALUES (?, ?)',
-            [ten_nguyen_lieu.trim(), don_vi.trim()]
-        );
-        res.json({ message: 'Thêm nguyên liệu thành công', id: result.insertId });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: 'Lỗi server: ' + err.message });
-    }
-});
-
-router.put('/admin/ingredients/:id', async (req, res) => {
-    const { id } = req.params;
-    const { ten_nguyen_lieu, don_vi } = req.body;
-    try {
-        // Kiểm tra xem nguyên liệu có tồn tại không
-        const [ingredient] = await query(
-            'SELECT id_chinh FROM nguyen_lieu WHERE id_chinh = ?',
-            [id]
-        );
-        if (!ingredient) {
-            return res.status(404).json({ message: 'Không tìm thấy nguyên liệu' });
-        }
-
-        // Kiểm tra xem tên nguyên liệu đã tồn tại chưa (trừ nguyên liệu hiện tại)
-        const [existing] = await query(
-            'SELECT id_chinh FROM nguyen_lieu WHERE ten_nguyen_lieu = ? AND id_chinh != ?',
-            [ten_nguyen_lieu.trim(), id]
-        );
-        if (existing) {
-            return res.status(400).json({ message: `Nguyên liệu "${ten_nguyen_lieu.trim()}" đã tồn tại.` });
-        }
-
-        // Cập nhật nguyên liệu
-        await query(
-            'UPDATE nguyen_lieu SET ten_nguyen_lieu = ?, don_vi = ? WHERE id_chinh = ?',
-            [ten_nguyen_lieu.trim(), don_vi.trim(), id]
-        );
-        res.json({ message: 'Cập nhật nguyên liệu thành công' });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: 'Lỗi server: ' + err.message });
-    }
-});
-// Xóa nguyên liệu (DELETE) - Thêm để hoàn thiện
-router.delete('/admin/ingredients/:id', ensureAdmin, async (req, res) => {
+// Thêm nguyên liệu
+router.post("/admin/nguyen-lieu", ensureAdmin, async (req, res) => {
+  const { TEN_NL, DON_VI } = req.body;
   try {
-    const { id } = req.params;
-
-    // Kiểm tra xem nguyên liệu có tồn tại không
-    const [existingIngredient] = await query(
-      'SELECT * FROM nguyen_lieu WHERE id_chinh = ?',
-      [id]
+    const [existing] = await query(
+      "SELECT ID_CHINH_NL FROM nguyen_lieu WHERE TEN_NL = ?",
+      [TEN_NL.trim()]
     );
-    if (!existingIngredient) {
-      return res.status(404).json({ message: 'Nguyên liệu không tồn tại.' });
+    if (existing) {
+      return res.status(400).json({ message: `Nguyên liệu "${TEN_NL.trim()}" đã tồn tại.` });
     }
 
-    // Xóa nguyên liệu
-    await query('DELETE FROM nguyen_lieu WHERE id_chinh = ?', [id]);
-
-    return res.status(200).json({ message: 'Xóa nguyên liệu thành công!' });
+    const result = await query(
+      "INSERT INTO nguyen_lieu (TEN_NL, DON_VI) VALUES (?, ?)",
+      [TEN_NL.trim(), DON_VI.trim()]
+    );
+    res.json({ message: "Thêm nguyên liệu thành công", id: result.insertId });
   } catch (err) {
-    console.error('Lỗi server:', err);
-    return res.status(500).json({ message: 'Lỗi server: ' + err.message });
+    console.error(err);
+    res.status(500).json({ message: "Lỗi server: " + err.message });
   }
 });
 
-// lOẠI MÓN
-router.get("/admin/categories", ensureAdmin, async (req, res) => {
+// Cập nhật nguyên liệu
+router.put("/admin/nguyen-lieu/:id", ensureAdmin, async (req, res) => {
+  const { id } = req.params;
+  const { TEN_NL, DON_VI } = req.body;
+
+  // Kiểm tra id và dữ liệu body
+  if (!id || isNaN(id)) {
+    return res.status(400).json({ message: "ID nguyên liệu không hợp lệ" });
+  }
+  if (!TEN_NL || !DON_VI) {
+    return res.status(400).json({ message: "Tên nguyên liệu và đơn vị là bắt buộc" });
+  }
+
   try {
-    // Phân trang loại món
+    const [ingredient] = await query(
+      "SELECT ID_CHINH_NL FROM nguyen_lieu WHERE ID_CHINH_NL = ?",
+      [id]
+    );
+    if (!ingredient) {
+      return res.status(404).json({ message: "Không tìm thấy nguyên liệu" });
+    }
+
+    const [existing] = await query(
+      "SELECT ID_CHINH_NL FROM nguyen_lieu WHERE TEN_NL = ? AND ID_CHINH_NL != ?",
+      [TEN_NL.trim(), id]
+    );
+    if (existing) {
+      return res.status(400).json({ message: `Nguyên liệu "${TEN_NL.trim()}" đã tồn tại.` });
+    }
+
+    await query(
+      "UPDATE nguyen_lieu SET TEN_NL = ?, DON_VI = ? WHERE ID_CHINH_NL = ?",
+      [TEN_NL.trim(), DON_VI.trim(), id]
+    );
+    res.json({ message: "Cập nhật nguyên liệu thành công" });
+  } catch (err) {
+    console.error("Lỗi server:", err);
+    res.status(500).json({ message: "Lỗi server: " + err.message });
+  }
+});
+
+// Xóa nguyên liệu
+router.delete("/admin/nguyen-lieu/:id", ensureAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const [existingIngredient] = await query(
+      "SELECT * FROM nguyen_lieu WHERE ID_CHINH_NL = ?",
+      [id]
+    );
+    if (!existingIngredient) {
+      return res.status(404).json({ message: "Nguyên liệu không tồn tại." });
+    }
+
+    await query("DELETE FROM nguyen_lieu WHERE ID_CHINH_NL = ?", [id]);
+
+    return res.status(200).json({ message: "Xóa nguyên liệu thành công!" });
+  } catch (err) {
+    console.error("Lỗi server:", err);
+    return res.status(500).json({ message: "Lỗi server: " + err.message });
+  }
+});
+
+// Danh sách loại món
+router.get("/admin/loai-mon", ensureAdmin, async (req, res) => {
+  try {
     const page = parseInt(req.query.page) || 1;
     const limit = 8;
     const offset = (page - 1) * limit;
@@ -842,153 +793,741 @@ router.get("/admin/categories", ensureAdmin, async (req, res) => {
     const totalPages = Math.ceil(total / limit);
 
     const categories = await query(`
-      SELECT id_chinh, ten_loai, slug, hinh_anh
+      SELECT ID_CHINH_LM, TEN_LM, SLUG_LM, HINH_ANH_LM_URL
       FROM loai_mon
-      ORDER BY id_chinh DESC
+      ORDER BY ID_CHINH_LM DESC
       LIMIT ? OFFSET ?
     `, [limit, offset]);
 
-    // Lấy công thức theo loại món
-    const categoryIds = categories.map(c => c.id_chinh);
+    const categoryIds = categories.map((c) => c.ID_CHINH_LM);
     let recipes = [];
 
     if (categoryIds.length > 0) {
       recipes = await query(`
-        SELECT ctl.id_chinh, ct.ten_ct, ctl.loai_mon_id
-        FROM cong_thuc_loai_mon ctl
-        JOIN cong_thuc ct ON ctl.cong_thuc_id = ct.id_chinh
-        WHERE ctl.loai_mon_id IN (?)
-        ORDER BY ctl.loai_mon_id DESC, ctl.id_chinh DESC
+        SELECT 
+          malm.ID_CHINH_LM,
+          ma.ID_CHINH_MA,
+          ma.TEN_MON_AN
+        FROM mon_an_loai_mon malm
+        JOIN mon_an ma ON malm.ID_CHINH_MA = ma.ID_CHINH_MA
+        WHERE malm.ID_CHINH_LM IN (?)
+        ORDER BY malm.ID_CHINH_LM DESC
       `, [categoryIds]);
     }
 
-    // Gộp công thức theo loại món
     const groupedRecipes = {};
-    categories.forEach(cat => {
-      groupedRecipes[cat.id_chinh] = {
-        ten_loai: cat.ten_loai,
-        cong_thuc: []
+    categories.forEach((cat) => {
+      groupedRecipes[cat.ID_CHINH_LM] = {
+        TEN_LM: cat.TEN_LM,
+        mon_an: [],
       };
     });
 
-    recipes.forEach(r => {
-      if (groupedRecipes[r.loai_mon_id]) {
-        groupedRecipes[r.loai_mon_id].cong_thuc.push({
-          id_chinh: r.id_chinh,
-          ten_ct: r.ten_ct
+    recipes.forEach((r) => {
+      if (groupedRecipes[r.ID_CHINH_LM]) {
+        groupedRecipes[r.ID_CHINH_LM].mon_an.push({
+          ID_CHINH_MA: r.ID_CHINH_MA,
+          TEN_MON_AN: r.TEN_MON_AN,
         });
       }
     });
 
-    // Render view
-    res.render("admin/categories", {
-      title: "Danh Sách Loại Món & Công Thức",
+    res.render("admin/loai-mon", {
+      title: "Danh Sách Loại Món & Món Ăn",
       categories,
       currentPage: page,
       totalPages,
-      groupedRecipes
+      groupedRecipes,
     });
   } catch (err) {
     console.error("Lỗi khi lấy dữ liệu loại món:", err);
     res.status(500).json({ error: "Lỗi server: " + err.message });
   }
 });
-// Thêm loại món mới (POST /admin/categories)
-router.post('/admin/categories', ensureAdmin, upload.single('hinh_anh'), async (req, res) => {
-    console.log('POST /admin/categories gọi lúc', new Date().toISOString());
+
+// Thêm loại món
+router.post("/admin/loai-mon", ensureAdmin, upload.single("hinh_anh"), async (req, res) => {
+  console.log("POST /admin/loai-mon called at", new Date().toISOString());
+  console.log("Request body:", req.body);
+  console.log("Request file:", req.file);
+  console.log("Multer temporary path:", req.file ? req.file.path : "No file");
+
   try {
-    const { ten_loai, slug } = req.body;
-    if (!ten_loai || !ten_loai.trim()) {
-      if (req.file) await fs.unlink(req.file.path).catch(() => {});
-      return res.status(400).json({ message: 'Tên loại món là bắt buộc!' });
+    const { TEN_LM, SLUG_LM } = req.body;
+
+    // Validate input
+    if (!TEN_LM || !TEN_LM.trim()) {
+      if (req.file) await fs.unlink(req.file.path).catch((err) => console.error("Lỗi xóa file tạm:", err));
+      return res.status(400).json({ message: "Tên loại món là bắt buộc!" });
     }
 
-    let imagePath = '';
-    if (req.file) {
-      // Lưu đường dẫn public cho ảnh
-      imagePath = `/uploads/images/${req.file.filename}`;
+    // Kiểm tra SLUG_LM nếu có
+    if (SLUG_LM && SLUG_LM.trim()) {
+      const [existing] = await query("SELECT SLUG_LM FROM loai_mon WHERE SLUG_LM = ?", [SLUG_LM.trim()]);
+      if (existing) {
+        if (req.file) await fs.unlink(req.file.path).catch((err) => console.error("Lỗi xóa file tạm:", err));
+        return res.status(400).json({ message: `Slug "${SLUG_LM.trim()}" đã tồn tại!` });
+      }
     }
 
+    // Thêm loại món mới
     const result = await query(
-      'INSERT INTO loai_mon (ten_loai, slug, hinh_anh) VALUES (?, ?, ?)',
-      [ten_loai.trim(), slug || null, imagePath]
+      "INSERT INTO loai_mon (TEN_LM, SLUG_LM, HINH_ANH_LM_URL) VALUES (?, ?, ?)",
+      [TEN_LM.trim(), SLUG_LM ? SLUG_LM.trim() : null, ""]
     );
+    const categoryId = result.insertId;
+    console.log(`Đã thêm loại món với ID: ${categoryId}`);
 
-    return res.status(201).json({ message: 'Thêm loại món thành công!', id: result.insertId });
+    // Hàm tạo thư mục
+    const createDir = async () => {
+      const dir = path.join(__dirname, "..", "public", "Uploads", "images", "loaimon", String(categoryId));
+      try {
+        await fs.mkdir(dir, { recursive: true });
+        console.log(`Đã tạo thư mục: ${dir}`);
+        return dir;
+      } catch (error) {
+        console.error(`Lỗi tạo thư mục ${dir}:`, error);
+        throw new Error(`Tạo thư mục thất bại: ${error.message}`);
+      }
+    };
+
+    // Hàm tạo tên file duy nhất
+    const getUniqueFileName = async (dir, original) => {
+      const ext = path.extname(original);
+      const name = path.basename(original, ext);
+      let filename = original;
+      let i = 1;
+      while (true) {
+        try {
+          await fs.access(path.join(dir, filename));
+          filename = `${name}_${i++}${ext}`;
+        } catch {
+          return filename;
+        }
+      }
+    };
+
+    // Hàm lưu file
+    const saveFile = async () => {
+      if (!req.file) {
+        console.log("Không có file được tải lên");
+        return null;
+      }
+      try {
+        await fs.access(req.file.path);
+        console.log(`File nguồn tồn tại: ${req.file.path}`);
+        const dir = await createDir();
+        const uniqueName = await getUniqueFileName(dir, req.file.originalname);
+        const targetPath = path.join(dir, uniqueName);
+        await fs.rename(req.file.path, targetPath);
+        console.log(`Đã di chuyển file đến: ${targetPath}`);
+        return `/uploads/images/loaimon/${categoryId}/${uniqueName}`;
+      } catch (error) {
+        console.error(`Lỗi trong saveFile cho ID ${categoryId}:`, error);
+        throw new Error(`Di chuyển file thất bại: ${error.message}`);
+      }
+    };
+
+    // Lưu hình ảnh và cập nhật database
+    let imagePath = null;
+    if (req.file) {
+      imagePath = await saveFile();
+      console.log(`Đường dẫn hình ảnh lưu vào DB: ${imagePath}`);
+      await query(
+        "UPDATE loai_mon SET HINH_ANH_LM_URL = ? WHERE ID_CHINH_LM = ?",
+        [imagePath, categoryId]
+      );
+    }
+
+    return res.status(201).json({ message: "Thêm loại món thành công!", id: categoryId });
   } catch (error) {
-    console.error('Lỗi server:', error);
-    if (req.file) await fs.unlink(req.file.path).catch(() => {});
-    return res.status(500).json({ message: 'Lỗi server: ' + error.message });
+    console.error("Lỗi server:", error);
+    if (req.file) await fs.unlink(req.file.path).catch((err) => console.error("Lỗi xóa file tạm:", err));
+    return res.status(500).json({ message: "Lỗi server: " + error.message });
+  }
+});
+router.get("/admin/loai-mon/edit/:id", ensureAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [category] = await query("SELECT ID_CHINH_LM, TEN_LM, SLUG_LM, HINH_ANH_LM_URL FROM loai_mon WHERE ID_CHINH_LM = ?", [id]);
+    if (!category) {
+      return res.status(404).json({ message: "Loại món không tồn tại!" });
+    }
+    res.status(200).json(category);
+  } catch (error) {
+    console.error("Lỗi server:", error);
+    res.status(500).json({ message: "Lỗi server: " + error.message });
+  }
+});
+// Cập nhật loại món
+router.put(
+  '/admin/loai-mon/:id',
+  ensureAdmin,
+  upload.single('hinh_anh'),
+  async (req, res) => {
+    const categoryId = req.params.id;
+    console.log(`PUT /admin/loai-mon/${categoryId} called at`, new Date().toISOString());
+    console.log('Request body:', req.body);
+    console.log('Request file:', req.file);
+
+    try {
+      const { TEN_LM, SLUG_LM } = req.body;
+
+      // --- Validate input ---
+      if (!TEN_LM || !TEN_LM.trim()) {
+        if (req.file) await fs.unlink(req.file.path).catch(() => { });
+        return res.status(400).json({ message: 'Tên loại món là bắt buộc!' });
+      }
+
+      if (SLUG_LM && SLUG_LM.trim()) {
+        // Kiểm tra xem slug có trùng với record khác không
+        const [exists] = await query(
+          'SELECT ID_CHINH_LM FROM loai_mon WHERE SLUG_LM = ? AND ID_CHINH_LM <> ?',
+          [SLUG_LM.trim(), categoryId]
+        );
+        if (exists) {
+          if (req.file) await fs.unlink(req.file.path).catch(() => { });
+          return res.status(400).json({ message: `Slug "${SLUG_LM.trim()}" đã tồn tại!` });
+        }
+      }
+
+      // --- Cập nhật text fields trước ---
+      await query(
+        'UPDATE loai_mon SET TEN_LM = ?, SLUG_LM = ? WHERE ID_CHINH_LM = ?',
+        [TEN_LM.trim(), SLUG_LM ? SLUG_LM.trim() : null, categoryId]
+      );
+      console.log(`Đã cập nhật TEN_LM, SLUG_LM cho ID ${categoryId}`);
+
+      // --- Xử lý file hình ảnh nếu có ---
+      if (req.file) {
+        // 1. Tạo folder nếu chưa có
+        const dir = path.join(__dirname, '..', 'public', 'Uploads', 'images', 'loaimon', categoryId);
+        await fs.mkdir(dir, { recursive: true });
+
+        // 2. Tạo tên file duy nhất
+        const ext = path.extname(req.file.originalname);
+        const baseName = path.basename(req.file.originalname, ext);
+        let filename = req.file.originalname;
+        let counter = 1;
+        while (true) {
+          try {
+            await fs.access(path.join(dir, filename));
+            filename = `${baseName}_${counter++}${ext}`;
+          } catch {
+            break;
+          }
+        }
+
+        // 3. Di chuyển file tạm vào folder chính
+        const targetPath = path.join(dir, filename);
+        await fs.rename(req.file.path, targetPath);
+        const imageUrl = `/uploads/images/loaimon/${categoryId}/${filename}`;
+        console.log(`File hình được lưu: ${imageUrl}`);
+
+        // 4. Xóa file cũ (nếu có)
+        const [old] = await query(
+          'SELECT HINH_ANH_LM_URL FROM loai_mon WHERE ID_CHINH_LM = ?',
+          [categoryId]
+        );
+        if (old && old.HINH_ANH_LM_URL) {
+          const oldPath = path.join(__dirname, '..', 'public', old.HINH_ANH_LM_URL);
+          fs.unlink(oldPath).catch(() => { }); // xóa bất đồng bộ, không chặn
+        }
+
+        // 5. Cập nhật URL mới vào DB
+        await query(
+          'UPDATE loai_mon SET HINH_ANH_LM_URL = ? WHERE ID_CHINH_LM = ?',
+          [imageUrl, categoryId]
+        );
+        console.log(`Cập nhật HINH_ANH_LM_URL cho ID ${categoryId}`);
+      }
+
+      return res.json({ message: 'Cập nhật loại món thành công!' });
+    } catch (err) {
+      console.error('Lỗi server:', err);
+      if (req.file) await fs.unlink(req.file.path).catch(() => { });
+      return res.status(500).json({ message: 'Lỗi server: ' + err.message });
+    }
+  }
+);
+
+router.delete("/admin/loai-mon/:id", ensureAdmin, async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // Kiểm tra loại món tồn tại
+    const [category] = await query("SELECT ID_CHINH_LM, HINH_ANH_LM_URL FROM loai_mon WHERE ID_CHINH_LM = ?", [id]);
+    if (!category) {
+      return res.status(404).json({ message: "Loại món không tồn tại!" });
+    }
+
+    // Xóa bản ghi trong bảng loai_mon
+    await query("DELETE FROM loai_mon WHERE ID_CHINH_LM = ?", [id]);
+
+    // Xóa thư mục hình ảnh
+    const imageDir = path.join(__dirname, "..", "public", "Uploads", "images", "loaimon", String(id));
+    await deleteDirectory(imageDir);
+
+    return res.status(200).json({ message: "Xóa loại món thành công!" });
+  } catch (error) {
+    console.error("Lỗi khi xóa loại món:", error);
+    return res.status(500).json({ message: "Lỗi server: " + error.message });
+  }
+});
+router.get("/admin/mon-an", ensureAdmin, async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const pageCategories = parseInt(req.query.pageCategories) || 1;
+    const limit = 8;
+    const limitCategories = 8;
+    const offset = (page - 1) * limit;
+    const offsetCategories = (pageCategories - 1) * limitCategories;
+
+    const countResult = await query(`SELECT COUNT(*) AS total FROM mon_an`);
+    const total = countResult[0]?.total || 0;
+    const totalPages = Math.ceil(total / limit);
+
+    const monAnList = await query(`
+      SELECT ID_CHINH_MA, TEN_MON_AN, HINH_ANH_MA, SLUG_MA, MO_TA_MA
+      FROM mon_an
+      ORDER BY ID_CHINH_MA DESC
+      LIMIT ? OFFSET ?
+    `, [limit, offset]);
+
+    const categories = await query(`
+      SELECT ID_CHINH_LM, TEN_LM
+      FROM loai_mon
+      ORDER BY TEN_LM ASC
+    `);
+
+    const countCategoriesResult = await query(`
+      SELECT COUNT(*) AS total
+      FROM mon_an_loai_mon malm
+      JOIN mon_an ma ON malm.ID_CHINH_MA = ma.ID_CHINH_MA
+    `);
+    const totalCategories = countCategoriesResult[0]?.total || 0;
+    const totalPagesCategories = Math.ceil(totalCategories / limitCategories);
+
+    const monAnIds = monAnList.map((m) => m.ID_CHINH_MA);
+    let loaiMonData = [];
+
+    if (monAnIds.length > 0) {
+      loaiMonData = await query(`
+        SELECT 
+          malm.ID_CHINH_MA,
+          lm.ID_CHINH_LM,
+          lm.TEN_LM,
+          ma.TEN_MON_AN
+        FROM mon_an_loai_mon malm
+        JOIN loai_mon lm ON malm.ID_CHINH_LM = lm.ID_CHINH_LM
+        JOIN mon_an ma ON malm.ID_CHINH_MA = ma.ID_CHINH_MA
+        ORDER BY malm.ID_CHINH_MA DESC
+        LIMIT ? OFFSET ?
+      `, [limitCategories, offsetCategories]);
+    }
+
+    const groupedLoaiMon = {};
+    monAnList.forEach((mon) => {
+      groupedLoaiMon[mon.ID_CHINH_MA] = {
+        TEN_MON_AN: mon.TEN_MON_AN,
+        HINH_ANH_MA: mon.HINH_ANH_MA,
+        MO_TA_MA: mon.MO_TA_MA,
+        loai_mon: [],
+      };
+    });
+
+    loaiMonData.forEach((lm) => {
+      if (groupedLoaiMon[lm.ID_CHINH_MA]) {
+        groupedLoaiMon[lm.ID_CHINH_MA].loai_mon.push({
+          ID_CHINH_LM: lm.ID_CHINH_LM,
+          TEN_LM: lm.TEN_LM,
+        });
+      } else {
+        groupedLoaiMon[lm.ID_CHINH_MA] = {
+          TEN_MON_AN: lm.TEN_MON_AN,
+          HINH_ANH_MA: null,
+          MO_TA_MA: null,
+          loai_mon: [{ ID_CHINH_LM: lm.ID_CHINH_LM, TEN_LM: lm.TEN_LM }],
+        };
+      }
+    });
+
+    res.render("admin/mon-an", {
+      title: "Danh Sách Món Ăn & Loại Món",
+      monAnList,
+      categories,
+      currentPage: page,
+      totalPages,
+      currentPageCategories: pageCategories,
+      totalPagesCategories,
+      groupedLoaiMon,
+    });
+  } catch (err) {
+    console.error("Lỗi khi lấy dữ liệu món ăn:", err);
+    res.status(500).json({ error: "Lỗi server: " + err.message });
+  }
+});
+// Thêm món ăn mới
+router.post("/admin/mon-an", ensureAdmin, upload.single("hinh_anh"), async (req, res) => {
+  console.log("POST /admin/mon-an called at", new Date().toISOString());
+  console.log("Request body:", req.body);
+  console.log("Request file:", req.file);
+  console.log("Multer temporary path:", req.file ? req.file.path : "No file");
+  console.log("ID_CHINH_LM raw value:", req.body.ID_CHINH_LM, "Type:", typeof req.body.ID_CHINH_LM);
+
+  try {
+    const { TEN_MON_AN, MO_TA_MA, SLUG_MA, ID_CHINH_LM } = req.body;
+
+    // Phân tích ID_CHINH_LM
+    let loaiMonIds = [];
+    if (ID_CHINH_LM) {
+      try {
+        if (typeof ID_CHINH_LM === 'string' && ID_CHINH_LM.trim()) {
+          const parsed = JSON.parse(ID_CHINH_LM);
+          loaiMonIds = Array.isArray(parsed) ? parsed : [parsed];
+        } else if (Array.isArray(ID_CHINH_LM)) {
+          loaiMonIds = ID_CHINH_LM;
+        } else {
+          loaiMonIds = [ID_CHINH_LM];
+        }
+        // Lọc và chuyển thành mảng các chuỗi số nguyên hợp lệ
+        loaiMonIds = loaiMonIds
+          .map(id => String(id).trim())
+          .filter(id => id && !isNaN(id) && Number.isInteger(Number(id)))
+          .map(id => String(id)); // Đảm bảo tất cả là chuỗi
+        console.log("Parsed loaiMonIds:", loaiMonIds);
+      } catch (err) {
+        console.error("Lỗi phân tích ID_CHINH_LM:", err.message, "Raw value:", ID_CHINH_LM);
+        if (req.file) await fs.unlink(req.file.path).catch((err) => console.error("Lỗi xóa file tạm:", err));
+        return res.status(400).json({
+          message: "Danh sách loại món không hợp lệ!",
+          error: err.message,
+          rawValue: ID_CHINH_LM
+        });
+      }
+    }
+
+    // Validate input
+    if (!TEN_MON_AN || !TEN_MON_AN.trim()) {
+      if (req.file) await fs.unlink(req.file.path).catch((err) => console.error("Lỗi xóa file tạm:", err));
+      return res.status(400).json({ message: "Tên món ăn là bắt buộc!" });
+    }
+
+    if (loaiMonIds.length === 0) {
+      if (req.file) await fs.unlink(req.file.path).catch((err) => console.error("Lỗi xóa file tạm:", err));
+      return res.status(400).json({ message: "Vui lòng chọn ít nhất một loại món!" });
+    }
+
+    // Kiểm tra SLUG_MA nếu có
+    if (SLUG_MA && SLUG_MA.trim()) {
+      const [existing] = await query("SELECT SLUG_MA FROM mon_an WHERE SLUG_MA = ?", [SLUG_MA.trim()]);
+      if (existing) {
+        if (req.file) await fs.unlink(req.file.path).catch((err) => console.error("Lỗi xóa file tạm:", err));
+        return res.status(400).json({ message: `Slug "${SLUG_MA.trim()}" đã tồn tại!` });
+      }
+    }
+
+    // Kiểm tra loại món tồn tại
+    const validLoaiMon = await query(
+      `SELECT ID_CHINH_LM FROM loai_mon WHERE ID_CHINH_LM IN (${loaiMonIds.map(() => "?").join(",")})`,
+      loaiMonIds
+    );
+    if (validLoaiMon.length !== loaiMonIds.length) {
+      if (req.file) await fs.unlink(req.file.path).catch((err) => console.error("Lỗi xóa file tạm:", err));
+      return res.status(400).json({ message: "Một hoặc nhiều loại món không tồn tại!" });
+    }
+
+    // Thêm món ăn mới
+    const result = await query(
+      "INSERT INTO mon_an (TEN_MON_AN, MO_TA_MA, SLUG_MA, HINH_ANH_MA) VALUES (?, ?, ?, ?)",
+      [TEN_MON_AN.trim(), MO_TA_MA?.trim() || null, SLUG_MA?.trim() || null, ""]
+    );
+    const monAnId = result.insertId;
+    console.log(`Đã thêm món ăn với ID: ${monAnId}`);
+
+    // Hàm tạo thư mục
+    const createDir = async () => {
+      const dir = path.join(__dirname, "..", "public", "Uploads", "images", "monan", String(monAnId));
+      try {
+        await fs.mkdir(dir, { recursive: true });
+        console.log(`Đã tạo thư mục: ${dir}`);
+        return dir;
+      } catch (error) {
+        console.error(`Lỗi tạo thư mục ${dir}:`, error);
+        throw new Error(`Tạo thư mục thất bại: ${error.message}`);
+      }
+    };
+
+    // Hàm tạo tên file duy nhất
+    const getUniqueFileName = async (dir, original) => {
+      const ext = path.extname(original);
+      const name = path.basename(original, ext);
+      let filename = original;
+      let i = 1;
+      while (true) {
+        try {
+          await fs.access(path.join(dir, filename));
+          filename = `${name}_${i++}${ext}`;
+        } catch {
+          return filename;
+        }
+      }
+    };
+
+    // Hàm lưu file
+    const saveFile = async () => {
+      if (!req.file) {
+        console.log("Không có file được tải lên");
+        return null;
+      }
+      try {
+        await fs.access(req.file.path);
+        console.log(`File nguồn tồn tại: ${req.file.path}`);
+        const dir = await createDir();
+        const uniqueName = await getUniqueFileName(dir, req.file.originalname);
+        const targetPath = path.join(dir, uniqueName);
+        await fs.rename(req.file.path, targetPath);
+        console.log(`Đã di chuyển file đến: ${targetPath}`);
+        return `/Uploads/images/monan/${monAnId}/${uniqueName}`;
+      } catch (error) {
+        console.error(`Lỗi trong saveFile cho ID ${monAnId}:`, error);
+        throw new Error(`Di chuyển file thất bại: ${error.message}`);
+      }
+    };
+
+    // Lưu hình ảnh và cập nhật database
+    let imagePath = null;
+    if (req.file) {
+      imagePath = await saveFile();
+      console.log(`Đường dẫn hình ảnh lưu vào DB: ${imagePath}`);
+      await query(
+        "UPDATE mon_an SET HINH_ANH_MA = ? WHERE ID_CHINH_MA = ?",
+        [imagePath, monAnId]
+      );
+    }
+
+    // Thêm quan hệ với loại món
+    const loaiMonData = loaiMonIds.map(id => [monAnId, id]);
+    if (loaiMonData.length > 0) {
+      const placeholders = loaiMonData.map(() => "(?, ?)").join(", ");
+      const values = loaiMonData.flat();
+      await query(
+        `INSERT INTO mon_an_loai_mon (ID_CHINH_MA, ID_CHINH_LM) VALUES ${placeholders}`,
+        values
+      );
+      console.log(`Đã thêm ${loaiMonData.length} quan hệ loại món cho món ăn ID ${monAnId}`);
+    }
+
+    return res.status(201).json({ message: "Thêm món ăn thành công!", id: monAnId });
+  } catch (error) {
+    console.error("Lỗi server:", error);
+    if (req.file) await fs.unlink(req.file.path).catch((err) => console.error("Lỗi xóa file tạm:", err));
+    return res.status(500).json({ message: "Lỗi server: " + error.message });
   }
 });
 
+router.put("/admin/mon-an/:id", ensureAdmin, upload.single("hinh_anh"), async (req, res) => {
+  console.log(`PUT /admin/mon-an/${req.params.id} called at`, new Date().toISOString());
+  console.log("Request body:", req.body);
+  console.log("Request file:", req.file);
+  console.log("Multer temporary path:", req.file ? req.file.path : "No file");
+  console.log("ID_CHINH_LM raw value:", req.body.ID_CHINH_LM, "Type:", typeof req.body.ID_CHINH_LM);
 
+  try {
+    const id = parseInt(req.params.id);
+    const { TEN_MON_AN, MO_TA_MA, SLUG_MA, ID_CHINH_LM } = req.body;
 
-
-
-// Route sửa loại món
-router.put('/admin/categories/:id', ensureAdmin, upload.fields([{ name: 'hinh_anh', maxCount: 1 }]), async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { ten_loai, slug } = req.body;
-        if (!ten_loai || !slug) {
-            return res.status(400).json({ message: 'Tên loại món và slug là bắt buộc' });
-        }
-
-        // Tạo thư mục lưu file
-        const imageDir = path.join(__dirname, '..', 'public', 'Uploads', 'images', 'loaimon', String(id));
-        await fs.mkdir(imageDir, { recursive: true });
-
-        // Hàm tạo tên file duy nhất
-        const getUniqueFileName = async (dir, filename) => {
-            const ext = path.extname(filename);
-            const name = path.basename(filename, ext);
-            let newName = filename,
-                i = 1;
-            while (true) {
-                try {
-                    await fs.access(path.join(dir, newName));
-                    newName = `${name}_${i++}${ext}`;
-                } catch {
-                    return newName;
-                }
-            }
-        };
-
-        // Xử lý file upload
-        const processFileUpload = async (type, dir, fileField) => {
-            if (!req.files || !req.files[fileField]) return null;
-            const file = req.files[fileField][0];
-            const uniqueName = await getUniqueFileName(dir, file.originalname);
-            await fs.rename(file.path, path.join(dir, uniqueName));
-            return `/Uploads/${type}/loaimon/${id}/${uniqueName}`;
-        };
-
-        // Xử lý hình ảnh
-        const hinh_anh = await processFileUpload('images', imageDir, 'hinh_anh');
-
-        // Cập nhật cơ sở dữ liệu
-        const updateFields = hinh_anh
-            ? { ten_loai, slug, hinh_anh }
-            : { ten_loai, slug };
-        const updateQuery = hinh_anh
-            ? 'UPDATE loai_mon SET ten_loai = ?, slug = ?, hinh_anh = ? WHERE id_chinh = ?'
-            : 'UPDATE loai_mon SET ten_loai = ?, slug = ? WHERE id_chinh = ?';
-        const updateValues = hinh_anh
-            ? [ten_loai, slug, hinh_anh, id]
-            : [ten_loai, slug, id];
-
-        const [result] = await query(updateQuery, updateValues);
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ message: 'Loại món không tồn tại' });
-        }
-
-        res.status(200).json({ message: 'Cập nhật loại món thành công' });
-    } catch (err) {
-        console.error('Lỗi khi cập nhật loại món:', err);
-        res.status(500).json({ message: 'Lỗi server: ' + err.message });
+    // Validate ID
+    if (!id || isNaN(id)) {
+      if (req.file) await fs.unlink(req.file.path).catch((err) => console.error("Lỗi xóa file tạm:", err));
+      return res.status(400).json({ message: "ID món ăn không hợp lệ!" });
     }
-});
 
+    // Kiểm tra món ăn tồn tại
+    const [existingDish] = await query("SELECT ID_CHINH_MA, HINH_ANH_MA FROM mon_an WHERE ID_CHINH_MA = ?", [id]);
+    if (!existingDish) {
+      if (req.file) await fs.unlink(req.file.path).catch((err) => console.error("Lỗi xóa file tạm:", err));
+      return res.status(404).json({ message: "Món ăn không tồn tại!" });
+    }
+
+    // Phân tích ID_CHINH_LM
+    let loaiMonIds = [];
+    if (ID_CHINH_LM) {
+      try {
+        if (typeof ID_CHINH_LM === 'string' && ID_CHINH_LM.trim()) {
+          const parsed = JSON.parse(ID_CHINH_LM);
+          loaiMonIds = Array.isArray(parsed) ? parsed : [parsed];
+        } else if (Array.isArray(ID_CHINH_LM)) {
+          loaiMonIds = ID_CHINH_LM;
+        } else {
+          loaiMonIds = [ID_CHINH_LM];
+        }
+        loaiMonIds = loaiMonIds
+          .map(id => String(id).trim())
+          .filter(id => id && !isNaN(id) && Number.isInteger(Number(id)))
+          .map(id => String(id));
+        console.log("Parsed loaiMonIds:", loaiMonIds);
+      } catch (err) {
+        console.error("Lỗi phân tích ID_CHINH_LM:", err.message, "Raw value:", ID_CHINH_LM);
+        if (req.file) await fs.unlink(req.file.path).catch((err) => console.error("Lỗi xóa file tạm:", err));
+        return res.status(400).json({
+          message: "Danh sách loại món không hợp lệ!",
+          error: err.message,
+          rawValue: ID_CHINH_LM
+        });
+      }
+    }
+
+    // Validate input
+    if (!TEN_MON_AN || !TEN_MON_AN.trim()) {
+      if (req.file) await fs.unlink(req.file.path).catch((err) => console.error("Lỗi xóa file tạm:", err));
+      return res.status(400).json({ message: "Tên món ăn là bắt buộc!" });
+    }
+
+    if (loaiMonIds.length === 0) {
+      if (req.file) await fs.unlink(req.file.path).catch((err) => console.error("Lỗi xóa file tạm:", err));
+      return res.status(400).json({ message: "Vui lòng chọn ít nhất một loại món!" });
+    }
+
+    // Kiểm tra SLUG_MA nếu có
+    if (SLUG_MA && SLUG_MA.trim()) {
+      const [existing] = await query(
+        "SELECT SLUG_MA FROM mon_an WHERE SLUG_MA = ? AND ID_CHINH_MA != ?",
+        [SLUG_MA.trim(), id]
+      );
+      if (existing) {
+        if (req.file) await fs.unlink(req.file.path).catch((err) => console.error("Lỗi xóa file tạm:", err));
+        return res.status(400).json({ message: `Slug "${SLUG_MA.trim()}" đã tồn tại!` });
+      }
+    }
+
+    // Kiểm tra loại món tồn tại
+    const validLoaiMon = await query(
+      `SELECT ID_CHINH_LM FROM loai_mon WHERE ID_CHINH_LM IN (${loaiMonIds.map(() => "?").join(",")})`,
+      loaiMonIds
+    );
+    if (validLoaiMon.length !== loaiMonIds.length) {
+      if (req.file) await fs.unlink(req.file.path).catch((err) => console.error("Lỗi xóa file tạm:", err));
+      return res.status(400).json({ message: "Một hoặc nhiều loại món không tồn tại!" });
+    }
+
+    // Hàm tạo thư mục
+    const createDir = async () => {
+      const dir = path.join(__dirname, "..", "public", "Uploads", "images", "monan", String(id));
+      try {
+        await fs.mkdir(dir, { recursive: true });
+        console.log(`Đã tạo thư mục: ${dir}`);
+        return dir;
+      } catch (error) {
+        console.error(`Lỗi tạo thư mục ${dir}:`, error);
+        throw new Error(`Tạo thư mục thất bại: ${error.message}`);
+      }
+    };
+
+    // Hàm tạo tên file duy nhất
+    const getUniqueFileName = async (dir, original) => {
+      const ext = path.extname(original);
+      const name = path.basename(original, ext);
+      let filename = original;
+      let i = 1;
+      while (true) {
+        try {
+          await fs.access(path.join(dir, filename));
+          filename = `${name}_${i++}${ext}`;
+        } catch {
+          return filename;
+        }
+      }
+    };
+
+    // Hàm lưu file
+    const saveFile = async () => {
+      if (!req.file) {
+        console.log("Không có file được tải lên");
+        return null;
+      }
+      try {
+        await fs.access(req.file.path);
+        console.log(`File nguồn tồn tại: ${req.file.path}`);
+        const dir = await createDir();
+        const uniqueName = await getUniqueFileName(dir, req.file.originalname);
+        const targetPath = path.join(dir, uniqueName);
+        await fs.rename(req.file.path, targetPath);
+        console.log(`Đã di chuyển file đến: ${targetPath}`);
+        return `/Uploads/images/monan/${id}/${uniqueName}`;
+      } catch (error) {
+        console.error(`Lỗi trong saveFile cho ID ${id}:`, error);
+        throw new Error(`Di chuyển file thất bại: ${error.message}`);
+      }
+    };
+
+    // Xóa hình ảnh cũ nếu có
+    let imagePath = existingDish.HINH_ANH_MA;
+    if (req.file && imagePath) {
+      const oldImagePath = path.join(__dirname, "..", "public", imagePath);
+      await fs.unlink(oldImagePath).catch((err) => console.error("Lỗi xóa hình ảnh cũ:", err));
+    }
+
+    // Lưu hình ảnh mới nếu có
+    if (req.file) {
+      imagePath = await saveFile();
+      console.log(`Đường dẫn hình ảnh mới: ${imagePath}`);
+    }
+
+    // Cập nhật món ăn
+    await query(
+      "UPDATE mon_an SET TEN_MON_AN = ?, MO_TA_MA = ?, SLUG_MA = ?, HINH_ANH_MA = ? WHERE ID_CHINH_MA = ?",
+      [TEN_MON_AN.trim(), MO_TA_MA?.trim() || null, SLUG_MA?.trim() || null, imagePath || null, id]
+    );
+    console.log(`Đã cập nhật món ăn với ID: ${id}`);
+
+    // Xóa quan hệ loại món cũ
+    await query("DELETE FROM mon_an_loai_mon WHERE ID_CHINH_MA = ?", [id]);
+
+    // Thêm quan hệ loại món mới
+    const loaiMonData = loaiMonIds.map(lmId => [id, lmId]);
+    if (loaiMonData.length > 0) {
+      const placeholders = loaiMonData.map(() => "(?, ?)").join(",");
+      const values = loaiMonData.flat();
+      await query(
+        `INSERT INTO mon_an_loai_mon (ID_CHINH_MA, ID_CHINH_LM) VALUES ${placeholders}`,
+        values
+      );
+      console.log(`Đã cập nhật ${loaiMonData.length} quan hệ loại món cho món ăn ID: ${id}`);
+    }
+
+    return res.status(200).json({ message: "Cập nhật món ăn thành công!" });
+  } catch (error) {
+    console.error("Lỗi server:", error);
+    if (req.file) await fs.unlink(req.file.path).catch((err) => console.error("Lỗi xóa file tạm:", err));
+    return res.status(500).json({ message: "Lỗi server: " + error.message });
+  }
+});
+router.delete("/admin/mon-an/:id", ensureAdmin, async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // Kiểm tra món ăn tồn tại
+    const [dish] = await query("SELECT ID_CHINH_MA, HINH_ANH_MA FROM mon_an WHERE ID_CHINH_MA = ?", [id]);
+    if (!dish) {
+      return res.status(404).json({ message: "Món ăn không tồn tại!" });
+    }
+
+    // Xóa bản ghi trong bảng liên kết mon_an_loai_mon
+    await query("DELETE FROM mon_an_loai_mon WHERE ID_CHINH_MA = ?", [id]);
+
+    // Xóa bản ghi trong bảng mon_an
+    await query("DELETE FROM mon_an WHERE ID_CHINH_MA = ?", [id]);
+
+    // Xóa thư mục hình ảnh
+    const imageDir = path.join(__dirname, "..", "public", "Uploads", "images", "monan", String(id));
+    await deleteDirectory(imageDir);
+
+    return res.status(200).json({ message: "Xóa món ăn thành công!" });
+  } catch (error) {
+    console.error("Lỗi khi xóa món ăn:", error);
+    return res.status(500).json({ message: "Lỗi server: " + error.message });
+  }
+});
 
 module.exports = router;

@@ -2,74 +2,182 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Quản lý Công Thức</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 </head>
 <body class="bg-[#FAF3E0] font-sans">
+<!-- Notification -->
+<div id="admin-notification"
+     class="fixed top-5 right-5 z-50 px-4 py-2 rounded text-white shadow-lg hidden">
+</div>
 
-  <div class="flex h-screen overflow-hidden">
-    <!-- Sidebar -->
-    <aside class="w-64 bg-gradient-to-b from-[#FFD700] to-[#DAA520] text-white p-6 shadow-xl flex flex-col justify-between fixed h-full rounded-r-2xl">
-      <!-- Logo và menu -->
-      <div>
-        <h2 class="text-3xl font-extrabold mb-8 text-center drop-shadow-md">🥘 Admin</h2>
-        <ul class="space-y-2">
-         <li><a href="/admin/recipes" onclick="event.preventDefault(); loadPage('/admin/recipes', this)" class="sidebar-item">🍽 Công Thức</a></li>
-        <li><a href="/admin/ingredients" onclick="event.preventDefault(); loadPage('/admin/ingredients', this)" class="sidebar-item">🥑 Nguyên Liệu</a></li>
-        <li><a href="/admin/categories" onclick="event.preventDefault(); loadPage('/admin/categories', this)" class="sidebar-item">🍜 Loại Món</a></li>
-        <li li><a href="/admin/users" onclick="event.preventDefault(); loadPage('/admin/users', this)" class="sidebar-item">👨‍🍳 Người Dùng</a></li>
+<div class="flex h-screen overflow-hidden">
+  <!-- Sidebar -->
+<aside
+  class="w-72 bg-gradient-to-b from-[#FFD700] to-[#DAA520] text-white p-8 shadow-xl flex flex-col fixed h-full border-r-4"
+>
+    <div class="mb-12">
+      <h2
+        class="text-3xl font-extrabold text-center drop-shadow-md select-none"
+      > 
+      <a href="/admin">  KemRepice</a>
+      
+      </h2>
+    </div>
+    <nav class="flex flex-col space-y-4 text-lg font-medium">
+  <a
+    href="/admin/cong-thuc"
+    onclick="event.preventDefault(); loadPage('/admin/cong-thuc', this)"
+    class="sidebar-item px-4 py-3 rounded-xl transition duration-300 hover:bg-yellow-700"
+  >🍽 Công Thức</a>
 
-          </ul>
-      </div>
+  <a
+    href="/admin/nguyen-lieu"
+    onclick="event.preventDefault(); loadPage('/admin/nguyen-lieu', this)"
+    class="sidebar-item px-4 py-3 rounded-xl transition duration-300 hover:bg-yellow-700"
+  >🥑 Nguyên Liệu</a>
 
-      <!-- Footer người dùng -->
-      <div class="border-t border-white/30 pt-4 mt-6">
-        <div class="flex items-center space-x-3">
-          <img src="<%= user && user.avatar ? user.avatar : '/default-avatar.png' %>" alt="User Avatar" class="w-10 h-10 rounded-full border-2 border-white object-cover" />
-          <span class="text-white font-semibold text-base"><%= user && user.username ? user.username : 'Guest' %></span>
-        </div>
-        <p class="text-xs text-white/70 mt-3 text-center">© 2025 Công thức nấu ăn</p>
-      </div>
-    </aside>
+  <a
+    href="/admin/loai-mon"
+    onclick="event.preventDefault(); loadPage('/admin/loai-mon', this)"
+    class="sidebar-item px-4 py-3 rounded-xl transition duration-300 hover:bg-yellow-700"
+  >🍜 Loại Món</a>
 
-    <!-- Nội dung chính -->
-    <main class="flex-1 ml-64 p-8 overflow-y-auto ">
-      <div class="bg-white shadow-xl rounded-xl p-6 h-full border h-full w-full">
-       
-        <div id="content" class="w-full max-w-full overflow-x-auto h-full"></div>
-      </div>
-    </main>
+  <a
+    href="/admin/nguoi-dung"
+    onclick="event.preventDefault(); loadPage('/admin/nguoi-dung', this)"
+    class="sidebar-item px-4 py-3 rounded-xl transition duration-300 hover:bg-yellow-700"
+  >👨‍🍳 Người Dùng</a>
+
+  <!-- Mục mới thêm -->
+  <a
+    href="/admin/mon-an"
+    onclick="event.preventDefault(); loadPage('/admin/mon-an', this)"
+    class="sidebar-item px-4 py-3 rounded-xl transition duration-300 hover:bg-yellow-700"
+  >🍲 Món Ăn</a>
+
+  <a
+    href="/admin/danh-gia"
+    onclick="event.preventDefault(); loadPage('/admin/reviews', this)"
+    class="sidebar-item px-4 py-3 rounded-xl transition duration-300 hover:bg-yellow-700"
+  >⭐ Đánh Giá</a>
+
+  <a
+    href="/admin/binh-luan"
+    onclick="event.preventDefault(); loadPage('/admin/binh-luan', this)"
+    class="sidebar-item px-4 py-3 rounded-xl transition duration-300 hover:bg-yellow-700"
+  >💬 Bình Luận</a>
+
+  <a
+    href="/admin/yeu-thich"
+    onclick="event.preventDefault(); loadPage('/admin/yeu-thich', this)"
+    class="sidebar-item px-4 py-3 rounded-xl transition duration-300 hover:bg-yellow-700"
+  >❤️ Yêu Thích</a>
+</nav>
+
+    <!-- Có thể thêm footer người dùng nếu cần -->
+  </aside>
+
+  <!-- Nội dung bên phải -->
+ <div class="flex-1 ml-72 flex flex-col h-screen overflow-hidden">
+    <!-- Header -->
+  <header
+  class="flex items-center justify-between bg-gradient-to-b from-[#FFD700] to-[#DAA520] p-4 border-b-4 shadow sticky top-0 z-30"
+  style="height: 60px;"
+>
+  <!-- Có thể thêm logo hoặc tên app bên trái nếu muốn -->
+  <div class="text-xl font-bold text-white select-none">
+    <!-- Logo hoặc tên ứng dụng
+    KemRecipe -->
   </div>
 
-  <!-- Custom CSS -->
-  <style>
-    .sidebar-item {
-      display: block;
-      padding: 12px 16px;
-      border-radius: 12px;
-      transition: 0.3s ease;
-      font-size: 16px;
-      font-weight: 500;
-      background: rgba(255, 255, 255, 0.15);
-    }
+  <div class="flex items-center space-x-6">
+    <!-- Notification button -->
+    <button
+      aria-label="Thông báo"
+      class="relative text-gray-700 hover:text-gray-900 focus:outline-none transition"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="h-7 w-7"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        stroke-width="2"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+        />
+      </svg>
+      <span
+        class="absolute top-0 right-0 inline-block w-3 h-3 bg-red-600 rounded-full ring-2 ring-white"
+      ></span>
+    </button>
 
-    .sidebar-item:hover,
-    .sidebar-item.active {
-      background: rgba(255, 255, 255, 0.25);
-      transform: translateX(6px);
-      color: #FFF8DC;
-      font-weight: bold;
-    }
-  </style>
+    <!-- User info with dropdown -->
+<div class="relative hidden md:block">
+  <div id="user-avatar" class="flex items-center cursor-pointer space-x-2">
+    <img src="<%= user.avatar || '/default-avatar.png' %>"
+      class="w-10 h-10 rounded-full border-2 border  object-cover" alt="Avatar">
+    <span class="font-semibold text-gray-700 truncate max-w-[120px]">
+      <%= user.username %>
+    </span>
+  </div>
 
-  <!-- JS -->
- 
-    <script src="/admin/categories.js"></script>
-    <script src="/admin/ingredients.js"></script>
-  <script src="/admin/script.js"></script>
- 
+  <div id="user-dropdown"
+    class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-md hidden text-sm text-center">
+    <a href="/profile" class="block px-4 py-2 hover:text-yellow-500">
+      <i class="fa-solid fa-user mr-2"></i>Thông tin cá nhân</a>
+    <a href="/logout" class="block px-4 py-2 hover:text-yellow-500">
+      <i class="fa-solid fa-right-from-bracket mr-2"></i>Đăng xuất</a>
+  </div>
+</div>
+
+</header>
+
+
+    <!-- Nội dung chính -->
+    <main
+      class="flex-1 bg-white rounded-b-3xl p-8 overflow-auto shadow-inner"
+    >
+    
+    <div
+      id="content"
+      class="w-full max-w-full h-full overflow-x-auto rounded-xl border border-white rounded-lg shadow-lg p-4"
+    ></div>
+    
+
+    </main>
+  </div>
+</div>
+
+<!-- Custom CSS -->
+<style>
+  .sidebar-item {
+    display: block;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    color: white;
+    background: rgba(255 255 255 / 0.15);
+    font-weight: 500;
+  }
+  .sidebar-item:hover,
+  .sidebar-item.active {
+    background: rgba(255 255 255 / 0.3);
+    transform: translateX(8px);
+    color: #FFF8DC;
+    font-weight: 700;
+    box-shadow: 0 4px 6px rgb(255 255 255 / 0.3);
+  }
+</style>
+<script src="/admin/monan.js"></script>
+<script src="/admin/categories.js"></script>
+<script src="/admin/ingredients.js"></script>
+<script src="/admin/script.js"></script>
+
 </body>
 </html>

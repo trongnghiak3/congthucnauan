@@ -1,116 +1,150 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
+
 <head>
   <meta charset="UTF-8">
-  <title></title>
-  <script src="https://cdn.tailwindcss.com"></script> 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <title>KemRecipe</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,100..900;1,100..900&family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&family=Montserrat+Alternates:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Raleway:ital,wght@0,100..900;1,100..900&family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
-<body>
+</head>
 
-  <!-- Phần Menu -->
-<nav class="bg-white shadow-md py-3 font-serif relative">
-  <div class="container mx-auto flex justify-between items-center px-6">
-    <!-- Logo -->
-    <a href="/" class="text-3xl font-bold text-gray-700 hover:text-yellow-500 transition flex items-center">
-      <i class="fa-solid fa-ice-cream mr-2 text-yellow-500"></i> KemRecipe
-    </a>
+<body class="bg-gray-50">
 
-    <!-- Menu Desktop -->
-    <ul class="hidden md:flex space-x-8 text-lg font-medium">
-      <li><a href="/" class="text-gray-600 hover:text-yellow-500 transition"><i class="fa-solid fa-house mr-1"></i>Trang chủ</a></li>
-      <li><a href="/cong-thuc" class="text-gray-600 hover:text-yellow-500 transition"><i class="fa-solid fa-utensils mr-1"></i>Công thức</a></li>
-      <li><a href="/danh-muc" class="text-gray-600 hover:text-yellow-500 transition"><i class="fa-solid fa-folder-open mr-1"></i>Danh mục</a></li>
-      <li><a href="/yeu-thich" class="text-gray-600 hover:text-yellow-500 transition"><i class="fa-solid fa-heart mr-1"></i>Yêu thích</a></li>
-      <li><a href="/tim-kiem" class="text-gray-600 hover:text-yellow-500 transition"><i class="fa-solid fa-magnifying-glass mr-1"></i>Tìm kiếm</a></li>
-      <li><a href="/gioi-thieu" class="text-gray-600 hover:text-yellow-500 transition"><i class="fa-solid fa-circle-info mr-1"></i>Giới thiệu</a></li>
-      <li><a href="/lien-he" class="text-gray-600 hover:text-yellow-500 transition"><i class="fa-solid fa-envelope mr-1"></i>Liên hệ</a></li>
-    </ul>
-
-    <!-- Người dùng / Đăng nhập -->
-    <div class="flex items-center space-x-4">
-      <% if (typeof user !== 'undefined' && user) { %>
-        <!-- Profile Dropdown -->
-        <div class="hidden md:block relative">
-          <div id="user-avatar" class="flex items-center space-x-4 cursor-pointer">
-            <img src="<%= user.avatar || '/default-avatar.png' %>" 
-                 alt="User Avatar" 
-                 class="w-10 h-10 rounded-full object-cover border-2 border-yellow-500">
-            <span class="text-lg font-bold text-gray-800"><%= user.username %></span>
-          </div>
-          <div id="user-dropdown" class="absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-lg hidden text-center">
-            <a href="/profile" class="block px-4 py-2 text-gray-600 hover:text-yellow-500">
-              <i class="fa-solid fa-user mr-2"></i>Thông tin cá nhân
-            </a>
-            <% if (user.role === 'admin') { %>
-              <a href="/admin" class="block px-4 py-2 text-gray-600 hover:text-yellow-500">
-                <i class="fa-solid fa-cogs mr-2"></i>Quản lý
-              </a>
-            <% } %>
-            <a href="/logout" class="block px-4 py-2 text-gray-600 hover:text-yellow-500">
-              <i class="fa-solid fa-right-from-bracket mr-2"></i>Đăng xuất
-            </a>
-          </div>
-        </div>
-      <% } else { %>
-        <a href="/login" class="hidden md:flex items-center bg-yellow-500 text-white px-5 py-2 rounded-lg font-semibold hover:bg-yellow-600 transition">
-          <i class="fa-solid fa-right-to-bracket mr-2"></i> Đăng nhập
+  <!-- Navbar -->
+  <nav class="bg-white shadow-md py-3 relative z-50 w-full">
+    <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
+      <div>
+        <!-- Logo -->
+        <a href="/"
+          class="text-2xl md:text-3xl font-bold text-gray-700 hover:text-yellow-500 transition flex items-center">
+          <i class="fa-solid fa-ice-cream mr-2 text-yellow-500"></i> KemRecipe
         </a>
-      <% } %>
+      </div>
+      <div>
+        <!-- Menu Desktop -->
+        <ul class="hidden md:flex space-x-6 lg:space-x-8 text-base lg:text-lg font-medium">
+          <li><a href="/" class="text-gray-600 hover:text-yellow-500 transition"><i
+                class="fa-solid fa-house mr-1"></i>Trang chủ</a></li>
+          <li><a href="/mon-an" class="text-gray-600 hover:text-yellow-500 transition">
+            <i class="fa-solid fa-mug-hot mr-1"></i>Món ăn</a></li>
+          <li><a href="/cong-thuc" class="text-gray-600 hover:text-yellow-500 transition"><i
+                class="fa-solid fa-utensils mr-1"></i>Công thức</a></li>
+          <li><a href="/danh-muc" class="text-gray-600 hover:text-yellow-500 transition"><i
+                class="fa-solid fa-folder-open mr-1"></i>Danh mục</a></li>
+          <li><a href="/gioi-thieu" class="text-gray-600 hover:text-yellow-500 transition"><i
+                class="fa-solid fa-circle-info mr-1"></i>Giới thiệu</a></li>
+          <li><a href="/lien-he" class="text-gray-600 hover:text-yellow-500 transition"><i
+                class="fa-solid fa-envelope mr-1"></i>Liên hệ</a></li>
+        </ul>
+      </div>
+      <!-- Tài khoản / Mobile Toggle -->
+      <div class="flex items-center space-x-4">
+        <% if (typeof user !=='undefined' && user) { %>
+          <!-- Avatar và Dropdown -->
+          <div class="relative hidden md:block">
+            <div id="user-avatar" class="flex items-center cursor-pointer space-x-2">
+              <img src="<%= user.avatar || '/default-avatar.png' %>"
+                class="w-10 h-10 rounded-full border-2 border object-cover" alt="Avatar">
+              <span class="font-semibold text-gray-700 truncate max-w-[120px]">
+                <%= user.TEN_NGUOI_DUNG %>
+              </span>
+            </div>
+            <div id="user-dropdown"
+              class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-md hidden text-sm text-center">
+              <a href="/profile" class="block px-4 py-2 hover:text-yellow-500"><i
+                  class="fa-solid fa-user mr-2"></i>Thông tin cá nhân</a>
+              <% if (user.role==='admin' ) { %>
+                <a href="/admin" class="block px-4 py-2 hover:text-yellow-500"><i class="fa-solid fa-cogs mr-2"></i>Quản
+                  lý</a>
+                <% } %>
+                 <a href="/cong-thuc-cua-toi" class="block text-gray-600 hover:text-yellow-500 py-2"><i class="fa-solid fa-receipt mr-2"></i>Công thức của tôi</a>
+                  <a href="/logout" class="block px-4 py-2 hover:text-yellow-500"><i
+                      class="fa-solid fa-right-from-bracket mr-2"></i>Đăng xuất</a>
+            </div>
+          </div>
+          <!-- Nút Đăng Công Thức (Desktop) -->
+          <a href="/dang-cong-thuc"
+            class="hidden md:block bg-gradient-to-r from-yellow-500 to-yellow-300 text-white px-4 py-2 rounded-full font-semibold button-glow hover:bg-yellow-600 transition">
+            <i class="fas fa-plus mr-2"></i> Đăng Công Thức
+          </a>
 
-      <!-- Menu Toggle Mobile -->
-      <button class="md:hidden text-gray-600 text-2xl focus:outline-none" id="menu-toggle">
-        <i class="fa-solid fa-bars"></i>
-      </button>
+          <% } else { %>
+            <a href="/login"
+              class="hidden md:flex items-center bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 transition text-sm font-semibold">
+              <i class="fa-solid fa-right-to-bracket mr-2"></i>Đăng nhập
+            </a>
+            <% } %>
+              <!-- Mobile Toggle -->
+              <button id="menu-toggle" class="md:hidden text-2xl text-gray-700 focus:outline-none">
+                <i class="fa-solid fa-bars"></i>
+              </button>
+      </div>
     </div>
-  </div>
+    <!-- Mobile Menu -->
+    <ul id="mobile-menu"
+      class="md:hidden absolute top-full left-0 w-full bg-white shadow-md hidden flex-col space-y-2 py-4 text-center">
+      <li><a href="/" class="block text-gray-600 hover:text-yellow-500 py-2"><i class="fa-solid fa-house mr-1"></i>Trang
+          chủ</a></li>
+      <li><a href="/mon-an" class="block text-gray-600 hover:text-yellow-500 py-2"><i
+            class="fa-solid fa-utensils mr-1"></i>Món ăn</a></li>
+      <li><a href="/cong-thuc" class="block text-gray-600 hover:text-yellow-500 py-2"><i
+            class="fa-solid fa-utensils mr-1"></i>Công thức</a></li>
+      <li><a href="/danh-muc" class="block text-gray-600 hover:text-yellow-500 py-2"><i
+            class="fa-solid fa-folder-open mr-1"></i>Danh mục</a></li>
+      <li><a href="/gioi-thieu" class="block text-gray-600 hover:text-yellow-500 py-2"><i
+            class="fa-solid fa-circle-info mr-1"></i>Giới thiệu</a></li>
+      <li><a href="/lien-he" class="block text-gray-600 hover:text-yellow-500 py-2"><i
+            class="fa-solid fa-envelope mr-1"></i>Liên hệ</a></li>
+      <% if (typeof user !=='undefined' && user) { %>
+        <li><a href="/profile" class="block text-gray-600 hover:text-yellow-500 py-2"><i
+              class="fa-solid fa-user mr-2"></i>Thông tin cá nhân</a></li>
+        <% if (user.role==='admin' ) { %>
+          <li><a href="/admin" class="block text-gray-600 hover:text-yellow-500 py-2"><i
+                class="fa-solid fa-cogs mr-2"></i>Quản lý</a></li>
+          <% } %>
+            <!-- Nút Đăng Công Thức (Mobile) -->
+            <li>
+              <a href="/dang-cong-thuc"
+                class="hidden md:block bg-gradient-to-r from-yellow-500 to-yellow-300 text-white px-4 py-2 rounded-full font-semibold button-glow hover:bg-yellow-600 transition">
+                <i class="fas fa-plus mr-2"></i> Đăng Công Thức
+              </a>
 
-  <!-- Menu Mobile -->
-  <ul id="mobile-menu" class="md:hidden absolute top-16 left-0 w-full bg-white shadow-md hidden flex-col space-y-4 py-4 text-center">
-    <li><a href="/" class="block text-gray-600 hover:text-yellow-500 transition py-2"><i class="fa-solid fa-house mr-1"></i>Trang chủ</a></li>
-    <li><a href="/cong-thuc" class="block text-gray-600 hover:text-yellow-500 transition py-2"><i class="fa-solid fa-utensils mr-1"></i>Công thức</a></li>
-    <li><a href="/danh-muc" class="block text-gray-600 hover:text-yellow-500 transition py-2"><i class="fa-solid fa-folder-open mr-1"></i>Danh mục</a></li>
-    <li><a href="/yeu-thich" class="block text-gray-600 hover:text-yellow-500 transition py-2"><i class="fa-solid fa-heart mr-1"></i>Yêu thích</a></li>
-    <li><a href="/tim-kiem" class="block text-gray-600 hover:text-yellow-500 transition py-2"><i class="fa-solid fa-magnifying-glass mr-1"></i>Tìm kiếm</a></li>
-    <li><a href="/gioi-thieu" class="block text-gray-600 hover:text-yellow-500 transition py-2"><i class="fa-solid fa-circle-info mr-1"></i>Giới thiệu</a></li>
-    <li><a href="/lien-he" class="block text-gray-600 hover:text-yellow-500 transition py-2"><i class="fa-solid fa-envelope mr-1"></i>Liên hệ</a></li>
-    <% if (typeof user !== 'undefined' && user) { %>
-      <li><a href="/cong-thuc-cua-toi" class="block text-gray-600 hover:text-yellow-500 transition py-2"><i class="fa-solid fa-utensils mr-1"></i>Công thức của tôi</a></li>
-      <% if (user.role === 'admin') { %>
-        <li><a href="/admin" class="block text-gray-600 hover:text-yellow-500 transition py-2"><i class="fa-solid fa-cogs mr-1"></i>Quản lý</a></li>
-      <% } %>
-      <li><a href="/profile" class="block text-gray-600 hover:text-yellow-500 transition py-2"><i class="fa-solid fa-user mr-2"></i>Thông tin cá nhân</a></li>
-      <li><a href="/logout" class="block text-gray-600 hover:text-yellow-500 transition py-2"><i class="fa-solid fa-right-from-bracket mr-2"></i>Đăng xuất</a></li>
-    <% } else { %>
-      <li><a href="/login" class="block bg-yellow-500 text-white py-2 rounded-lg font-semibold hover:bg-yellow-600 transition"><i class="fa-solid fa-right-to-bracket mr-2"></i> Đăng nhập</a></li>
-    <% } %>
-  </ul>
-</nav>
+            </li>
+           <li><a href="/logout" class="block text-gray-600 hover:text-yellow-500 py-2"><i
+                  class="fa-solid fa-right-from-bracket mr-2"></i>Công thức của tôi</a></li>
+            <li><a href="/logout" class="block text-gray-600 hover:text-yellow-500 py-2"><i
+                  class="fa-solid fa-right-from-bracket mr-2"></i>Đăng xuất</a></li>
+            <% } else { %>
+              <li><a href="/login"
+                  class="block bg-yellow-500 text-white py-2 rounded-lg hover:bg-yellow-600 transition font-semibold"><i
+                    class="fa-solid fa-right-to-bracket mr-2"></i>Đăng nhập</a></li>
+              <% } %>
+    </ul>
+  </nav>
 
 
 
-
-  <!-- Nội dung động -->
-  <main>
+  <!-- Nội dung -->
+  <main class="mt-6 px-4 F">
     <%- include(viewPath) %>
   </main>
 
-  <!-- Chân trang -->
+  <!-- Footer -->
   <%- include('../partials/footer') %>
-
+    <style>
+      body {
+        font-family: 'Montserrat Alternates', sans-serif;
+      }
+    </style>
+    <!-- JavaScript -->
+    <script src="/index/index.js"></script>
 </body>
-<!-- JavaScript -->
-<script>
-  // Toggle menu mobile
-  document.getElementById("menu-toggle").addEventListener("click", function () {
-    let menu = document.getElementById("mobile-menu");
-    menu.classList.toggle("hidden");
-  });
 
-  // Toggle user dropdown trên desktop
-  document.getElementById("user-avatar")?.addEventListener("click", function () {
-    let dropdown = document.getElementById("user-dropdown");
-    dropdown.classList.toggle("hidden");
-  });
-</script>
 </html>
