@@ -36,8 +36,10 @@
             <i class="fa-solid fa-mug-hot mr-1"></i>Món ăn</a></li>
           <li><a href="/cong-thuc" class="text-gray-600 hover:text-yellow-500 transition"><i
                 class="fa-solid fa-utensils mr-1"></i>Công thức</a></li>
-          <li><a href="/danh-muc" class="text-gray-600 hover:text-yellow-500 transition"><i
-                class="fa-solid fa-folder-open mr-1"></i>Danh mục</a></li>
+<li><a href="/cong-thuc" class="text-gray-600 hover:text-yellow-500 transition"><i
+                class="fa-solid fa-utensils mr-1"></i>Danh mục ăn</a></li>
+
+
           <li><a href="/gioi-thieu" class="text-gray-600 hover:text-yellow-500 transition"><i
                 class="fa-solid fa-circle-info mr-1"></i>Giới thiệu</a></li>
           <li><a href="/lien-he" class="text-gray-600 hover:text-yellow-500 transition"><i
@@ -56,18 +58,19 @@
                 <%= user.TEN_NGUOI_DUNG %>
               </span>
             </div>
-            <div id="user-dropdown"
-              class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-md hidden text-sm text-center">
-              <a href="/profile" class="block px-4 py-2 hover:text-yellow-500"><i
-                  class="fa-solid fa-user mr-2"></i>Thông tin cá nhân</a>
-              <% if (user.role==='admin' ) { %>
-                <a href="/admin" class="block px-4 py-2 hover:text-yellow-500"><i class="fa-solid fa-cogs mr-2"></i>Quản
-                  lý</a>
-                <% } %>
-                 <a href="/cong-thuc-cua-toi" class="block text-gray-600 hover:text-yellow-500 py-2"><i class="fa-solid fa-receipt mr-2"></i>Công thức của tôi</a>
-                  <a href="/logout" class="block px-4 py-2 hover:text-yellow-500"><i
-                      class="fa-solid fa-right-from-bracket mr-2"></i>Đăng xuất</a>
-            </div>
+           <div id="user-dropdown"
+     class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-md hidden text-sm text-center">
+  <a href="/profile" class="block px-4 py-2 hover:text-yellow-500">
+    <i class="fa-solid fa-user mr-2"></i>Thông tin cá nhân
+  </a>
+  <a href="/cong-thuc-cua-toi" class="block text-gray-600 hover:text-yellow-500 py-2">
+    <i class="fa-solid fa-receipt mr-2"></i>Công thức của tôi
+  </a>
+  <a href="/logout" class="block px-4 py-2 hover:text-yellow-500">
+    <i class="fa-solid fa-right-from-bracket mr-2"></i>Đăng xuất
+  </a>
+</div>
+
           </div>
           <!-- Nút Đăng Công Thức (Desktop) -->
           <a href="/dang-cong-thuc"

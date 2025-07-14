@@ -485,6 +485,21 @@ const addRecipeForm = document.getElementById('add-recipe-form');
       document.getElementById('step1').style.display = 'block';
     });
   }
+
+    const toggle = document.getElementById('category-toggle');
+    const menu = document.querySelector('.dropdown-menu');
+
+    toggle.addEventListener('click', (e) => {
+        e.preventDefault();
+        menu.classList.toggle('hidden');
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!toggle.contains(e.target) && !menu.contains(e.target)) {
+            menu.classList.add('hidden');
+        }
+    });
+
   // // Modal Profile
   // function openModalProfile() {
   //   const modal = document.getElementById('updateProfileModal');

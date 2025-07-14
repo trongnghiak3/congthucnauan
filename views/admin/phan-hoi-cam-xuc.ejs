@@ -1,0 +1,102 @@
+<div id="reply-emotions-by-recipe" class="tab-content" role="tabpanel">
+  <div class="flex justify-between items-center px-6 py-4 bg-white border-b border-gray-200">
+    <div class="text-gray-600 text-sm">
+      Tổng công thức có phản hồi cảm xúc:
+      <span class="font-semibold text-gray-800">
+        <%= Object.keys(groupedEmotions).length %>
+      </span>
+    </div>
+  </div>
+
+  <div class="overflow-x-auto px-6 py-4 bg-white border border-t-0 rounded-b-lg">
+    <table class="min-w-full text-sm text-gray-700">
+      <thead>
+        <tr class="bg-gray-100 text-gray-700 uppercase font-medium">
+          <th class="px-4 py-3 text-center">STT</th>
+          <th class="px-4 py-3 text-left">Người Dùng</th>
+          <th class="px-4 py-3 text-left">Phản Hồi</th>
+          <th class="px-4 py-3 text-left">Loại Cảm Xúc</th>
+          <th class="px-4 py-3 text-center">Ngày</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (groupedEmotions && Object.keys(groupedEmotions).length > 0) { %>
+          <% Object.keys(groupedEmotions).forEach((tenCT, index) => {
+            const list = groupedEmotions[tenCT];
+          %>
+            <tr class="hover:bg-yellow-50 cursor-pointer bg-gray-50" onclick="toggleReplyEmotions('<%= tenCT %>')">
+              <td colspan="5" class="text-center font-medium py-3">
+                🍽 Công thức: <%= tenCT %>
+              </td>
+            </tr>
+            <% list.forEach((emo, i) => { %>
+              <tr class="emotion-row hidden border-b border-gray-100" data-group="<%= tenCT %>">
+                <td class="p-3 text-center"><%= i + 1 %></td>
+                <td class="p-3"><%= emo.TEN_NGUOI_DUNG %> – <%= emo.EMAIL_ %></td>
+               <td class="p-3 comment-content text-sm leading-relaxed">
+  <div class="font-medium text-gray-800" title="<%= emo.NOI_DUNG_PH %>">
+    <%= emo.NOI_DUNG_PH %>
+  </div>
+  <% if (emo.NOI_DUNG_PH_CHA) { %>
+    <div class="text-gray-500 italic text-xs mt-1" title="<%= emo.NOI_DUNG_PH_CHA %>">
+      ↪ Trả lời: <%= emo.NOI_DUNG_PH_CHA %>
+    </div>
+  <% } else if (emo.NOI_DUNG_BL) { %>
+    <div class="text-gray-500 italic text-xs mt-1" title="<%= emo.NOI_DUNG_BL %>">
+      🗨 Bình luận: <%= emo.NOI_DUNG_BL %>
+    </div>
+  <% } %>
+</td>
+
+                
+                <td class="p-3">
+                  <% 
+                    const emotionIcons = {
+                      like: '👍',
+                      love: '❤️',
+                      haha: '😂',
+                      wow: '😮',
+                      sad: '😢',
+                      angry: '😣'
+                    };
+                    const emotion = emo.LOAI_CAM_XUC.toLowerCase();
+                  %>
+                  <%= emotionIcons[emotion] || emotion %>
+                </td>
+                <td class="p-3 text-center">
+                  <%= new Date(emo.NGAY_TAO_CX_PH).toLocaleDateString('vi-VN') %>
+                </td>
+              </tr>
+            <% }) %>
+          <% }) %>
+        <% } else { %>
+          <tr>
+            <td colspan="5" class="text-center py-6 text-gray-400 italic">Không có phản hồi cảm xúc nào.</td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+
+  <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
+    <div class="mt-6 flex justify-center space-x-2">
+      <% if (currentPage > 1) { %>
+        <a href="#"
+          onclick="loadPage('/admin/phan-hoi-cam-xuc?page=<%= currentPage - 1 %>', document.querySelector('#content')); return false;"
+          class="px-4 py-2 border bg-white hover:bg-gray-100">‹ Trước</a>
+      <% } %>
+      <% for (let i = 1; i <= totalPages; i++) { %>
+        <a href="#"
+          onclick="loadPage('/admin/phan-hoi-cam-xuc?page=<%= i %>', document.querySelector('#content')); return false;"
+          class="px-4 py-2 rounded border text-sm <%= i === currentPage ? 'bg-yellow-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100' %>">
+          <%= i %>
+        </a>
+      <% } %>
+      <% if (currentPage < totalPages) { %>
+        <a href="#"
+          onclick="loadPage('/admin/phan-hoi-cam-xuc?page=<%= currentPage + 1 %>', document.querySelector('#content')); return false;"
+          class="px-4 py-2 border bg-white hover:bg-gray-100">Sau ›</a>
+      <% } %>
+    </div>
+  <% } %>
+</div>

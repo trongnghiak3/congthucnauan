@@ -1,11 +1,12 @@
-
 <div class="flex justify-between items-center px-6 py-4 bg-gray-50 shadow-sm">
   <div></div>
-  <a href="#" onclick="loadPage('/admin/cong-thuc/add', this)"
-    class=" flex justifty-end bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg transition duration-300 ease-in-out shadow-md">
+  <a href="/admin/cong-thuc/add"
+     onclick="event.preventDefault(); loadPage('/admin/cong-thuc/add', this)"
+     class="flex justify-end bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg transition duration-300 ease-in-out shadow-md">
     Thêm Công Thức
   </a>
 </div>
+
 
 <div class="overflow-x-auto px-6 py-4">
    <table class="min-w-full border border-gray-300 rounded-lg overflow-hidden shadow-sm">
@@ -162,7 +163,12 @@
     </div>
     <% } %>
 </div>
-
+<!-- Menu chuột phải -->
+<ul id="contextMenu" class="absolute bg-white shadow-lg rounded-lg border border-gray-200 text-sm hidden z-50 w-48">
+  <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer" onclick="handleEdit()">✏️ Chỉnh sửa</li>
+  <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer" onclick="handleApprove()">✅ Duyệt công thức</li>
+  <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer text-red-600" onclick="handleDelete()">❌ Xóa</li>
+</ul>
 <style>
   .line-clamp-2 {
     display: -webkit-box;

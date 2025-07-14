@@ -1,6 +1,6 @@
 const ensureLoggedIn = (req, res, next) => {
     try {
-        if (!req.session.user || req.session.user.status !== "active") {
+        if (!req.session.user || req.session.user.status !== "hoatdong") {
             if (req.xhr || req.headers.accept.includes("json")) {
                 return res.status(401).json({ error: "Vui lòng đăng nhập để thực hiện hành động này" });
             }

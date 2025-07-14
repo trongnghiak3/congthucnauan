@@ -65,8 +65,8 @@ router.post("/register", async (req, res) => {
             name,
             email,
             hash,
-            "user", // Fixed to string "user"
-            "active", // Default status
+            "nguoidung", // Fixed to string "user"
+            "hoatdong", // Default status
         ]);
         res.redirect("/login");
     } catch (err) {
@@ -81,5 +81,80 @@ router.get("/logout", (req, res) => {
         res.redirect("/login");
     });
 });
+// GET - giao diện đổi mật khẩu dùng chung
+// GET - hiển thị giao diện đổi mật khẩu
+router.get('/doi-mat-khau', async (req, res) => {
+  const user = req.session.user;
+  if (!user) return res.redirect('/dang-nhap');
+
+  try {
+    const rows = await query('SELECT * FROM NGUOI_DUNG WHERE ID_CHINH_ND = ?', [user.ID_CHINH_ND]);
+    if (rows.length === 0) return res.status(404).send('Không tìm thấy người dùng');
+
+    res.render('admin/admin', {
+      title: 'Đổi Mật Khẩu',
+      user: rows[0],
+      content: 'auth/doi-mat-khau', // ✅ Đường dẫn tới file nội dung bên trong
+      error: null,
+      success: null
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Lỗi máy chủ');
+  }
+});
+
+// POST - xử lý đổi mật khẩu dùng chung
+router.post('/doi-mat-khau', async (req, res) => {
+  const user = req.session.user;
+  if (!user) return res.redirect('/dang-nhap');
+
+  const { matKhauCu, matKhauMoi, xacNhanMatKhau } = req.body;
+
+  try {
+    const rows = await query('SELECT * FROM NGUOI_DUNG WHERE ID_CHINH_ND = ?', [user.ID_CHINH_ND]);
+    const currentUser = rows[0];
+
+    const match = await bcrypt.compare(matKhauCu, currentUser.MAT_KHAU);
+    if (!match) {
+      return res.render('admin/admin', {
+        title: 'Đổi Mật Khẩu',
+        user: currentUser,
+        content: 'auth/doi-mat-khau',
+        error: 'Mật khẩu hiện tại không đúng',
+        success: null
+      });
+    }
+
+    if (matKhauMoi !== xacNhanMatKhau) {
+      return res.render('admin/admin', {
+        title: 'Đổi Mật Khẩu',
+        user: currentUser,
+        content: 'auth/doi-mat-khau',
+        error: 'Xác nhận mật khẩu không khớp',
+        success: null
+      });
+    }
+
+    const hashed = await bcrypt.hash(matKhauMoi, 10);
+    await query(
+      'UPDATE NGUOI_DUNG SET MAT_KHAU = ?, NGAY_CAP_NHAT_ND = NOW() WHERE ID_CHINH_ND = ?',
+      [hashed, user.ID_CHINH_ND]
+    );
+
+    res.render('admin/admin', {
+      title: 'Đổi Mật Khẩu',
+      user: currentUser,
+      content: 'auth/doi-mat-khau',
+      error: null,
+      success: 'Đổi mật khẩu thành công!'
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Lỗi máy chủ');
+  }
+});
+
+
 
 module.exports = router;

@@ -1,0 +1,53 @@
+<%
+// Xử lý thời gian nấu
+const totalMinutes = parseInt(recipe.THOI_GIAN_NAU) || 0;
+let timeDisplay = "";
+if (totalMinutes >= 60) {
+  const hours = Math.floor(totalMinutes / 60);
+  const mins = totalMinutes % 60;
+  timeDisplay = `${hours} giờ${mins > 0 ? ' ' + mins + ' phút' : ''}`;
+} else {
+  timeDisplay = `${totalMinutes} phút`;
+}
+%>
+
+<div class="recipe-card flex overflow-hidden transform hover:-translate-y-2 transition-all duration-300 cursor-pointer"
+     data-category-id="<%= recipe.loai_mon_ids %>"
+     data-portion="<%= recipe.SO_PHAN_AN %>"
+     data-time="<%= Math.floor(recipe.THOI_GIAN_NAU / 60) %>"
+     data-difficulty="<%= recipe.DO_KHO %>"
+     onclick="window.location.href='/cong-thuc/<%= recipe.ID_CHINH_CT %>'">
+    <div class="relative w-1/3 h-48 overflow-hidden">
+        <% if (recipe.HINH_ANH_CT) { %>
+            <img src="<%= recipe.HINH_ANH_CT %>" alt="<%= recipe.TEN_CT %>" class="w-full h-full object-cover transition-transform duration-300 hover:scale-105">
+        <% } else { %>
+            <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 text-gray-500 text-sm animate-pulse">
+                <i class="fas fa-image mr-2"></i>Không có ảnh
+            </div>
+        <% } %>
+        <span class="absolute top-3 left-3 bg-amber-500 text-white text-xs font-semibold px-2 py-1 rounded-full">
+            <%= recipe.TEN_MON_AN %>
+        </span>
+        <div class="absolute bottom-3 right-3 bg-black bg-opacity-60 text-white text-xs font-semibold px-2 py-1 rounded-full flex items-center">
+            <i class="fas fa-star text-yellow-400 mr-1"></i>
+            <%= recipe.DANH_GIA %>
+        </div>
+    </div>
+    <div class="w-2/3 p-4 flex flex-col justify-between">
+        <div>
+            <h3 class="text-xl font-bold text-gray-800 hover:text-yellow-600 transition-colors line-clamp-2">
+                <%= recipe.TEN_CT %>
+            </h3>
+            <% if (recipe.MOTA) { %>
+                <p class="text-sm text-gray-600 line-clamp-2 mt-2">
+                    <%= recipe.MOTA %>
+                </p>
+            <% } %>
+        </div>
+        <div class="flex justify-between items-center text-sm text-gray-500 mt-2">
+            <span><i class="fas fa-clock mr-1"></i><%= timeDisplay %></span>
+            <span><i class="fas fa-fire mr-1"></i><%= recipe.DO_KHO %></span>
+            <span><i class="fas fa-utensils mr-1"></i><%= recipe.SO_PHAN_AN %> người</span>
+        </div>
+    </div>
+</div>

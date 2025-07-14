@@ -5,6 +5,7 @@ const { ensureLoggedIn } = require("../middleware/auth");
 const multer = require('multer');
 const path = require("path");
 const fs = require("fs").promises;
+
 // Hàm chuyển buffer sang base64 (chỉ dùng cho avatar, không dùng cho ảnh công thức)
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -42,21 +43,58 @@ const upload = multer({
 
 router.get("/", async (req, res) => {
     try {
-        // Nếu user đã đăng nhập và là admin thì redirect sang /admin
-        if (req.session.user && req.session.user.role === 1) {
-            return res.redirect("/admin");
-        }
+        
 
-        // Nếu không phải admin thì render trang chủ bình thường
         res.render("index/index_layout", {
             title: "Trang chủ",
             viewPath: "trang-chu",
-            user: req.session.user, // truyền user cho view
+            user: req.session.user
+           
         });
     } catch (err) {
         console.error("Lỗi lấy dữ liệu:", err);
         res.status(500).send("Lỗi server");
     }
+});
+
+router.get("/gioi-thieu", async (req, res) => {
+    try {
+        // Nếu user là admin thì redirect về trang admin
+        if (req.session.user && req.session.user.role === 1) {
+            return res.redirect("/admin");
+        }
+
+        // Render trang giới thiệu cho người dùng thường
+        res.render("index/index_layout", {
+            title: "Giới thiệu",
+            viewPath: "gioi-thieu",  // Tên file .ejs trong views/index/gioi-thieu.ejs
+            user: req.session.user
+        });
+    } catch (err) {
+        console.error("Lỗi khi truy cập trang giới thiệu:", err);
+        res.status(500).send("Lỗi server");
+    }
+});
+router.get("/lien-he", async (req, res) => {
+  try {
+    // Nếu user là admin thì redirect về trang admin
+    if (req.session.user && req.session.user.role === 1) {
+      return res.redirect("/admin");
+    }
+
+    // Render trang liên hệ cho người dùng thường
+    res.render("index/index_layout", {
+      title: "Liên hệ",
+      viewPath: "lien-he", // => views/index/lien-he.ejs
+      user: req.session.user,
+      success: null,
+      error: null
+    });
+
+  } catch (err) {
+    console.error("Lỗi khi truy cập trang liên hệ:", err);
+    res.status(500).send("Lỗi server");
+  }
 });
 
 // Route danh sách món ăn
@@ -139,6 +177,8 @@ router.get("/mon-an", async (req, res) => {
 
 
 // Route danh sách công thức
+
+
 router.get("/cong-thuc", async (req, res) => {
     try {
 
@@ -241,7 +281,8 @@ router.get("/cong-thuc", async (req, res) => {
         res.status(500).send("Lỗi truy vấn dữ liệu");
     }
 });
-// Route chi tiết công thức
+
+
 router.get("/cong-thuc/:id", async (req, res) => {
     const recipeId = req.params.id;
     if (!recipeId || isNaN(recipeId)) {

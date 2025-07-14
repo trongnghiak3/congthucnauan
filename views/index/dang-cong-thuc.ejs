@@ -1,5 +1,5 @@
   <!-- Form Đăng Công Thức -->
-<div id="addRecipeFormContainer" class="w-full max-w-6xl mx-auto my-10">
+<div id="addRecipeFormContainer" class="w-full max-w-7xl mx-auto my-10">
   <div class="bg-white p-6 rounded-2xl shadow-2xl bg-gradient-to-b from-white to-gray-50">
     <h2 class="text-2xl font-semibold text-gray-900 text-center mb-6 bg-clip-text text-transparent bg-gradient-to-r from-yellow-500 to-yellow-300">
       Đăng Công Thức
@@ -10,24 +10,39 @@
         <section id="step1" class="grid grid-cols-1 md:grid-cols-2 gap-8">
             <!-- BÊN TRÁI -->
             <div class="space-y-6">
-                <div class="flex items-center justify-between">
-                    <!-- Hình ảnh -->
-                    <div>
-                        <img id="image_preview" src="/default.jpg"
-                            class="mt-2 w-40 h-40 object-cover rounded-lg border cursor-pointer"
-                            onclick="document.getElementById('hinh_anh').click()" />
-                        <input type="file" id="hinh_anh" name="hinh_anh" accept="image/*" class="hidden" />
-                    </div>
-                    <!-- Video -->
-                    <div>
-                        <video id="video_preview" controls
-                            class="mt-2 w-64 h-36 rounded-lg border cursor-pointer"
-                            onclick="document.getElementById('video_file').click()">
-                        </video>
-                        <input type="file" id="video_file" name="video_file" accept="video/mp4" class="hidden" />
-                    </div>
-                </div>
+               <div class="flex items-center justify-between gap-8 mt-6">
+  <!-- Ảnh minh họa -->
+  <div class="flex flex-col items-center">
+    <label class="text-gray-700 font-semibold mb-2">Ảnh minh họa</label>
+    <label for="hinh_anh" class="relative group cursor-pointer">
+      <img id="image_preview" src="/default.jpg"
+        class="w-40 h-40 object-cover rounded-xl border-2 border-gray-300 shadow-md group-hover:opacity-70 transition duration-200" />
+      <div
+        class="absolute inset-0 flex items-center justify-center text-white text-sm bg-black bg-opacity-40 rounded-xl opacity-0 group-hover:opacity-100 transition">
+        Nhấn để chọn ảnh
+      </div>
+    </label>
+    <input type="file" id="hinh_anh" name="hinh_anh" accept="image/*" class="hidden" />
+  </div>
 
+  <!-- Video minh họa -->
+  <div class="flex flex-col items-center">
+    <label class="text-gray-700 font-semibold mb-2">Video minh họa</label>
+    <label for="video_file" class="relative group cursor-pointer">
+      <video id="video_preview" controls
+        class="w-64 h-36 rounded-xl border-2 border-gray-300 shadow-md group-hover:opacity-70 transition duration-200 pointer-events-none">
+        Trình duyệt không hỗ trợ video.
+      </video>
+      <div
+        class="absolute inset-0 flex items-center justify-center text-white text-sm bg-black bg-opacity-40 rounded-xl opacity-0 group-hover:opacity-100 transition">
+        Nhấn để chọn video
+      </div>
+    </label>
+    <input type="file" id="video_file" name="video_file" accept="video/mp4" class="hidden" />
+  </div>
+</div>
+
+                
                 <!-- Tên Công Thức -->
                 <div>
                     <label for="ten_ct" class="block text-sm font-semibold text-yellow-600">📌 Tên Công Thức</label>

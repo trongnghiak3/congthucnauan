@@ -12,10 +12,10 @@ const port = 4000;
 const ejs = require('ejs');
 
 
-
+app.use(methodOverride('_method'));
 // Middleware
 app.use(express.urlencoded({ extended: true }));
-app.use(methodOverride('_method'));
+
 app.use(express.json());
 
 app.use('/uploads', express.static('uploads'));
@@ -52,6 +52,7 @@ app.locals.escapeJs = function (str) {
     .replace(/\n/g, '\\n')
     .replace(/\r/g, '\\r');
 };
+
 
 app.use("/", indexRoutes);
 app.use("/", authRoutes);

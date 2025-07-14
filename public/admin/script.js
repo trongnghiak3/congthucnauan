@@ -1,37 +1,80 @@
 console.log("script.js đã tải thành công!");
 // console.log("User hiện tại:", req.user);
+// Hàm tải trang bằng AJAX
 function loadPage(url, element) {
-    console.log("Bắt đầu tải trang từ URL: " + url);
-    fetch(url)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.text();
-        })
-        .then(data => {
-            console.log("Nội dung nhận được: " + data.substring(0, 100) + "...");
-            document.querySelector("#content").innerHTML = data;
-            console.log("Chèn nội dung vào #content...");
-            window.history.pushState({ path: url }, '', url);
-            try {
-                initializePage(url);
-            } catch (e) {
-                console.error("Không tìm thấy hàm initializePage: ", e);
-            }
-        })
-        .catch(err => console.error("Lỗi fetch: ", err));
-}
-   const avatar = document.getElementById("user-avatar");
-  const dropdown = document.getElementById("user-dropdown");
+  console.log("🔄 Bắt đầu tải trang từ URL:", url);
+  const content = document.querySelector("#content");
 
-  document.addEventListener("click", function (e) {
+  if (!content) {
+    console.error("❌ Không tìm thấy phần tử #content trong DOM");
+    return;
+  }
+
+  content.innerHTML = '<div class="text-center py-8 text-yellow-600">⏳ Đang tải...</div>';
+
+  fetch(url, {
+    headers: {
+      'Accept': 'text/html' // ✅ Thêm để đảm bảo server trả về HTML
+    }
+  })
+    .then(async (response) => {
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`❌ Lỗi HTTP ${response.status}:`, errorText);
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.text();
+    })
+    .then((data) => {
+      console.log("📦 HTML trả về:", data.slice(0, 500), "...");
+
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(data, "text/html");
+      const newContent = doc.querySelector("#content")?.innerHTML;
+
+      if (newContent) {
+        content.innerHTML = newContent;
+      } else {
+        content.innerHTML = '<div class="text-center py-8 text-red-600">⚠️ Không tìm thấy nội dung để hiển thị.</div>';
+      }
+
+      document.querySelectorAll(".sidebar-item").forEach((item) => {
+        item.classList.remove("active");
+      });
+      if (element) {
+        element.classList.add("active");
+      }
+
+      window.history.pushState({ path: url }, "", url);
+
+      if (typeof initializePage === 'function') {
+        initializePage(url);
+      }
+    })
+    .catch((err) => {
+      console.error("🚨 Lỗi fetch hoặc DOM:", err);
+      content.innerHTML = `
+        <div class="bg-red-100 text-red-700 p-4 rounded-lg mt-4 shadow">
+          ❌ Không thể tải trang: <strong>${err.message}</strong><br>
+          🔍 Kiểm tra xem file EJS có bị lỗi hoặc thiếu không.<br>
+        </div>`;
+    });
+}
+
+// Xử lý dropdown avatar
+const avatar = document.getElementById("user-avatar");
+const dropdown = document.getElementById("user-dropdown");
+
+document.addEventListener("click", function (e) {
+  if (avatar && dropdown) {
     if (avatar.contains(e.target)) {
       dropdown.classList.toggle("hidden");
     } else {
       dropdown.classList.add("hidden"); // Ẩn nếu click ra ngoài
     }
-  });
+  }
+});
+
 function initializeRecipesList() {
     console.log("Khởi tạo sự kiện cho trang danh sách công thức...");
     const toggleButtons = document.querySelectorAll('button[onclick^="toggleInstructions"]');
@@ -147,7 +190,12 @@ function removeBuocNau(btn) {
         showError("Phải có ít nhất một bước nấu!");
     }
 }
-
+// Reset form tìm kiếm
+function resetSearchForm() {
+  const searchForm = document.getElementById('searchForm');
+  searchForm.reset();
+  loadPage('/admin/cong-thuc?page=1', document.querySelector('#content'));
+}
 function initializeAddRecipe() {
     console.log("Khởi tạo biểu mẫu thêm/chỉnh sửa công thức");
     const form = document.getElementById('add-recipe-form');
@@ -190,7 +238,7 @@ function initializeAddRecipe() {
             preview.src = URL.createObjectURL(file);
         }
     });
-
+   
     if (form) {
         form.addEventListener('submit', async function (e) {
             e.preventDefault();
@@ -274,40 +322,47 @@ function initializeAddRecipe() {
                 console.log(`${key}: ${val}`);
             }
 
-        const method = recipeId ? "PUT" : "POST";
-  const url = recipeId ? `/admin/cong-thuc/${recipeId}` : "/admin/cong-thuc";
+            const method = recipeId ? "PUT" : "POST";
+            const url = recipeId ? `/admin/cong-thuc/${recipeId}` : "/admin/cong-thuc";
 
-  try {
-    const res = await fetch(url, {
-      method,
-      body: formData,
-    });
+            try {
+                const res = await fetch(url, {
+                    method,
+                    body: formData,
+                });
 
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.message || "Lỗi từ server");
+                const data = await res.json();
+                if (!res.ok) {
+                    throw new Error(data.message || "Lỗi từ server");
+                }
+
+                console.log("Response:", data);
+                showAdminNotification(recipeId ? "Cập nhật công thức thành công!" : "Thêm công thức thành công!", "success");
+                loadPage("/admin/cong-thuc", document.querySelector("#content"));
+            } catch (err) {
+                console.error("Lỗi gửi form:", err);
+                showError("Đã xảy ra lỗi: " + err.message);
+            }
+        });
     }
-
-    console.log("Response:", data);
-    alert(recipeId ? "Cập nhật công thức thành công!" : "Thêm công thức thành công!");
-    loadPage("/admin/cong-thuc", document.querySelector("#content"));
-  } catch (err) {
-    console.error("Lỗi gửi form:", err);
-    showError("Đã xảy ra lỗi: " + err.message);
-  }
-});
-  }
 }
 
-function showError(msg) {
-    let errorEl = document.getElementById('error-message');
-    if (!errorEl) {
-        errorEl = document.createElement('div');
-        errorEl.id = 'error-message';
-        errorEl.className = 'text-red-600 mt-2';
-        document.getElementById('add-recipe-form').prepend(errorEl);
-    }
-    errorEl.textContent = msg;
+function showError(message) {
+  const errorContainer = document.getElementById("errorContainer");
+  if (!errorContainer) {
+    console.error("Không tìm thấy #errorContainer trong DOM");
+    alert(message); // Fallback: dùng alert nếu không có errorContainer
+    return;
+  }
+
+  const errorElement = document.createElement("div");
+  errorElement.className = "bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4";
+  errorElement.textContent = message;
+  errorContainer.prepend(errorElement);
+
+  setTimeout(() => {
+    errorElement.remove();
+  }, 5000);
 }
 
 function convertYouTubeUrl(url) {
@@ -320,38 +375,38 @@ function convertYouTubeUrl(url) {
 }
 
 function toggleInstructions(recipeId) {
-    const instructions = document.getElementById(`instructions-${recipeId}`);
-    const toggleIcon = document.getElementById(`toggle-icon-${recipeId}`);
-    instructions.classList.toggle('hidden');
-    toggleIcon.classList.toggle('rotate-180');
+  const instructions = document.getElementById(`instructions-${recipeId}`);
+  const toggleIcon = document.getElementById(`toggle-icon-${recipeId}`);
+  instructions.classList.toggle("hidden");
+  toggleIcon.classList.toggle("rotate-180");
 }
 
 async function confirmDelete(id) {
-    if (confirm('Bạn có chắc muốn xóa công thức này?')) {
-        try {
-            const res = await fetch(`/admin/cong-thuc/${id}`, {
-                method: 'DELETE',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            });
+  if (confirm("Bạn có chắc muốn xóa công thức này?")) {
+    try {
+      const res = await fetch(`/admin/cong-thuc/${id}`, {
+        method: "DELETE",
+        headers: {
+          "X-Requested-With": "XMLHttpRequest",
+        },
+      });
 
-            const contentType = res.headers.get('content-type') || '';
-            if (!contentType.includes('application/json')) {
-                const text = await res.text();
-                throw new Error('Server không trả về JSON hợp lệ: ' + text);
-            }
+      const contentType = res.headers.get("content-type") || "";
+      if (!contentType.includes("application/json")) {
+        const text = await res.text();
+        throw new Error("Server không trả về JSON hợp lệ: " + text);
+      }
 
-            const result = await res.json();
-            if (!res.ok) throw new Error(result.message || 'Có lỗi từ server.');
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.message || "Có lỗi từ server.");
 
-            alert('Xóa công thức thành công!');
-            loadPage('/admin/cong-thuc', document.querySelector('#content'));
-        } catch (err) {
-            console.error('Lỗi xóa công thức:', err);
-            showError('Đã xảy ra lỗi: ' + err.message);
-        }
+      showAdminNotification("Xóa công thức thành công!", "success");
+      loadPage("/admin/cong-thuc", document.querySelector("#content"));
+    } catch (err) {
+      console.error("Lỗi xóa công thức:", err);
+      showError("Đã xảy ra lỗi: " + err.message);
     }
+  }
 }
 
 async function confirmApprove(id) {
@@ -374,7 +429,7 @@ async function confirmApprove(id) {
             const result = await res.json();
             if (!res.ok) throw new Error(result.message || 'Có lỗi từ server.');
 
-            alert('Duyệt công thức thành công!');
+            showAdminNotification('Duyệt công thức thành công!', 'success');
             loadPage('/admin/cong-thuc', document.querySelector('#content'));
         } catch (err) {
             console.error('Lỗi duyệt công thức:', err);
@@ -382,38 +437,123 @@ async function confirmApprove(id) {
         }
     }
 }
+
 function showAdminNotification(message, type = 'success') {
-  const notif = document.getElementById('admin-notification');
-  notif.textContent = message;
+    const notif = document.getElementById('admin-notification');
+    notif.innerHTML = '';
 
-  notif.className = 'fixed top-5 right-5 z-50 px-4 py-2 rounded text-white shadow-lg';
-  notif.classList.add(type === 'error' ? 'bg-red-500' : 'bg-green-500');
-  notif.classList.remove('hidden');
+    // Chọn icon và màu theo loại
+    const icons = {
+      success: '✅',
+      error: '❌',
+      info: 'ℹ️',
+      warning: '⚠️'
+    };
+    const bgColors = {
+      success: 'bg-green-500',
+      error: 'bg-red-500',
+      info: 'bg-blue-500',
+      warning: 'bg-yellow-500'
+    };
 
-  setTimeout(() => {
-    notif.classList.add('hidden');
-  }, 3000);
+    // Tạo nội dung
+    notif.className = `fixed top-5 right-5 z-50 flex items-start gap-3 px-4 py-3 rounded-xl text-white shadow-xl transform transition-all duration-300 ease-in-out opacity-0 ${bgColors[type] || bgColors.success}`;
+    notif.innerHTML = `
+      <div class="text-2xl">${icons[type] || icons.success}</div>
+      <div class="text-sm font-medium">${message}</div>
+    `;
+
+    // Hiện thông báo
+    notif.classList.remove('hidden');
+    setTimeout(() => {
+      notif.classList.add('opacity-100', 'translate-y-0');
+    }, 10); // delay nhỏ để kích hoạt animation
+
+    // Ẩn sau 3 giây
+    setTimeout(() => {
+      notif.classList.remove('opacity-100');
+      notif.classList.add('opacity-0');
+    }, 3000);
+
+    // Ẩn hoàn toàn sau animation
+    setTimeout(() => {
+      notif.classList.add('hidden');
+    }, 3500);
 }
 
-
-
-
+// Hàm khởi tạo trang
 function initializePage(url) {
-    console.log("Khởi tạo trang với URL:", url);
-    if (url.includes('/admin/cong-thuc/add') || url.includes('/admin/cong-thuc/edit')) {
-        initializeAddRecipe();
-    } else if (url.includes('/admin/cong-thuc')) {
-        initializeRecipesList();
-    } else if (url.includes('/admin/nguyen-lieu') || url.includes('/admin/loai-mon')) {
-        if (typeof bindEventListeners === 'function') {
-            bindEventListeners();
-        } else {
-            console.error('bindEventListeners not found');
-        }
+  console.log("Khởi tạo trang với URL:", url);
+
+  if (url.includes('/admin/cong-thuc/add') || url.includes('/admin/cong-thuc/edit')) {
+    initializeAddRecipe();
+    return;
+  }
+
+  if (url.includes('/admin/cong-thuc')) {
+    initializeRecipesList();
+    return;
+  }
+
+  const routeHandlers = [
+    { path: '/admin/loai-mon', handler: bindEventListeners, name: 'bindEventListeners' },
+    { path: '/admin/mon-an', handler: bindDishEventListeners, name: 'bindDishEventListeners' },
+    { path: '/admin/nguyen-lieu', handler: bindEvennguyenlieutListeners, name: 'bindEvennguyenlieutListeners' },
+    { path: '/admin/nguoi-dung', handler: bindUserEventListeners, name: 'bindUserEventListeners' },
+    { path: '/admin/yeu-thich', handler: bindFavoriteEventListeners, name: 'bindFavoriteEventListeners' },
+    { path: '/admin/danh-gia', handler: binddanhgiaEventListeners, name: 'binddanhgiaEventListeners' },
+    { path: '/admin/binh-luan', handler: bindbinhluanEventListeners, name: 'bindbinhluanEventListeners' },
+    { path: '/admin/phan-hoi-binh-luan', handler: bindphbinhluanEventListeners, name: 'bindphbinhluanEventListeners' },
+    { path: '/admin/binh-luan-cam-xuc', handler: bindCamXucBinhLuanEventListeners, name: 'bindCamXucBinhLuanEventListeners' },
+    { path: '/admin/phan-hoi-cam-xuc', handler: bindPhanHoiCamXucEventListeners, name: 'bindPhanHoiCamXucEventListeners' },
+    { path: '/admin/trang-ca-nhan', handler: bindTrangCaNhanEventListeners, name: 'bindTrangCaNhanEventListeners' }
+  ];
+
+  let matched = false;
+
+  for (const route of routeHandlers) {
+    if (url.includes(route.path)) {
+      if (typeof route.handler === 'function') {
+        route.handler();
+        console.log(`✅ Đã gọi ${route.name} cho ${route.path}`);
+      } else {
+        console.warn(`⚠️ Hàm ${route.name} không được định nghĩa.`);
+      }
+      matched = true;
+      break;
     }
+  }
+
+  if (!matched) {
+    console.warn("❌ Không có route phù hợp trong initializePage");
+  }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
     updateStepNumbers();
     initializePage(window.location.pathname);
+    document.querySelectorAll('.reply-content').forEach(td => {
+      const depth = parseInt(td.getAttribute('data-depth')) || 0;
+      td.style.paddingLeft = `${depth * 24}px`;
+    });
+    const currentPath = window.location.pathname;
+    console.log("URL hiện tại:", currentPath);
+
+    // Kiểm tra nếu là route admin, tải lại nội dung
+    if (currentPath.startsWith("/admin")) {
+      loadPage(currentPath, document.querySelector(`a[href="${currentPath}"]`) || null);
+    } else {
+      // Fallback về trang admin mặc định nếu không phải route admin
+      loadPage("/admin", document.querySelector(`a[href="/admin"]`));
+    }
+
+    // Xử lý popstate cho back/forward
+    window.addEventListener("popstate", (event) => {
+      const path = event.state ? event.state.path : "/admin";
+      console.log("Popstate với URL:", path);
+      loadPage(path, document.querySelector(`a[href="${path}"]`) || null);
+    });
+     
+  
 });
+

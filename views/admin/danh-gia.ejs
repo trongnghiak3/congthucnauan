@@ -1,0 +1,90 @@
+<div id="reviews-by-user" class="tab-content" role="tabpanel" aria-labelledby="tab-reviews-by-user">
+  <div class="flex flex-col md:flex-row justify-between items-center px-6 py-4 bg-white border-b border-gray-200">
+    <div class="text-gray-600 text-sm">
+      Tổng người dùng đã đánh giá: <span class="font-semibold text-gray-800">
+        <%= Object.keys(groupedReviews).length %>
+      </span>
+    </div>
+  </div>
+
+  <div class="overflow-x-auto px-6 py-4 bg-white rounded-b-lg border border-t-0 border-gray-200">
+    <table class="min-w-full text-sm text-gray-700">
+      <thead>
+        <tr class="bg-gray-100 text-gray-700 uppercase text-sm font-medium select-none">
+          <th class="px-6 py-3 border-r border-gray-300 text-center">STT</th>
+          <th class="px-6 py-3 border-r border-gray-300 text-left">Tên Công Thức</th>
+          <th class="px-6 py-3 border-r border-gray-300 text-left">Nội Dung</th>
+          <th class="px-6 py-3 border-r border-gray-300 text-center">Điểm</th>
+          <th class="px-6 py-3 text-left">Ngày Đánh Giá</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (groupedReviews && Object.keys(groupedReviews).length > 0) { %>
+          <% Object.keys(groupedReviews).forEach((userId, index) => {
+               const list = groupedReviews[userId];
+               const first = list[0];
+          %>
+            <!-- Tiêu đề nhóm: Người dùng -->
+            <tr class="hover:bg-yellow-50 transition" onclick="toggleReviews('<%= userId %>')" data-group-id="<%= userId %>">
+              <td colspan="5"
+                class="py-3 px-4 text-center font-medium text-gray-900 border-t border-gray-100 bg-gray-50 rounded hover:bg-gray-100 cursor-pointer">
+                📝 <%= first.TEN_NGUOI_DUNG %> – <%= first.EMAIL_ %>
+              </td>
+            </tr>
+
+            <!-- Danh sách đánh giá -->
+            <% list.forEach((item, i) => { %>
+          <tr class="review-row hidden border-b border-gray-100" data-group="<%= userId %>">
+  <td class="p-3 text-center"><%= i + 1 %></td>
+  <td class="p-3 text-left"><%= item.TEN_CT %></td>
+  <td class="p-3 text-left"><%= item.NOI_DUNG_DG || '(Không có)' %></td>
+  <td class="p-3 text-center"><%= item.DANH_GIA %> ⭐</td>
+  <td class="p-3 text-left">
+    <%= new Date(item.NGAY_TAO_DG).toLocaleDateString('vi-VN') %>
+    <button
+      onclick="confirmDeleteReview('<%= item.ID_CHINH_DG %>')"
+      class="ml-3 bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-md transition text-sm"
+    >
+      🗑 Xóa
+    </button>
+  </td>
+</tr>
+
+            <% }) %>
+          <% }) %>
+        <% } else { %>
+          <tr>
+            <td colspan="5" class="text-center py-6 text-gray-400 italic">Không có đánh giá nào.</td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Phân trang -->
+  <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
+    <div class="mt-6 flex justify-center space-x-2">
+      <% if (currentPage > 1) { %>
+        <a
+          href="#"
+          onclick="loadPage('/admin/danh-gia?page=<%= currentPage - 1 %>', document.querySelector('#content')); return false;"
+          class="px-4 py-2 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 transition"
+        >‹ Trước</a>
+      <% } %>
+      <% for (let i = 1; i <= totalPages; i++) { %>
+        <a
+          href="#"
+          onclick="loadPage('/admin/danh-gia?page=<%= i %>', document.querySelector('#content')); return false;"
+          class="px-4 py-2 rounded-lg border text-sm <%= i === currentPage ? 'bg-yellow-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100' %>"
+        ><%= i %></a>
+      <% } %>
+      <% if (currentPage < totalPages) { %>
+        <a
+          href="#"
+          onclick="loadPage('/admin/danh-gia?page=<%= currentPage + 1 %>', document.querySelector('#content')); return false;"
+          class="px-4 py-2 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 transition"
+        >Sau ›</a>
+      <% } %>
+    </div>
+  <% } %>
+</div>
