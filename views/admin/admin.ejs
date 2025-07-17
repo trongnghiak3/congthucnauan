@@ -6,115 +6,118 @@
   <title>Quản lý Công Thức</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
 </head>
 <body class="bg-[#FAF3E0] font-sans">
-<!-- Notification -->
-<!-- Đặt ở cuối <body> hoặc trong layout chính -->
-<div id="admin-notification" class="hidden fixed top-5 right-5 z-50 flex items-start gap-3 px-4 py-3 rounded-xl text-white shadow-xl transform transition-all duration-300 ease-in-out opacity-0"></div>
+  <!-- Notification -->
+  <div id="admin-notification" class="hidden fixed top-5 right-5 z-50 flex items-start gap-3 px-4 py-3 rounded-xl text-white shadow-xl transform transition-all duration-300 ease-in-out opacity-0"></div>
 
-<div class="flex h-screen overflow-hidden">
-  <!-- Sidebar -->
-  <aside class="w-80 bg-gradient-to-b from-[#FFD700] to-[#DAA520] text-white p-8 shadow-xl flex flex-col fixed h-full border-r-4">
-    <div class="mb-12">
-      <h2 class="text-3xl font-extrabold text-center drop-shadow-md select-none">
-        <a href="/admin">KemRepice</a>
-      </h2>
-    </div>
-    <nav class="flex flex-col space-y-2 text-base font-medium">
-  <% const items = [
-    { url: '/admin/cong-thuc', icon: 'utensils', label: 'Công Thức', color: 'text-yellow-700' },
-    { url: '/admin/nguyen-lieu', icon: 'seedling', label: 'Nguyên Liệu', color: 'text-green-600' },
-    { url: '/admin/loai-mon', icon: 'bowl-rice', label: 'Loại Món', color: 'text-amber-600' },
-    { url: '/admin/nguoi-dung', icon: 'user', label: 'Người Dùng', color: 'text-gray-700' },
-    { url: '/admin/mon-an', icon: 'drumstick-bite', label: 'Món Ăn', color: 'text-orange-500' },
-    { url: '/admin/yeu-thich', icon: 'heart', label: 'Yêu Thích', color: 'text-red-500' },
-    { url: '/admin/danh-gia', icon: 'star', label: 'Đánh Giá', color: 'text-yellow-500' },
-    { url: '/admin/binh-luan', icon: 'comment', label: 'Bình Luận', color: 'text-blue-600' },
-    { url: '/admin/phan-hoi-binh-luan', icon: 'comments', label: 'Phản Hồi Bình Luận', color: 'text-blue-400' },
-    { url: '/admin/binh-luan-cam-xuc', icon: 'face-smile', label: 'Cảm Xúc Bình Luận', color: 'text-pink-500' },
-    { url: '/admin/phan-hoi-cam-xuc', icon: 'face-laugh-squint', label: 'Cảm Xúc Phản Hồi', color: 'text-purple-500' },
-  ]; %>
+  <!-- Wrapper scale -->
+  <div class="transform scale-80 origin-top-left">
+    <div class="flex h-screen overflow-hidden">
+      <!-- Sidebar -->
+      <aside class="w-64 bg-gradient-to-b from-[#FFD700] to-[#DAA520] text-white p-6 shadow-xl flex flex-col fixed h-full border-r-4 z-10">
+        <div class="mb-10">
+          <h2 class="text-2xl font-extrabold text-center drop-shadow-md select-none">
+            <a href="/admin">KemRepice</a>
+          </h2>
+        </div>
+        <nav class="flex flex-col space-y-2 text-sm font-medium">
+          <% const items = [
+            { url: '/admin/cong-thuc', icon: 'utensils', label: 'Công Thức', color: 'text-yellow-700' },
+            { url: '/admin/nguyen-lieu', icon: 'seedling', label: 'Nguyên Liệu', color: 'text-green-600' },
+            { url: '/admin/loai-mon', icon: 'bowl-rice', label: 'Loại Món', color: 'text-amber-600' },
+            { url: '/admin/nguoi-dung', icon: 'user', label: 'Người Dùng', color: 'text-gray-700' },
+            { url: '/admin/mon-an', icon: 'drumstick-bite', label: 'Món Ăn', color: 'text-orange-500' },
+            { url: '/admin/yeu-thich', icon: 'heart', label: 'Yêu Thích', color: 'text-red-500' },
+            { url: '/admin/danh-gia', icon: 'star', label: 'Đánh Giá', color: 'text-yellow-500' },
+            { url: '/admin/binh-luan', icon: 'comment', label: 'Bình Luận', color: 'text-blue-600' },
+            { url: '/admin/phan-hoi-binh-luan', icon: 'comments', label: 'Phản Hồi Bình Luận', color: 'text-blue-400' },
+            { url: '/admin/binh-luan-cam-xuc', icon: 'face-smile', label: 'Cảm Xúc Bình Luận', color: 'text-pink-500' },
+            { url: '/admin/phan-hoi-cam-xuc', icon: 'face-laugh-squint', label: 'Cảm Xúc Phản Hồi', color: 'text-purple-500' },
+          ]; %>
 
-  <% items.forEach(item => { %>
-    <a href="<%= item.url %>"
-       onclick="event.preventDefault(); loadPage('<%= item.url %>', this)"
-       class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:bg-yellow-600 text-white/90">
-       <i class="fas fa-<%= item.icon %> <%= item.color %> text-lg w-5 text-center"></i>
-       <span><%= item.label %></span>
-    </a>
-  <% }) %>
-</nav>
+          <% items.forEach(item => { %>
+            <a href="<%= item.url %>" onclick="event.preventDefault(); loadPage('<%= item.url %>', this)"
+               class="sidebar-item flex items-center gap-2 px-3 py-2 rounded-xl transition-all duration-200 hover:bg-yellow-600 text-white/90">
+              <i class="fas fa-<%= item.icon %> <%= item.color %> text-base w-4 text-center"></i>
+              <span><%= item.label %></span>
+            </a>
+          <% }) %>
+        </nav>
+      </aside>
 
-  </aside>
+      <!-- Content Area -->
+      <div class="flex-1 ml-64 flex flex-col h-screen overflow-hidden">
+        <!-- Header -->
+        <header class="flex items-center justify-between bg-gradient-to-b from-[#FFD700] to-[#DAA520] p-3 border-b-4 shadow sticky top-0 z-30" style="height: 48px;">
+          <div class="text-lg font-bold text-white select-none"></div>
+          <div class="flex items-center space-x-4">
+            <!-- Notification Button -->
+            <div class="relative">
+              <button aria-label="Thông báo" class="relative text-gray-700 hover:text-gray-900 focus:outline-none transition" id="notification-toggle">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+                <span id="notification-count" class="absolute top-0 right-0 inline-block w-2 h-2 bg-red-600 rounded-full ring-2 ring-white hidden"></span>
+              </button>
 
-  <!-- Nội dung bên phải -->
-  <div class="flex-1 ml-80 flex flex-col h-screen overflow-hidden">
-    <!-- Header -->
-    <header class="flex items-center justify-between bg-gradient-to-b from-[#FFD700] to-[#DAA520] p-4 border-b-4 shadow sticky top-0 z-30" style="height: 60px;">
-      <div class="text-xl font-bold text-white select-none"></div>
-      <div class="flex items-center space-x-6">
-<div class="relative">
-  <button aria-label="Thông báo" class="relative text-gray-700 hover:text-gray-900 focus:outline-none transition" id="notification-toggle">
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-    </svg>
-    <span id="notification-count" class="absolute top-0 right-0 inline-block w-3 h-3 bg-red-600 rounded-full ring-2 ring-white hidden"></span>
-  </button>
-  <!-- Dropdown thông báo -->
-  <div id="notification-dropdown" class="absolute right-0 mt-2 w-80 bg-white rounded-md shadow-md hidden z-50 max-h-96 overflow-y-auto">
-    <div class="p-4">
-      <h3 class="text-lg font-semibold text-gray-800">Thông báo</h3>
-      <div id="notification-preview" class="space-y-2">
-        <!-- Mẫu thông báo sẽ được thêm bằng JavaScript -->
-      </div>
-      <div class="mt-4 text-center">
-        <a href="/admin/thong-bao" onclick="event.preventDefault(); loadPage('/admin/thong-bao', this)" 
-           class="block px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600">
-          Xem tất cả
-        </a>
+              <!-- Notification Dropdown -->
+              <div id="notification-dropdown" class="absolute right-0 mt-2 w-64 bg-white rounded-md shadow-md hidden z-50 max-h-80 overflow-y-auto">
+                <div class="p-3">
+                  <h3 class="text-base font-semibold text-gray-800">Thông báo</h3>
+                  <div id="notification-preview" class="space-y-1"></div>
+                  <div class="mt-3 text-center">
+                    <a href="/admin/thong-bao" onclick="event.preventDefault(); loadPage('/admin/thong-bao', this)"
+                       class="block px-3 py-1 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 text-sm">
+                      Xem tất cả
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- User Dropdown -->
+            <div class="relative hidden md:block">
+              <div id="user-avatar" class="flex items-center cursor-pointer space-x-1">
+                <img src="<%= user.avatar || '/default-avatar.png' %>" class="w-8 h-8 rounded-full border-2 object-cover" alt="Avatar">
+                <span class="font-semibold text-gray-700 truncate max-w-[100px] text-sm"><%= user.username %></span>
+              </div>
+              <div id="user-dropdown" class="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-md hidden text-xs text-center">
+                <a href="/admin/trang-ca-nhan" onclick="event.preventDefault(); loadPage('/admin/trang-ca-nhan', this)"
+                   class="block px-3 py-1 hover:text-yellow-500">
+                  <i class="fa-solid fa-user mr-1"></i>Thông tin cá nhân
+                </a>
+                <a href="/doi-mat-khau" onclick="event.preventDefault(); loadPage('/doi-mat-khau', this)"
+                   class="block px-3 py-1 hover:text-yellow-500">
+                  <i class="fa-solid fa-lock mr-1"></i>Đổi mật khẩu
+                </a>
+                <a href="/logout" class="block px-3 py-1 hover:text-yellow-500">
+                  <i class="fa-solid fa-right-from-bracket mr-1"></i>Đăng xuất
+                </a>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="flex-1 bg-white rounded-b-3xl p-6 overflow-auto shadow-inner z-0">
+          <div id="content" class="w-full max-w-full h-full overflow-x-auto rounded-lg shadow-lg p-3">
+            <% if (error) { %>
+              <div class="bg-red-100 text-red-700 p-3 rounded mb-3"><%= error %></div>
+            <% } %>
+
+            <% if (content) { %>
+              <%- include('../' + content) %>
+            <% } else { %>
+              <div class="text-center py-6 text-red-500">Không thể tải nội dung.</div>
+            <% } %>
+          </div>
+        </main>
       </div>
     </div>
   </div>
-</div>
-        <div class="relative hidden md:block">
-          <div id="user-avatar" class="flex items-center cursor-pointer space-x-2">
-            <img src="<%= user.avatar || '/default-avatar.png' %>" class="w-10 h-10 rounded-full border-2 border object-cover" alt="Avatar">
-            <span class="font-semibold text-gray-700 truncate max-w-[120px]"><%= user.username %></span>
-          </div>
-          <div id="user-dropdown" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-md hidden text-sm text-center">
-            <a href="/admin/trang-ca-nhan" 
-   onclick="event.preventDefault(); loadPage('/admin/trang-ca-nhan', this)" 
-   class="block px-4 py-2 hover:text-yellow-500">
-  <i class="fa-solid fa-user mr-2"></i>Thông tin cá nhân
-</a>
-                        <a href="/doi-mat-khau" 
-   onclick="event.preventDefault(); loadPage('/doi-mat-khau', this)" 
-   class="block px-4 py-2 hover:text-yellow-500">
-  <i class="fa-solid fa-user mr-2"></i>Đổi mật khẩu
-</a>
-            <a href="/logout" class="block px-4 py-2 hover:text-yellow-500">
-              <i class="fa-solid fa-right-from-bracket mr-2"></i>Đăng xuất</a>
-          </div>
-        </div>
-      </div>
-    </header>
 
-   
-    <main class="flex-1 bg-white rounded-b-3xl p-8 overflow-auto shadow-inner">
-<div id="content" class="w-full max-w-full h-full overflow-x-auto rounded-lg shadow-lg p-4">
- <% if (error) { %>
-    <div class="bg-red-100 text-red-700 p-4 rounded mb-4"><%= error %></div>
-  <% } %>
-
-<% if (content) { %>
-  <%- include('../' + content) %>
-<% } else { %>
-  <div class="text-center py-8 text-red-500">Không thể tải nội dung.</div>
-<% } %>
-
-</div>
-
-</main>
   <!-- Custom CSS -->
   <style>
     .sidebar-item {
@@ -123,20 +126,24 @@
       color: white;
       background: rgba(255, 255, 255, 0.15);
       font-weight: 500;
+      font-size: 0.9rem;
     }
     .sidebar-item:hover,
     .sidebar-item.active {
       background: rgba(255, 255, 255, 0.3);
-      transform: translateX(8px);
+      transform: translateX(6px);
       color: #FFF8DC;
       font-weight: 700;
-      box-shadow: 0 4px 6px rgba(255, 255, 255, 0.3);
+      box-shadow: 0 3px 4px rgba(255, 255, 255, 0.3);
     }
   </style>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
   <script src="/admin/thongbao.js"></script>
   <script src="/admin/trangcanhan.js"></script>
   <script src="/admin/phanhoicamxuc.js"></script>
-<script src="/admin/binhluancamxuc.js"></script>
+  <script src="/admin/binhluancamxuc.js"></script>
   <script src="/admin/phanhoibinhluan.js"></script>
   <script src="/admin/binhluan.js"></script>
   <script src="/admin/danhgia.js"></script>

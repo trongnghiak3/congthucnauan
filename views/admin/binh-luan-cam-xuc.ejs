@@ -1,6 +1,6 @@
 <div id="emotions-by-recipe" class="tab-content" role="tabpanel">
-  <div class="flex justify-between items-center px-6 py-4 bg-white border-b border-gray-200">
-    <div class="text-gray-600 text-sm">
+  <div class="flex justify-between items-center px-4 py-2 bg-white border-b border-gray-200">
+    <div class="text-gray-600 text-xs">
       Tổng công thức có cảm xúc:
       <span class="font-semibold text-gray-800">
         <%= Object.keys(groupedEmotions).length %>
@@ -8,16 +8,15 @@
     </div>
   </div>
 
-  <div class="overflow-x-auto px-6 py-4 bg-white border border-t-0 rounded-b-lg">
+  <div class="overflow-x-auto px-4 py-2 bg-white border border-t-0 rounded-b-lg">
     <table class="min-w-full text-sm text-gray-700">
       <thead>
-        <tr class="bg-gray-100 text-gray-700 uppercase font-medium">
-          <th class="px-4 py-3 text-center">STT</th>
-          <th class="px-4 py-3 text-left">Người Dùng</th>
-          <th class="px-4 py-3 text-left">Bình Luận</th>
-          <th class="px-4 py-3 text-left">Loại Cảm Xúc</th>
-          <th class="px-4 py-3 text-center">Ngày</th>
-          
+        <tr class="bg-gray-100 text-gray-700 uppercase text-xs font-semibold">
+          <th class="px-4 py-2 text-center">STT</th>
+          <th class="px-4 py-2 text-left">Người Dùng</th>
+          <th class="px-4 py-2 text-left">Bình Luận</th>
+          <th class="px-4 py-2 text-left">Loại Cảm Xúc</th>
+          <th class="px-4 py-2 text-center">Ngày</th>
         </tr>
       </thead>
       <tbody>
@@ -26,17 +25,17 @@
             const list = groupedEmotions[tenCT];
           %>
             <tr class="hover:bg-yellow-50 cursor-pointer bg-gray-50" onclick="toggleEmotions('<%= tenCT %>')">
-              <td colspan="6" class="text-center font-medium py-3">
+              <td colspan="6" class="text-center font-medium py-2 text-sm">
                 🍽 Công thức: <%= tenCT %>
               </td>
             </tr>
             <% list.forEach((emo, i) => { %>
-              <tr class="emotion-row hidden border-b border-gray-100" data-group="<%= tenCT %>">
-                <td class="p-3 text-center"><%= i + 1 %></td>
-                <td class="p-3"><%= emo.TEN_NGUOI_DUNG %> – <%= emo.EMAIL_ %></td>
-                <td class="p-3"><%= emo.NOI_DUNG_BL %></td>
-                <td class="p-3">
-                  <% 
+              <tr class="emotion-row hidden border-b border-gray-100 text-sm" data-group="<%= tenCT %>">
+                <td class="p-2 text-center"><%= i + 1 %></td>
+                <td class="p-2"><%= emo.TEN_NGUOI_DUNG %> – <%= emo.EMAIL_ %></td>
+                <td class="p-2"><%= emo.NOI_DUNG_BL %></td>
+                <td class="p-2">
+                  <%
                     const emotionIcons = {
                       like: '👍',
                       love: '❤️',
@@ -49,21 +48,15 @@
                   %>
                   <%= emotionIcons[emotion] || emotion %>
                 </td>
-                <td class="p-3 text-center">
+                <td class="p-2 text-center">
                   <%= new Date(emo.NGAY_TAO_CX_BL).toLocaleDateString('vi-VN') %>
                 </td>
-                <!-- <td class="p-3 text-center">
-                  <button onclick="confirmDeleteEmotion('<%= emo.ID_CHINH_CXBL %>')"
-                    class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-md transition">
-                    🗑 Xóa
-                  </button>
-                </td> -->
               </tr>
             <% }) %>
           <% }) %>
         <% } else { %>
           <tr>
-            <td colspan="6" class="text-center py-6 text-gray-400 italic">Không có cảm xúc nào.</td>
+            <td colspan="6" class="text-center py-4 text-gray-400 italic text-sm">Không có cảm xúc nào.</td>
           </tr>
         <% } %>
       </tbody>
@@ -71,23 +64,23 @@
   </div>
 
   <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
-    <div class="mt-6 flex justify-center space-x-2">
+    <div class="mt-4 flex justify-center space-x-2">
       <% if (currentPage > 1) { %>
         <a href="#"
           onclick="loadPage('/admin/cam-xuc-binh-luan?page=<%= currentPage - 1 %>', document.querySelector('#content')); return false;"
-          class="px-4 py-2 border bg-white hover:bg-gray-100">‹ Trước</a>
+          class="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 transition text-sm">‹ Trước</a>
       <% } %>
       <% for (let i = 1; i <= totalPages; i++) { %>
         <a href="#"
           onclick="loadPage('/admin/cam-xuc-binh-luan?page=<%= i %>', document.querySelector('#content')); return false;"
-          class="px-4 py-2 rounded border text-sm <%= i === currentPage ? 'bg-yellow-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100' %>">
+          class="px-3 py-1 rounded-lg border text-sm <%= i === currentPage ? 'bg-yellow-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100' %>">
           <%= i %>
         </a>
       <% } %>
       <% if (currentPage < totalPages) { %>
         <a href="#"
           onclick="loadPage('/admin/cam-xuc-binh-luan?page=<%= currentPage + 1 %>', document.querySelector('#content')); return false;"
-          class="px-4 py-2 border bg-white hover:bg-gray-100">Sau ›</a>
+          class="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 transition text-sm">Sau ›</a>
       <% } %>
     </div>
   <% } %>

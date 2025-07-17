@@ -1,4 +1,3 @@
-
 <%
   const totalMinutes = parseInt(recipe.THOI_GIAN_NAU) || 0;
   let timeDisplay = "";
@@ -11,42 +10,43 @@
   }
 %>
 
-
-<div class="recipe-card bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer transform hover:-translate-y-2"
+<div class="recipe-card bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer group"
      data-category-id="<%= recipe.loai_mon_ids %>"
      data-portion="<%= recipe.SO_PHAN_AN %>"
      data-time="<%= Math.floor(recipe.THOI_GIAN_NAU / 60) %>"
      data-difficulty="<%= recipe.DO_KHO %>"
      onclick="window.location.href='/cong-thuc/<%= recipe.ID_CHINH_CT %>'">
-    <div class="relative h-56 overflow-hidden">
-        <% if (recipe.HINH_ANH_CT) { %>
-            <img src="<%= recipe.HINH_ANH_CT %>" 
-                 alt="<%= recipe.TEN_CT %>" 
-                 class="w-full h-full object-cover transition-transform duration-500"/>
-        <% } else { %>
-            <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 text-gray-500 text-sm animate-pulse">
-                <i class="fas fa-image mr-2"></i>Không có ảnh
-            </div>
-        <% } %>
-        <span class="absolute top-3 left-3 bg-amber-500 text-white text-xs font-semibold px-2 py-1 rounded-full">
-            <%= recipe.TEN_MON_AN %>
-        </span>
-        <div class="absolute bottom-3 right-3 bg-black bg-opacity-60 text-white text-xs font-semibold px-2 py-1 rounded-full flex items-center">
-            <i class="fas fa-star text-yellow-400 mr-1"></i>
-            <%= recipe.DANH_GIA %>
-        </div>
+  
+  <div class="relative h-48 sm:h-52 overflow-hidden">
+    <% if (recipe.HINH_ANH_CT) { %>
+      <img src="<%= recipe.HINH_ANH_CT %>" 
+           alt="<%= recipe.TEN_CT %>" 
+           class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-in-out" />
+    <% } else { %>
+      <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 text-gray-400 text-sm font-medium animate-pulse">
+        <i class="fas fa-image mr-2 text-xl"></i>Không có ảnh
+      </div>
+    <% } %>
+
+    <span class="absolute top-3 left-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md">
+      <%= recipe.TEN_MON_AN %>
+    </span>
+
+    <div class="absolute bottom-3 right-3 bg-black bg-opacity-70 text-white text-xs font-semibold px-3 py-1 rounded-full flex items-center shadow-md">
+      <i class="fas fa-star text-yellow-400 mr-1.5 text-xs"></i>
+      <%= recipe.DANH_GIA %>
     </div>
-    <div class="p-5 space-y-3">
-        <h3 class="text-xl font-bold text-gray-800 hover:text-amber-600 transition-colors truncate">
-            <%= recipe.TEN_CT %>
-        </h3>
-            <!-- <p class="text-sm text-gray-600 line-clamp-2 leading-relaxed">
-                <%= recipe.MOTA %>
-            </p> -->
-        <div class="flex justify-between items-center text-sm text-gray-500">
-            <span><i class="fas fa-clock mr-1"></i><%= timeDisplay %></span>
-            <span><i class="fas fa-fire mr-1"></i><%= recipe.DO_KHO %></span>
-            <span><i class="fas fa-utensils mr-1"></i><%= recipe.SO_PHAN_AN %> người</span>
-        </div>
+  </div>
+
+  <div class="p-4 sm:p-5 space-y-3">
+    <h3 class="text-base sm:text-lg font-semibold text-gray-800 truncate leading-tight group-hover:text-amber-600 transition-colors duration-300">
+      <%= recipe.TEN_CT %>
+    </h3>
+
+    <div class="flex flex-wrap justify-between items-center text-xs sm:text-sm text-gray-600 font-medium pt-1 border-t border-gray-100">
+      <span class="flex items-center mb-1 sm:mb-0"><i class="fas fa-clock mr-1.5 text-amber-500"></i><%= timeDisplay %></span>
+      <span class="flex items-center mb-1 sm:mb-0"><i class="fas fa-fire mr-1.5 text-red-500"></i><%= recipe.DO_KHO %></span>
+      <span class="flex items-center"><i class="fas fa-utensils mr-1.5 text-green-500"></i><%= recipe.SO_PHAN_AN %> người</span>
     </div>
+  </div>
 </div>

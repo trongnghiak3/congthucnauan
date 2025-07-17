@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Trang Cá Nhân</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <style>
     .gradient-bg {
       background: linear-gradient(135deg, #facc15, #ffffff, #000000);
@@ -61,218 +61,170 @@
     }
   </style>
 </head>
-<body class="gradient-bg font-sans min-h-screen">
-<div class="container mx-auto p-6 lg:p-12">
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
-    <div class="bg-white rounded-2xl shadow-2xl p-6 sticky top-8 card-hover h-fit">
-      <div class="flex flex-col items-center text-center">
-        <div class="avatar-container w-32 h-32 mb-6">
-          <img id="avatar-img" 
+<body class="gradient-bg font-sans min-h-screen ">
+  <div class="container mx-auto p-6 lg:p-12 bg-white shadow-2xl max-w-8xl h-full ">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+      <!-- Sidebar Avatar -->
+      <div class="bg-white rounded-2xl shadow-2xl p-4 sticky top-8 card-hover h-fit">
+        <div class="flex flex-col items-center text-center">
+          <div class="avatar-container w-24 h-24 mb-4">
+            <img id="avatar-img" src="<%= userInfo && userInfo.AVARTAR_URL ? userInfo.AVARTAR_URL : 'https://i.imgur.com/2Nv5jVb.png' %>"
+                 class="w-full h-full rounded-full object-cover shadow-lg border-4 border-white" alt="Avatar">
+            <button onclick="openModalProfile()"
+                    class="edit-icon absolute bottom-2 right-2 bg-yellow-400 text-white p-1.5 rounded-full hover:bg-yellow-500">
+              <i class="fas fa-camera text-xs"></i>
+            </button>
+          </div>
+          <h2 class="text-xl font-semibold text-gray-900"><%= userInfo?.TEN_NGUOI_DUNG || 'Chưa có tên' %></h2>
+          <p class="text-gray-600 mt-1 text-sm flex items-center gap-1">
+            <i class="fas fa-envelope text-yellow-500 text-xs"></i>
+            <%= userInfo?.EMAIL_ || 'Chưa có email' %>
+          </p>
+          <% if (!userInfo?.TEN_NGUOI_DUNG || !userInfo?.EMAIL_) { %>
+            <div class="error-message mt-3 text-sm p-3">Vui lòng cập nhật thông tin hồ sơ của bạn!</div>
+          <% } %>
+          <button onclick="openModalProfile()"
+                  class="mt-4 bg-yellow-400 text-white px-4 py-1.5 rounded-full font-medium button-glow w-full text-sm">
+            Cập nhật Hồ Sơ
+          </button>
+        </div>
+      </div>
+
+      <!-- Main Content -->
+      <div class="lg:col-span-2">
+        <!-- Tabs -->
+        <div class="flex gap-4 mb-6 border-b border-gray-300 pb-2">
+          <button class="tab-btn text-sm font-semibold px-4 py-2 rounded-t-lg border-b-2 transition-all duration-300 active-tab text-yellow-600 border-yellow-500"
+                  onclick="switchTab('profile')">
+            <i class="fas fa-user-circle mr-1"></i> Thông tin cá nhân
+          </button>
+          <button class="tab-btn text-sm font-semibold px-4 py-2 rounded-t-lg border-b-2 transition-all duration-300 text-gray-500 hover:text-yellow-600 hover:border-yellow-400"
+                  onclick="switchTab('favorites')">
+            <i class="fas fa-heart mr-1"></i> Công thức yêu thích
+          </button>
+        </div>
+
+        <!-- Tab Content: Thông tin cá nhân -->
+        <div id="profile-tab" class="tab-content">
+          <div class="bg-white rounded-3xl shadow-xl p-8 md:p-10 card-hover">
+            <h2 class="text-2xl font-bold text-yellow-600 flex items-center gap-2 mb-6">
+              <i class="fas fa-user"></i> Hồ sơ cá nhân
+            </h2>
+            <form id="profileForm" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label class="block text-sm text-gray-700 font-medium mb-1">Tên người dùng</label>
+                <input type="text" name="TEN_NGUOI_DUNG" value="<%= userInfo.TEN_NGUOI_DUNG %>" readonly
+                       class="w-full p-3 border border-gray-300 bg-gray-100 rounded-lg focus:outline-none text-base">
+              </div>
+              <div>
+                <label class="block text-sm text-gray-700 font-medium mb-1">Email</label>
+                <input type="email" name="EMAIL_" value="<%= userInfo.EMAIL_ %>" readonly
+                       class="w-full p-3 border border-gray-300 bg-gray-100 rounded-lg focus:outline-none text-base">
+              </div>
+              <div class="md:col-span-2">
+                <label class="block text-sm text-gray-700 font-medium mb-1">Số điện thoại</label>
+                <input type="text" name="SO_DIEN_THOAI_" value="<%= userInfo.SO_DIEN_THOAI_ || '' %>" readonly
+                       class="w-full p-3 border border-gray-300 bg-gray-100 rounded-lg focus:outline-none text-base">
+              </div>
+            </form>
+         
+          </div>
+        </div>
+        <!-- Tab: Công thức yêu thích -->
+<div id="favorites-tab" class="tab-content hidden">
+  <div class="bg-white rounded-3xl shadow-xl p-8 card-hover">
+    <div class="flex items-center justify-between mb-6">
+      <h2 class="text-2xl font-bold text-gray-900 flex items-center gap-2">
+        <i class="fas fa-heart text-yellow-500"></i> Công Thức Yêu Thích
+      </h2>
+      <span class="badge">
+        <%= favoriteRecipes ? favoriteRecipes.length : 0 %> công thức
+      </span>
+    </div>
+    
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <% if (favoriteRecipes && favoriteRecipes.length > 0) { %>
+        <% favoriteRecipes.forEach(function(recipe) { %>
+          <%- include('../partials/recipeCard.ejs', { recipe: recipe }) %>
+        <% }); %>
+      <% } else { %>
+        <div class="text-center col-span-full py-16">
+          <i class="fas fa-utensils text-gray-400 text-6xl mb-4 animate-pulse"></i>
+          <p class="text-gray-600 text-xl font-medium">Bạn chưa có công thức yêu thích nào.</p>
+          <a href="/cong-thucs" class="text-yellow-500 hover:text-yellow-700 text-lg font-semibold mt-3 inline-block transition">
+            Khám phá công thức ngay!
+          </a>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+<!-- Modal Cập nhật Hồ sơ -->
+<div id="updateProfileModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-70 hidden z-50 modal">
+  <div class="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-md relative transform scale-90 bg-gradient-to-b from-white to-gray-50">
+    <button onclick="closeModalProfile()" 
+            class="absolute top-3 right-3 text-gray-600 hover:text-gray-900 text-2xl transition hover:scale-110">
+      <i class="fas fa-times"></i>
+    </button>
+    <h2 class="text-2xl font-semibold text-gray-900 text-center mb-6 bg-clip-text text-transparent bg-gradient-to-r from-yellow-500 to-yellow-300">
+      Cập nhật Hồ Sơ
+    </h2>
+    <form id="updateProfileForm" enctype="multipart/form-data">
+      <div class="flex flex-col items-center mb-6">
+        <div class="avatar-container w-24 h-24">
+          <img id="avatarPreview" 
                src="<%= userInfo && userInfo.AVARTAR_URL ? userInfo.AVARTAR_URL : 'https://i.imgur.com/2Nv5jVb.png' %>" 
                alt="Avatar" 
-               class="w-full h-full rounded-full object-cover shadow-lg border-4 border-white">
-          <button onclick="openModalProfile()" 
-                  class="edit-icon absolute bottom-2 right-2 bg-gradient-to-r from-yellow-500 to-yellow-300 text-white p-2 rounded-full hover:bg-yellow-600 transition">
-            <i class="fas fa-camera"></i>
-          </button>
+               class="w-full h-full rounded-full object-cover shadow-md border-4 border-white">
         </div>
-        <h2 class="text-2xl font-bold text-gray-900">
-          <%= userInfo && userInfo.TEN_NGUOI_DUNG ? userInfo.TEN_NGUOI_DUNG : 'Chưa có tên' %>
-        </h2>
-        <p class="text-gray-600 mt-2 flex items-center gap-2">
-          <i class="fas fa-envelope text-yellow-500"></i>
-          <%= userInfo && userInfo.EMAIL_ ? userInfo.EMAIL_ : 'Chưa có email' %>
-        </p>
-        <% if (!userInfo || !userInfo.TEN_NGUOI_DUNG || !userInfo.EMAIL_) { %>
-          <div class="error-message mt-4">
-            Vui lòng cập nhật thông tin hồ sơ của bạn!
-          </div>
-        <% } %>
-        <button onclick="openModalProfile()" 
-                class="mt-6 bg-gradient-to-r from-yellow-500 to-yellow-300 text-white px-6 py-2 rounded-full font-semibold button-glow w-full">
-          Cập nhật Hồ Sơ
+        <input type="file" id="avatarInput" name="hinh_anh" accept="image/*" 
+               class="mt-3 text-sm text-gray-600 w-full cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-yellow-50 file:text-yellow-700 hover:file:bg-yellow-100">
+      </div>
+
+      <div class="mb-4">
+        <label class="block text-gray-900 font-medium mb-2">Tên người dùng</label>
+        <input type="text" id="username" name="TEN_NGUOI_DUNG" 
+               value="<%= userInfo && userInfo.TEN_NGUOI_DUNG ? userInfo.TEN_NGUOI_DUNG : '' %>" 
+               placeholder="Nhập tên của bạn" 
+               class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 transition bg-gray-50">
+      </div>
+
+      <div class="mb-4">
+        <label class="block text-gray-900 font-medium mb-2">Email</label>
+        <input type="email" id="email" name="EMAIL_" 
+               value="<%= userInfo && userInfo.EMAIL_ ? userInfo.EMAIL_ : '' %>" 
+               placeholder="Nhập email của bạn" 
+               class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 transition bg-gray-50">
+      </div>
+
+      <!-- ✅ Trường Số điện thoại -->
+      <div class="mb-6">
+        <label class="block text-gray-900 font-medium mb-2">Số điện thoại</label>
+        <input type="text" id="phone" name="SO_DIEN_THOAI_" 
+               value="<%= userInfo && userInfo.SO_DIEN_THOAI_ ? userInfo.SO_DIEN_THOAI_ : '' %>" 
+               placeholder="Nhập số điện thoại" 
+               class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 transition bg-gray-50">
+      </div>
+
+      <div class="flex justify-end gap-3">
+        <button type="button" onclick="closeModalProfile()" 
+                class="px-5 py-2 rounded-full bg-gray-200 hover:bg-gray-300 transition font-medium">
+          Hủy
         </button>
-   
+        <button type="submit" id="saveButton" 
+                class="px-5 py-2 rounded-full bg-gradient-to-r from-yellow-500 to-yellow-300 text-white button-glow font-medium flex items-center gap-2">
+          <span>Lưu</span>
+          <i class="fas fa-spinner fa-spin hidden" id="loadingIcon"></i>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+
       </div>
     </div>
-
-    <div class="lg:col-span-2">
-      <div class="bg-white rounded-3xl shadow-2xl p-8 card-hover">
-        <div class="flex items-center justify-between mb-6">
-          <h2 class="text-3xl font-bold text-gray-900 flex items-center gap-2">
-            <i class="fas fa-heart text-yellow-500"></i> Công Thức Yêu Thích
-          </h2>
-          <span class="badge">
-            <%= favoriteRecipes ? favoriteRecipes.length : 0 %> công thức
-          </span>
-        </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          <% if (favoriteRecipes && favoriteRecipes.length > 0) { %>
-            <% favoriteRecipes.forEach(function(recipe) { %>
-              <%- include('../partials/recipeCard.ejs', { recipe: recipe }) %>
-            <% }); %>
-          <% } else { %>
-            <div class="text-center col-span-full py-16">
-              <i class="fas fa-utensils text-gray-400 text-6xl mb-4 animate-pulse"></i>
-              <p class="text-gray-600 text-xl font-medium">Bạn chưa có công thức yêu thích nào.</p>
-              <a href="/cong-thucs" class="text-yellow-500 hover:text-yellow-700 text-lg font-semibold mt-3 inline-block transition">
-                Khám phá công thức ngay!
-              </a>
-            </div>
-          <% } %>
-        </div>
-      </div>
-
-      <!-- Phần Công thức của bạn -->
-   
-    </div>
   </div>
-
-  <!-- Modal Cập nhật hồ sơ -->
-  <div id="updateProfileModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-70 hidden z-50 modal">
-    <div class="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-md relative transform scale-90 bg-gradient-to-b from-white to-gray-50">
-      <button onclick="closeModalProfile()" 
-              class="absolute top-3 right-3 text-gray-600 hover:text-gray-900 text-2xl transition hover:scale-110">
-        <i class="fas fa-times"></i>
-      </button>
-      <h2 class="text-2xl font-semibold text-gray-900 text-center mb-6 bg-clip-text text-transparent bg-gradient-to-r from-yellow-500 to-yellow-300">
-        Cập nhật Hồ Sơ
-      </h2>
-      <form id="updateProfileForm" enctype="multipart/form-data">
-        <div class="flex flex-col items-center mb-6">
-          <div class="avatar-container w-24 h-24">
-            <img id="avatarPreview" 
-                 src="<%= userInfo && userInfo.AVARTAR_URL ? userInfo.AVARTAR_URL : 'https://i.imgur.com/2Nv5jVb.png' %>" 
-                 alt="Avatar" 
-                 class="w-full h-full rounded-full object-cover shadow-md border-4 border-white">
-          </div>
-          <input type="file" id="avatarInput" name="AVARTAR_URL" accept="image/*" 
-                 class="mt-3 text-sm text-gray-600 w-full cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-yellow-50 file:text-yellow-700 hover:file:bg-yellow-100">
-        </div>
-        <div class="mb-4">
-          <label class="block text-gray-900 font-medium mb-2">Tên người dùng</label>
-          <input type="text" id="username" name="TEN_NGUOI_DUNG" 
-                 value="<%= userInfo && userInfo.TEN_NGUOI_DUNG ? userInfo.TEN_NGUOI_DUNG : '' %>" 
-                 placeholder="Nhập tên của bạn" 
-                 class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 transition bg-gray-50">
-        </div>
-        <div class="mb-6">
-          <label class="block text-gray-900 font-medium mb-2">Email</label>
-          <input type="email" id="email" name="EMAIL_" 
-                 value="<%= userInfo && userInfo.EMAIL_ ? userInfo.EMAIL_ : '' %>" 
-                 placeholder="Nhập email của bạn" 
-                 class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 transition bg-gray-50">
-        </div>
-        <div class="flex justify-end gap-3">
-          <button type="button" onclick="closeModalProfile()" 
-                  class="px-5 py-2 rounded-full bg-gray-200 hover:bg-gray-300 transition font-medium">
-            Hủy
-          </button>
-          <button type="submit" id="saveButton" 
-                  class="px-5 py-2 rounded-full bg-gradient-to-r from-yellow-500 to-yellow-300 text-white button-glow font-medium flex items-center gap-2">
-            <span>Lưu</span>
-            <i class="fas fa-spinner fa-spin hidden" id="loadingIcon"></i>
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-
-
-  <script>
-    function openModalProfile() {
-      const modal = document.getElementById('updateProfileModal');
-      if (modal) {
-        modal.classList.remove('hidden');
-        setTimeout(() => {
-          const modalContent = modal.querySelector('.modal');
-          if (modalContent) modalContent.classList.add('show');
-        }, 10);
-      } else {
-        console.error('Modal không tìm thấy!');
-      }
-    }
-
-    function closeModalProfile() {
-      const modal = document.getElementById('updateProfileModal');
-      if (modal) {
-        const modalContent = modal.querySelector('.modal');
-        if (modalContent) modalContent.classList.remove('show');
-        setTimeout(() => modal.classList.add('hidden'), 400);
-      } else {
-        console.error('Modal không tìm thấy khi đóng!');
-      }
-    }
-
-    document.getElementById('avatarInput').addEventListener('change', function(event) {
-      const file = event.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          const avatarPreview = document.getElementById('avatarPreview');
-          const avatarImg = document.getElementById('avatar-img');
-          if (avatarPreview) avatarPreview.src = e.target.result;
-          if (avatarImg) avatarImg.src = e.target.result;
-        };
-        reader.readAsDataURL(file);
-      }
-    });
-
-    document.getElementById('updateProfileForm').addEventListener('submit', async function(event) {
-      event.preventDefault();
-      const saveButton = document.getElementById('saveButton');
-      const loadingIcon = document.getElementById('loadingIcon');
-      
-      if (!saveButton || !loadingIcon) {
-        console.error('Nút lưu hoặc icon loading không tìm thấy!');
-        return;
-      }
-
-      saveButton.disabled = true;
-      loadingIcon.classList.remove('hidden');
-
-      const formData = new FormData(this);
-
-      try {
-        const response = await fetch('/api/profile', {
-          method: 'PUT',
-          body: formData
-        });
-        const data = await response.json();
-        console.log('Phản hồi từ API:', data);
-        
-        if (data.error) {
-          alert(data.error);
-        } else {
-          alert(data.message || 'Cập nhật hồ sơ thành công!');
-          closeModalProfile();
-          
-          if (data.user) {
-            const avatarImg = document.getElementById('avatar-img');
-            const nameElement = document.querySelector('h2.text-2xl.font-bold');
-            const emailElement = document.querySelector('p.text-gray-600.mt-2');
-            
-            if (avatarImg) avatarImg.src = data.user.AVARTAR_URL || 'https://i.imgur.com/2Nv5jVb.png';
-            if (nameElement) nameElement.textContent = data.user.TEN_NGUOI_DUNG || 'Chưa có tên';
-            if (emailElement) emailElement.textContent = `📧 ${data.user.EMAIL_ || 'Chưa có email'}`;
-            
-            const errorMessage = document.querySelector('.error-message');
-            if (errorMessage && data.user.TEN_NGUOI_DUNG && data.user.EMAIL_) errorMessage.remove();
-          }
-        }
-      } catch (error) {
-        console.error('Lỗi:', error);
-        alert('Có lỗi khi cập nhật hồ sơ!');
-      } finally {
-        saveButton.disabled = false;
-        loadingIcon.classList.add('hidden');
-      }
-    });
-
-
-
-
-  </script>
 </body>
 </html>

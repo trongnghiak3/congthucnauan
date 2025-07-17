@@ -6,60 +6,58 @@
   <title>Quản Lý Loại Món</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body class="p-8 font-sans bg-gray-50">
-  <div class="max-w-8xl mx-auto">
-    <!-- Tiêu đề và nút thêm -->
-    <div class="flex justify-between items-center mb-6">
-      <h1 class="text-3xl font-bold text-gray-800"></h1>
+<body class="p-4 font-sans bg-gray-50">
+  <div class="max-w-6xl mx-auto h-full">
+    <div class="flex justify-between items-center mb-4">
+      <h1 class="text-2xl font-bold text-gray-800"></h1>
       <button
         onclick="openAddCategoryModal()"
-        class="px-5 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition duration-200"
+        class="px-3 py-1.5 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition duration-200 text-sm"
       >
         ➕ Thêm Loại Món
       </button>
     </div>
 
-    <!-- Bảng loại món -->
     <table class="min-w-full border border-gray-300 rounded-lg overflow-hidden shadow-sm bg-white">
-      <thead class="bg-gray-100 text-gray-700 uppercase text-sm font-semibold">
+      <thead class="bg-gray-100 text-gray-700 uppercase text-xs font-semibold">
         <tr>
-          <th class="px-6 py-3 text-left border-r border-gray-300">ID</th>
-          <th class="px-6 py-3 text-left border-r border-gray-300">Tên Loại Món</th>
-          <th class="px-6 py-3 text-left border-r border-gray-300">Slug</th>
-          <th class="px-6 py-3 text-left border-r border-gray-300">Hình Ảnh</th>
-          <th class="px-6 py-3 text-left">Hành động</th>
+          <th class="px-4 py-2 text-left border-r border-gray-300">ID</th>
+          <th class="px-4 py-2 text-left border-r border-gray-300">Tên Loại Món</th>
+          <th class="px-4 py-2 text-left border-r border-gray-300">Slug</th>
+          <th class="px-4 py-2 text-left border-r border-gray-300">Hình Ảnh</th>
+          <th class="px-4 py-2 text-left">Hành động</th>
         </tr>
       </thead>
       <tbody class="text-gray-800 text-sm">
         <% if (categories && categories.length > 0) { %>
           <% categories.forEach(category => { %>
             <tr class="hover:bg-yellow-50 transition duration-200">
-              <td class="px-6 py-3 border-t border-gray-200"><%= category.ID_CHINH_LM %></td>
-              <td class="px-6 py-3 border-t border-gray-200"><%= category.TEN_LM %></td>
-              <td class="px-6 py-3 border-t border-gray-200"><%= category.SLUG_LM || 'Không có' %></td>
-              <td class="px-6 py-3 border-t border-gray-200">
+              <td class="px-4 py-2 border-t border-gray-200"><%= category.ID_CHINH_LM %></td>
+              <td class="px-4 py-2 border-t border-gray-200"><%= category.TEN_LM %></td>
+              <td class="px-4 py-2 border-t border-gray-200"><%= category.SLUG_LM || 'Không có' %></td>
+              <td class="px-4 py-2 border-t border-gray-200">
                 <% if (category.HINH_ANH_LM_URL) { %>
                   <a href="<%= category.HINH_ANH_LM_URL %>" target="_blank">
                     <img
                       src="<%= category.HINH_ANH_LM_URL %>"
                       alt="Ảnh loại món"
-                      class="w-14 h-14 object-cover rounded shadow-sm hover:scale-105 transition transform"
+                      class="w-12 h-12 object-cover rounded shadow-sm hover:scale-105 transition transform mt-1"
                     />
                   </a>
                 <% } else { %>
                   <span class="text-gray-400 italic">Không có</span>
                 <% } %>
               </td>
-              <td class="px-6 py-3 border-t border-gray-200 space-x-2">
+              <td class="px-4 py-2 border-t border-gray-200 space-x-1.5">
                 <button
                   onclick="openEditCategoryModal('<%= category.ID_CHINH_LM %>')"
-                  class="bg-yellow-400 hover:bg-yellow-500 text-white px-3 py-2 rounded-md transition"
+                  class="bg-yellow-400 hover:bg-yellow-500 text-white px-2.5 py-1.5 rounded-md transition text-xs"
                 >
                   ✏ Sửa
                 </button>
                 <button
                   onclick="confirmDeleteCategory('<%= category.ID_CHINH_LM %>')"
-                  class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-md transition"
+                  class="bg-red-600 hover:bg-red-700 text-white px-2.5 py-1.5 rounded-md transition text-xs"
                 >
                   🗑 Xóa
                 </button>
@@ -68,20 +66,19 @@
           <% }) %>
         <% } else { %>
           <tr>
-            <td colspan="5" class="text-center py-6 text-gray-400 italic">Không có loại món nào!</td>
+            <td colspan="5" class="text-center py-4 text-gray-400 italic text-sm">Không có loại món nào!</td>
           </tr>
         <% } %>
       </tbody>
     </table>
 
-        <!-- Phân trang -->
         <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
-          <div class="mt-6 flex justify-center space-x-2">
+          <div class="mt-4 flex justify-center space-x-2">
             <% if (currentPage > 1) { %>
               <a
                 href="#"
                 onclick="loadPage('/admin/loai-mon?page=<%= currentPage - 1 %>', document.querySelector('#content')); return false;"
-                class="px-4 py-2 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 transition"
+                class="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 transition text-sm"
               >
                 ‹ Trước
               </a>
@@ -90,7 +87,7 @@
               <a
                 href="#"
                 onclick="loadPage('/admin/loai-mon?page=<%= i %>', document.querySelector('#content')); return false;"
-                class="px-4 py-2 rounded-lg border text-sm <%= i === currentPage ? 'bg-yellow-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100' %>"
+                class="px-3 py-1 rounded-lg border text-sm <%= i === currentPage ? 'bg-yellow-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100' %>"
               >
                 <%= i %>
               </a>
@@ -99,7 +96,7 @@
               <a
                 href="#"
                 onclick="loadPage('/admin/loai-mon?page=<%= currentPage + 1 %>', document.querySelector('#content')); return false;"
-                class="px-4 py-2 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 transition"
+                class="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 transition text-sm"
               >
                 Sau ›
               </a>
@@ -108,37 +105,36 @@
         <% } %>
       </div>
 
-      <!-- Modal Thêm/Sửa Loại Món -->
       <div id="categoryModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
-        <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
-          <h2 id="modalTitle" class="text-2xl font-semibold mb-4 text-gray-800">Thêm Loại Món</h2>
+        <div class="bg-white p-4 rounded-lg shadow-lg w-full max-w-sm">
+          <h2 id="modalTitle" class="text-lg font-semibold mb-3 text-gray-800">Thêm Loại Món</h2>
       <form id="categoryForm" enctype="multipart/form-data" data-category-id="">
-    <input type="hidden" id="categoryId" name="ID_CHINH_LM" />
-            <div class="mb-4">
+        <input type="hidden" id="categoryId" name="ID_CHINH_LM" />
+            <div class="mb-3">
               <label for="tenLoai" class="block text-sm font-medium text-gray-700">Tên Loại Món</label>
               <input
                 type="text"
                 id="tenLoai"
                 name="TEN_LM"
-                class="mt-1 p-2 w-full border rounded-lg focus:ring-yellow-500 focus:border-yellow-500"
+                class="mt-1 p-1.5 w-full border rounded-lg focus:ring-yellow-500 focus:border-yellow-500 text-sm"
                 required
               />
             </div>
-            <div class="mb-4">
+            <div class="mb-3">
               <label for="slug" class="block text-sm font-medium text-gray-700">Slug</label>
               <input
                 type="text"
                 id="slug"
                 name="SLUG_LM"
-                class="mt-1 p-2 w-full border rounded-lg focus:ring-yellow-500 focus:border-yellow-500"
+                class="mt-1 p-1.5 w-full border rounded-lg focus:ring-yellow-500 focus:border-yellow-500 text-sm"
               />
             </div>
-            <div class="mb-4">
+            <div class="mb-3">
               <label class="block text-sm font-medium text-gray-700 mb-1">Hình Ảnh</label>
               <img
                 id="imagePreview"
                 src="/default.jpg"
-                class="mt-2 w-40 h-40 object-cover rounded-lg border cursor-pointer"
+                class="mt-1 w-28 h-28 object-cover rounded-lg border cursor-pointer"
                 onclick="document.getElementById('hinhAnh').click()"
               />
               <input
@@ -154,14 +150,14 @@
               <button
                 type="button"
                 onclick="closeCategoryModal()"
-                class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition"
+                class="px-3 py-1 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition text-sm"
               >
                 Hủy
               </button>
               <button
                 type="submit"
                 id="submitButton"
-                class="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition"
+                class="px-3 py-1 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition text-sm"
               >
                 Thêm
               </button>
@@ -170,7 +166,6 @@
         </div>
       </div>
     </div>
-
 
   </body>
   </html>

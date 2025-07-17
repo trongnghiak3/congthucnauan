@@ -111,6 +111,7 @@ router.get("/admin/cong-thuc", ensureAdmin, async (req, res) => {
     const recipes = await query(`
       SELECT 
         ct.ID_CHINH_CT,
+        ct.ID_CHINH_ND, -- ✅ lấy thêm ID người tạo
         ct.TEN_CT,
         ct.MOTA,
         ct.HUONG_DAN,
@@ -123,6 +124,7 @@ router.get("/admin/cong-thuc", ensureAdmin, async (req, res) => {
         ct.NGAY_CAP_NHAT_CT,
         ct.TRANG_THAI_DUYET_,
         nd.TEN_NGUOI_DUNG AS user,
+        nd.VAI_TRO AS role, -- ✅ vai trò: 'admin' hoặc 'nguoidung'
         ma.TEN_MON_AN
       FROM cong_thuc ct
       LEFT JOIN nguoi_dung nd ON ct.ID_CHINH_ND = nd.ID_CHINH_ND
@@ -131,28 +133,28 @@ router.get("/admin/cong-thuc", ensureAdmin, async (req, res) => {
       LIMIT ? OFFSET ?
     `, [limit, offset]);
 
+    console.log("User đăng nhập:", req.session.user); // ✅ kiểm tra session
+
     res.render("admin/admin", {
-  title: "Danh Sách Công Thức",
-  user: req.session.user,
-  content: "admin/cong-thuc",
-  recipes,
-  currentPage: page,
-  totalPages,
-  error: null,
-  stats: {},
-});
+      title: "Danh Sách Công Thức",
+      user: req.session.user, // ✅ truyền user đang đăng nhập
+      content: "admin/cong-thuc",
+      recipes,
+      currentPage: page,
+      totalPages,
+      error: null,
+      stats: {},
+    });
 
   } catch (err) {
     console.error("Lỗi khi lấy danh sách công thức:", err);
     res.render("admin/admin", {
       title: "Danh Sách Công Thức",
       user: req.session.user,
-     content: "admin/cong-thuc",
-      data: {
-        recipes: [],
-        currentPage: 1,
-        totalPages: 1,
-      },
+      content: "admin/cong-thuc",
+      recipes: [],
+      currentPage: 1,
+      totalPages: 1,
       error: "Không thể tải danh sách công thức",
       stats: {},
     });
@@ -242,20 +244,20 @@ router.get("/admin/cong-thuc/edit/:id", ensureLoggedIn, async (req, res) => {
     const nguyen_lieu = await query("SELECT * FROM nguyen_lieu");
     const mon_an = await query("SELECT * FROM mon_an");
 
-   res.render("admin/admin", {
-  title: "Chỉnh sửa Công Thức",
-  user: req.session.user,
-  content: "admin/them-cong-thuc", // ⚠️ Đảm bảo file này tồn tại: views/admin/them-cong-thuc.ejs
-  recipe: recipe || null,
-  loai_mon: loai_mon || [],
-  nguyen_lieu: nguyen_lieu || [],
-  mon_an: mon_an || [],
-  selectedLoaiMon: selectedLoaiMon.map(lm => lm.ID_CHINH_LM.toString()),
-  selectedNguyenLieu: selectedNguyenLieu || [],
-  selectedMonAn: recipe.ID_CHINH_MA ? recipe.ID_CHINH_MA.toString() : null,
-  error: null,
-  stats: {},
-});
+    res.render("admin/admin", {
+      title: "Chỉnh sửa Công Thức",
+      user: req.session.user,
+      content: "admin/them-cong-thuc", // ⚠️ Đảm bảo file này tồn tại: views/admin/them-cong-thuc.ejs
+      recipe: recipe || null,
+      loai_mon: loai_mon || [],
+      nguyen_lieu: nguyen_lieu || [],
+      mon_an: mon_an || [],
+      selectedLoaiMon: selectedLoaiMon.map(lm => lm.ID_CHINH_LM.toString()),
+      selectedNguyenLieu: selectedNguyenLieu || [],
+      selectedMonAn: recipe.ID_CHINH_MA ? recipe.ID_CHINH_MA.toString() : null,
+      error: null,
+      stats: {},
+    });
 
   } catch (err) {
     console.error("Lỗi khi lấy chi tiết công thức:", err);
@@ -370,7 +372,14 @@ router.post(
       };
 
       const finalImagePath = await saveFile("hinh_anh", "images");
-      const finalVideoPath = await saveFile("video_file", "videos");
+      
+      let finalVideoPath = null;
+      if (req.files['video_file']) {
+        finalVideoPath = await saveFile("video_file", "videos");
+      }
+      if (req.body.remove_video === '1') {
+        finalVideoPath = ''; // đặt rỗng
+      }
 
       await query(`UPDATE cong_thuc SET HINH_ANH_CT = ?, VIDEO = ? WHERE ID_CHINH_CT = ?`,
         [finalImagePath, finalVideoPath, recipeId]
@@ -548,15 +557,30 @@ router.put(
         return `/uploads/${type}/congthuc/${recipeId}/${uniqueName}`;
       };
 
-      const finalImagePath = await saveFile("hinh_anh", "images");
-      const finalVideoPath = await saveFile("video_file", "videos");
+     const finalImagePath = await saveFile("hinh_anh", "images");
 
-      await query(`
-        UPDATE cong_thuc 
-        SET HINH_ANH_CT = COALESCE(?, HINH_ANH_CT),
-            VIDEO = COALESCE(?, VIDEO)
-        WHERE ID_CHINH_CT = ?
-      `, [finalImagePath, finalVideoPath, recipeId]);
+let finalVideoPath = null;
+
+// Nếu upload mới thì lưu
+if (req.files['video_file']) {
+  finalVideoPath = await saveFile("video_file", "videos");
+}
+
+// Nếu chọn xoá video
+if (req.body.remove_video === '1') {
+  finalVideoPath = ''; // set rỗng
+}
+
+// Cập nhật hình/video
+await query(`
+  UPDATE cong_thuc 
+  SET HINH_ANH_CT = COALESCE(?, HINH_ANH_CT),
+      VIDEO = CASE 
+        WHEN ? IS NOT NULL THEN ?
+        ELSE VIDEO
+      END
+  WHERE ID_CHINH_CT = ?
+`, [finalImagePath, finalVideoPath, finalVideoPath, recipeId]);
 
       // Xóa nguyên liệu cũ
       // Xóa nguyên liệu cũ
@@ -682,7 +706,7 @@ router.put("/admin/cong-thuc/approve/:id", ensureAdmin, async (req, res) => {
 router.get("/admin/nguyen-lieu", ensureAdmin, async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const limit = 8;
+    const limit = 9;
     const offset = (page - 1) * limit;
 
     const countResult = await query(`SELECT COUNT(*) AS total FROM nguyen_lieu`);
@@ -1186,9 +1210,10 @@ router.get('/admin/mon-an', ensureAdmin, async (req, res) => {
     `);
     const totalCategories = countCategoriesResult[0]?.total || 0;
     const totalPagesCategories = Math.ceil(totalCategories / limitCategories);
-
-    let loaiMonData = [];
-    if (monAnList.length > 0) {
+    // Lấy danh sách ID của món ăn đã phân trang
+    const monAnIds = monAnList.map(item => item.ID_CHINH_MA);  
+      let loaiMonData = [];
+    if (monAnIds.length > 0) {
       loaiMonData = await query(`
         SELECT 
           malm.ID_CHINH_MA,
@@ -1198,9 +1223,9 @@ router.get('/admin/mon-an', ensureAdmin, async (req, res) => {
         FROM mon_an_loai_mon malm
         JOIN loai_mon lm ON malm.ID_CHINH_LM = lm.ID_CHINH_LM
         JOIN mon_an ma ON malm.ID_CHINH_MA = ma.ID_CHINH_MA
+        WHERE malm.ID_CHINH_MA IN (?)
         ORDER BY malm.ID_CHINH_MA DESC
-        LIMIT ? OFFSET ?
-      `, [limitCategories, offsetCategories]);
+      `, [monAnIds]);
     }
 
     const groupedLoaiMon = {};
@@ -1631,8 +1656,8 @@ router.get('/admin/nguoi-dung', ensureAdmin, async (req, res) => {
 
     // Đếm tổng số người dùng (chỉ role = 'nguoidung')
     const countResult = await query(`
-      SELECT COUNT(*) AS total 
-      FROM nguoi_dung 
+      SELECT COUNT(*) AS total
+      FROM nguoi_dung
       WHERE ID_CHINH_ND != ? AND VAI_TRO = 'nguoidung'
     `, [currentUserId]);
     const total = countResult[0]?.total || 0;
@@ -1647,11 +1672,17 @@ router.get('/admin/nguoi-dung', ensureAdmin, async (req, res) => {
       LIMIT ? OFFSET ?
     `, [currentUserId, limit, offset]);
 
+    // --- Dòng console.log bạn cần dùng để kiểm tra danh sách người dùng ---
+    console.log("Danh sách người dùng được gửi tới EJS:", users);
+    console.log("Tổng số người dùng (chỉ vai trò 'nguoidung', không bao gồm admin hiện tại):", total);
+    console.log("Trang hiện tại:", page);
+    // ---------------------------------------------------------------------
+
     res.render("admin/admin", {
       title: "Danh Sách Người Dùng",
-      user: req.session.user,
+      user: req.session.user, // Đây là thông tin của người dùng admin hiện tại
       content: "admin/nguoi-dung",
-      users,
+      users, // Đây là danh sách người dùng bạn muốn kiểm tra
       currentPage: page,
       totalPages,
       error: null,
@@ -1889,16 +1920,16 @@ router.get('/admin/yeu-thich', ensureAdmin, async (req, res) => {
     const total = countResult[0]?.total || 0;
     const totalPages = Math.ceil(total / limit);
 
-   res.render("admin/admin", {
-  title: "Danh sách yêu thích",
-  user: req.session.user,
-  content: "admin/yeu-thich",
-  groupedFavorites,
-  currentPage: page,
-  totalPages,
-  error: null,
-  success: null
-});
+    res.render("admin/admin", {
+      title: "Danh sách yêu thích",
+      user: req.session.user,
+      content: "admin/yeu-thich",
+      groupedFavorites,
+      currentPage: page,
+      totalPages,
+      error: null,
+      success: null
+    });
   } catch (err) {
     console.error('Lỗi khi lấy dữ liệu yêu thích:', err);
     res.status(500).render("admin/admin", {
@@ -1948,7 +1979,7 @@ router.get('/admin/danh-gia', ensureAdmin, async (req, res) => {
       currentPage: page,
       totalPages,
       error: null,
-     success: null
+      success: null
     });
   } catch (err) {
     console.error('Lỗi lấy đánh giá:', err);
@@ -2008,7 +2039,7 @@ router.get('/admin/binh-luan', ensureAdmin, async (req, res) => {
       if (!groupedComments[ct]) groupedComments[ct] = [];
       groupedComments[ct].push(cmt);
     });
-
+    
     res.render("admin/admin", {
       title: "Danh sách bình luận",
       user: req.session.user,
@@ -2017,7 +2048,7 @@ router.get('/admin/binh-luan', ensureAdmin, async (req, res) => {
       currentPage: page,
       totalPages,
       error: null,
-     success: null
+      success: null
     });
   } catch (err) {
     console.error('Lỗi khi lấy bình luận:', err);
@@ -2097,7 +2128,7 @@ router.get('/admin/phan-hoi-binh-luan', ensureAdmin, async (req, res) => {
       content: "admin/phan-hoi-binh-luan",
       groupedReplies,
       error: null,
-     success: null
+      success: null
     });
   } catch (err) {
     console.error('Lỗi lấy phản hồi:', err);
@@ -2248,7 +2279,7 @@ router.get('/admin/phan-hoi-cam-xuc', ensureAdmin, async (req, res) => {
       currentPage: page,
       totalPages,
       error: null,
-     success: null
+      success: null
     });
   } catch (err) {
     console.error('Lỗi khi lấy phản hồi cảm xúc:', err);
@@ -2349,6 +2380,7 @@ router.put('/admin/trang-ca-nhan/cap-nhat', ensureLoggedIn, upload.single("hinh_
   }
 });
 
+
 router.get('/admin/thong-bao', ensureAdmin, async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -2356,296 +2388,166 @@ router.get('/admin/thong-bao', ensureAdmin, async (req, res) => {
     const offset = (page - 1) * limit;
     const filter = req.query.filter || 'all';
     const search = req.query.search || '';
+    const adminId = req.session.user.ID_CHINH_ND;
 
-    // Truy vấn để đếm tổng số thông báo
-    let countQuery = `
-      SELECT COUNT(*) AS total FROM (
-        SELECT ID_CHINH_CT AS id, 'cong_thuc' AS type, NGAY_TAO_CT AS date
-        FROM cong_thuc
-        WHERE TRANG_THAI_DUYET_ = 'Đang chờ duyệt'
-        UNION
-        SELECT ID_CHINH_BL, 'binh_luan', NGAY_TAO_BL
-        FROM binh_luan
-        UNION
-        SELECT ID_CHINH_PHBL, 'phan_hoi_binh_luan', NGAY_TAO_PH
-        FROM phan_hoi_binh_luan
-        UNION
-        SELECT ID_CHINH_DG, 'danh_gia', NGAY_TAO_DG
-        FROM danh_gia
-        UNION
-        SELECT ID_CHINH_YT, 'yeu_thich', NGAY_TAO_YT
-        FROM yeu_thich
-        UNION
-        SELECT ID_CHINH_CXBL, 'binh_luan_cam_xuc', NGAY_TAO_CX_BL
-        FROM binh_luan_cam_xuc
-        UNION
-        SELECT ID_CHINH_PHCX, 'phan_hoi_cam_xuc', NGAY_TAO_CX_PH
-        FROM phan_hoi_cam_xuc
-      ) AS notifications
-    `;
+    // Điều kiện lọc: chỉ thông báo gửi đến admin đang đăng nhập
+    let whereClause = `WHERE tb.DA_XOA = FALSE AND tb.ID_MUC_TIEU = ? AND nd.VAI_TRO = 'nguoidung'`;
+    const params = [adminId];
+
+    // Lọc theo nội dung tìm kiếm
     if (search) {
-      countQuery += ` WHERE message LIKE ?`;
+      whereClause += ` AND tb.NOI_DUNG_TB LIKE ?`;
+      params.push(`%${search}%`);
     }
-    const count = await query(countQuery, search ? [`%${search}%`] : []);
-    const total = count[0]?.total || 0;
+
+    // Lọc theo trạng thái đọc
+    if (filter === 'unread') {
+      whereClause += ` AND tb.DA_DOC = FALSE`;
+    } else if (filter === 'read') {
+      whereClause += ` AND tb.DA_DOC = TRUE`;
+    }
+
+    // Đếm tổng số bản ghi
+    const countQuery = `
+      SELECT COUNT(*) AS total
+      FROM THONG_BAO tb
+      JOIN nguoi_dung nd ON tb.ID_CHINH_ND = nd.ID_CHINH_ND
+      ${whereClause}
+    `;
+    const countResult = await query(countQuery, params);
+    const total = countResult[0]?.total || 0;
     const totalPages = Math.ceil(total / limit);
 
-    // Truy vấn thông báo
-    let notificationsQuery = `
-      SELECT id, type, message, date
-      FROM (
-        SELECT 
-          ID_CHINH_CT AS id, 'cong_thuc' AS type, 
-          CONCAT('Người dùng ', (SELECT TEN_NGUOI_DUNG FROM nguoi_dung WHERE ID_CHINH_ND = cong_thuc.ID_CHINH_ND), 
-                 ' đã thêm công thức ', TEN_CT) AS message, 
-          NGAY_TAO_CT AS date
-        FROM cong_thuc
-        WHERE TRANG_THAI_DUYET_ = 'Đang chờ duyệt'
-        UNION
-        SELECT 
-          ID_CHINH_BL, 'binh_luan', 
-          CONCAT('Người dùng ', (SELECT TEN_NGUOI_DUNG FROM nguoi_dung WHERE ID_CHINH_ND = binh_luan.ID_CHINH_ND), 
-                 ' đã bình luận trên công thức ', (SELECT TEN_CT FROM cong_thuc WHERE ID_CHINH_CT = binh_luan.ID_CHINH_CT)), 
-          NGAY_TAO_BL
-        FROM binh_luan
-        UNION
-        SELECT 
-          ID_CHINH_PHBL, 'phan_hoi_binh_luan', 
-          CONCAT('Người dùng ', (SELECT TEN_NGUOI_DUNG FROM nguoi_dung WHERE ID_CHINH_ND = phan_hoi_binh_luan.ID_CHINH_ND), 
-                 ' đã phản hồi bình luận trên công thức ', (SELECT TEN_CT FROM cong_thuc WHERE ID_CHINH_CT = (SELECT ID_CHINH_CT FROM binh_luan WHERE ID_CHINH_BL = phan_hoi_binh_luan.ID_CHINH_BL))), 
-          NGAY_TAO_PH
-        FROM phan_hoi_binh_luan
-        UNION
-        SELECT 
-          ID_CHINH_DG, 'danh_gia', 
-          CONCAT('Người dùng ', (SELECT TEN_NGUOI_DUNG FROM nguoi_dung WHERE ID_CHINH_ND = danh_gia.ID_CHINH_ND), 
-                 ' đã đánh giá công thức ', (SELECT TEN_CT FROM cong_thuc WHERE ID_CHINH_CT = danh_gia.ID_CHINH_CT)), 
-          NGAY_TAO_DG
-        FROM danh_gia
-        UNION
-        SELECT 
-          ID_CHINH_YT, 'yeu_thich', 
-          CONCAT('Người dùng ', (SELECT TEN_NGUOI_DUNG FROM nguoi_dung WHERE ID_CHINH_ND = yeu_thich.ID_CHINH_ND), 
-                 ' đã yêu thích công thức ', (SELECT TEN_CT FROM cong_thuc WHERE ID_CHINH_CT = yeu_thich.ID_CHINH_CT)), 
-          NGAY_TAO_YT
-        FROM yeu_thich
-        UNION
-        SELECT 
-          ID_CHINH_CXBL, 'binh_luan_cam_xuc', 
-          CONCAT('Người dùng ', (SELECT TEN_NGUOI_DUNG FROM nguoi_dung WHERE ID_CHINH_ND = binh_luan_cam_xuc.ID_CHINH_ND), 
-                 ' đã bày tỏ cảm xúc ', LOAI_CAM_XUC_BL, ' trên bình luận'), 
-          NGAY_TAO_CX_BL
-        FROM binh_luan_cam_xuc
-        UNION
-        SELECT 
-          ID_CHINH_PHCX, 'phan_hoi_cam_xuc', 
-          CONCAT('Người dùng ', (SELECT TEN_NGUOI_DUNG FROM nguoi_dung WHERE ID_CHINH_ND = phan_hoi_cam_xuc.ID_CHINH_ND), 
-                 ' đã bày tỏ cảm xúc ', LOAI_CAM_XUC, ' trên phản hồi bình luận'), 
-          NGAY_TAO_CX_PH
-        FROM phan_hoi_cam_xuc
-      ) AS notifications
+    // Truy vấn lấy dữ liệu thực tế
+    const dataQuery = `
+      SELECT tb.ID_CHINH_TB, tb.LOAI_TB, tb.NOI_DUNG_TB, tb.NGAY_TAO_TB, tb.DA_DOC
+      FROM THONG_BAO tb
+      JOIN nguoi_dung nd ON tb.ID_CHINH_ND = nd.ID_CHINH_ND
+      ${whereClause}
+      ORDER BY tb.NGAY_TAO_TB DESC
+      LIMIT ? OFFSET ?
     `;
-    if (search) {
-      notificationsQuery += ` WHERE message LIKE ?`;
-    }
-    notificationsQuery += ` ORDER BY date DESC LIMIT ? OFFSET ?`;
-    const notifications = await query(notificationsQuery, search ? [`%${search}%`, limit, offset] : [limit, offset]);
-
-    // Thêm trạng thái read từ session
-    const readNotifications = req.session.readNotifications || [];
-    const deletedNotifications = req.session.deletedNotifications || [];
-    const filteredNotifications = notifications
-      .filter(n => !deletedNotifications.includes(`${n.type}:${n.id}`))
-      .map(n => ({
-        ...n,
-        read: readNotifications.includes(`${n.type}:${n.id}`)
-      }));
-
-    // Lọc theo trạng thái
-    let finalNotifications = filteredNotifications;
-    if (filter === 'unread') {
-      finalNotifications = filteredNotifications.filter(n => !n.read);
-    } else if (filter === 'read') {
-      finalNotifications = filteredNotifications.filter(n => n.read);
-    }
+    const dataParams = [...params, limit, offset];
+    const thongBao = await query(dataQuery, dataParams);
 
     res.render("admin/admin", {
       title: "Danh sách thông báo",
       user: req.session.user,
       content: "admin/thong-bao",
-      notifications: finalNotifications,
+      thong_bao: thongBao,
       currentPage: page,
       totalPages,
       filter,
       search,
       error: null,
-      success: null
+      success: null,
+      stats: {},
     });
+
   } catch (err) {
-    console.error('Lỗi khi lấy thông báo:', err);
+    console.error("❌ Lỗi khi lấy thông báo:", err);
     res.status(500).render("admin/admin", {
       title: "Lỗi",
       user: req.session.user,
       content: null,
-      error: err.message
+      error: "Không thể tải danh sách thông báo: " + err.message,
+      stats: {}
     });
   }
 });
-// Lấy 5 thông báo mới nhất cho dropdown
-router.get('/api/notifications', async (req, res) => {
+
+
+
+
+
+
+
+
+router.get('/api/thong-bao', ensureAdmin, async (req, res) => {
   try {
     const limit = parseInt(req.query.limit) || 5;
-    const notifications = await query(`
-      SELECT id, type, message, date
-      FROM (
-        SELECT 
-          ID_CHINH_CT AS id, 'cong_thuc' AS type, 
-          CONCAT('Người dùng ', (SELECT TEN_NGUOI_DUNG FROM nguoi_dung WHERE ID_CHINH_ND = cong_thuc.ID_CHINH_ND), 
-                 ' đã thêm công thức ', TEN_CT) AS message, 
-          NGAY_TAO_CT AS date
-        FROM cong_thuc
-        WHERE TRANG_THAI_DUYET_ = 'Đang chờ duyệt'
-        UNION
-        SELECT 
-          ID_CHINH_BL, 'binh_luan', 
-          CONCAT('Người dùng ', (SELECT TEN_NGUOI_DUNG FROM nguoi_dung WHERE ID_CHINH_ND = binh_luan.ID_CHINH_ND), 
-                 ' đã bình luận trên công thức ', (SELECT TEN_CT FROM cong_thuc WHERE ID_CHINH_CT = binh_luan.ID_CHINH_CT)), 
-          NGAY_TAO_BL
-        FROM binh_luan
-        UNION
-        SELECT 
-          ID_CHINH_PHBL, 'phan_hoi_binh_luan', 
-          CONCAT('Người dùng ', (SELECT TEN_NGUOI_DUNG FROM nguoi_dung WHERE ID_CHINH_ND = phan_hoi_binh_luan.ID_CHINH_ND), 
-                 ' đã phản hồi bình luận trên công thức ', (SELECT TEN_CT FROM cong_thuc WHERE ID_CHINH_CT = (SELECT ID_CHINH_CT FROM binh_luan WHERE ID_CHINH_BL = phan_hoi_binh_luan.ID_CHINH_BL))), 
-          NGAY_TAO_PH
-        FROM phan_hoi_binh_luan
-        UNION
-        SELECT 
-          ID_CHINH_DG, 'danh_gia', 
-          CONCAT('Người dùng ', (SELECT TEN_NGUOI_DUNG FROM nguoi_dung WHERE ID_CHINH_ND = danh_gia.ID_CHINH_ND), 
-                 ' đã đánh giá công thức ', (SELECT TEN_CT FROM cong_thuc WHERE ID_CHINH_CT = danh_gia.ID_CHINH_CT)), 
-          NGAY_TAO_DG
-        FROM danh_gia
-        UNION
-        SELECT 
-          ID_CHINH_YT, 'yeu_thich', 
-          CONCAT('Người dùng ', (SELECT TEN_NGUOI_DUNG FROM nguoi_dung WHERE ID_CHINH_ND = yeu_thich.ID_CHINH_ND), 
-                 ' đã yêu thích công thức ', (SELECT TEN_CT FROM cong_thuc WHERE ID_CHINH_CT = yeu_thich.ID_CHINH_CT)), 
-          NGAY_TAO_YT
-        FROM yeu_thich
-        UNION
-        SELECT 
-          ID_CHINH_CXBL, 'binh_luan_cam_xuc', 
-          CONCAT('Người dùng ', (SELECT TEN_NGUOI_DUNG FROM nguoi_dung WHERE ID_CHINH_ND = binh_luan_cam_xuc.ID_CHINH_ND), 
-                 ' đã bày tỏ cảm xúc ', LOAI_CAM_XUC_BL, ' trên bình luận'), 
-          NGAY_TAO_CX_BL
-        FROM binh_luan_cam_xuc
-        UNION
-        SELECT 
-          ID_CHINH_PHCX, 'phan_hoi_cam_xuc', 
-          CONCAT('Người dùng ', (SELECT TEN_NGUOI_DUNG FROM nguoi_dung WHERE ID_CHINH_ND = phan_hoi_cam_xuc.ID_CHINH_ND), 
-                 ' đã bày tỏ cảm xúc ', LOAI_CAM_XUC, ' trên phản hồi bình luận'), 
-          NGAY_TAO_CX_PH
-        FROM phan_hoi_cam_xuc
-      ) AS notifications
-      ORDER BY date DESC
+    const adminId = req.session.user?.ID_CHINH_ND;
+
+    const thongBao = await query(`
+      SELECT tb.ID_CHINH_TB, tb.LOAI_TB, tb.NOI_DUNG_TB, tb.NGAY_TAO_TB, tb.DA_DOC,
+             nd.TEN_NGUOI_DUNG
+      FROM THONG_BAO tb
+      JOIN nguoi_dung nd ON tb.ID_CHINH_ND = nd.ID_CHINH_ND
+      WHERE tb.DA_XOA = FALSE AND tb.ID_MUC_TIEU = ?
+      ORDER BY tb.NGAY_TAO_TB DESC
       LIMIT ?
-    `, [limit]);
+    `, [adminId, limit]);
 
-    // Thêm trạng thái read từ session
-    const readNotifications = req.session.readNotifications || [];
-    const deletedNotifications = req.session.deletedNotifications || [];
-    const filteredNotifications = notifications
-      .filter(n => !deletedNotifications.includes(`${n.type}:${n.id}`))
-      .map(n => ({
-        ...n,
-        read: readNotifications.includes(`${n.type}:${n.id}`)
-      }));
-
-    res.json({ notifications: filteredNotifications });
+    res.json({ thong_bao: thongBao });
   } catch (err) {
     console.error('Lỗi khi lấy thông báo:', err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Không thể tải thông báo' });
   }
 });
 
-// Lấy số lượng thông báo chưa đọc
-router.get('/api/notifications/unread-count', async (req, res) => {
+
+
+// API lấy số lượng thông báo chưa đọc
+// ✅ API lấy số lượng thông báo chưa đọc
+router.get('/api/thong-bao/dem-chua-doc', async (req, res) => {
   try {
-    const notifications = await query(`
-      SELECT id, type
-      FROM (
-        SELECT ID_CHINH_CT AS id, 'cong_thuc' AS type
-        FROM cong_thuc
-        WHERE TRANG_THAI_DUYET_ = 'Đang chờ duyệt'
-        UNION
-        SELECT ID_CHINH_BL, 'binh_luan'
-        FROM binh_luan
-        UNION
-        SELECT ID_CHINH_PHBL, 'phan_hoi_binh_luan'
-        FROM phan_hoi_binh_luan
-        UNION
-        SELECT ID_CHINH_DG, 'danh_gia'
-        FROM danh_gia
-        UNION
-        SELECT ID_CHINH_YT, 'yeu_thich'
-        FROM yeu_thich
-        UNION
-        SELECT ID_CHINH_CXBL, 'binh_luan_cam_xuc'
-        FROM binh_luan_cam_xuc
-        UNION
-        SELECT ID_CHINH_PHCX, 'phan_hoi_cam_xuc'
-        FROM phan_hoi_cam_xuc
-      ) AS notifications
-    `);
-    const readNotifications = req.session.readNotifications || [];
-    const deletedNotifications = req.session.deletedNotifications || [];
-    const unreadCount = notifications.filter(n => 
-      !readNotifications.includes(`${n.type}:${n.id}`) && 
-      !deletedNotifications.includes(`${n.type}:${n.id}`)
-    ).length;
-    res.json({ count: unreadCount });
+    const userId = req.session.user.ID_CHINH_ND;
+
+    const count = await query(`
+      SELECT COUNT(*) AS total 
+      FROM THONG_BAO 
+      WHERE DA_DOC = FALSE AND DA_XOA = FALSE AND ID_MUC_TIEU = ?
+    `, [userId]);
+
+    res.json({ count: count[0].total });
   } catch (err) {
     console.error('Lỗi khi lấy số lượng thông báo:', err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Không thể tải số lượng thông báo' });
   }
 });
 
+
 // Đánh dấu đã đọc
-router.post('/api/notifications/:type/:id/mark-read', ensureAdmin, async (req, res) => {
+// ✅ Đánh dấu đã đọc
+router.post('/api/thong-bao/:type/:id/mark-read', ensureAdmin, async (req, res) => {
   try {
-    const { type, id } = req.params;
-    if (!req.session.readNotifications) {
-      req.session.readNotifications = [];
-    }
-    const key = `${type}:${id}`;
-    if (!req.session.readNotifications.includes(key)) {
-      req.session.readNotifications.push(key);
-    }
+    const { id } = req.params;
+    const userId = req.session.user.ID_CHINH_ND;
+
+    await query(`
+      UPDATE THONG_BAO 
+      SET DA_DOC = TRUE 
+      WHERE ID_CHINH_TB = ? AND ID_MUC_TIEU = ?
+    `, [id, userId]);
+
     res.json({ success: true });
   } catch (err) {
     console.error('Lỗi khi đánh dấu đã đọc:', err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Không thể đánh dấu đã đọc' });
   }
 });
 
-// Xóa thông báo
-router.post('/api/notifications/:type/:id/delete', ensureAdmin, async (req, res) => {
+
+
+// ✅ Xóa thông báo
+router.post('/api/thong-bao/:type/:id/delete', ensureAdmin, async (req, res) => {
   try {
-    const { type, id } = req.params;
-    if (!req.session.deletedNotifications) {
-      req.session.deletedNotifications = [];
-    }
-    const key = `${type}:${id}`;
-    if (!req.session.deletedNotifications.includes(key)) {
-      req.session.deletedNotifications.push(key);
-    }
+    const { id } = req.params;
+    const userId = req.session.user.ID_CHINH_ND;
+
+    await query(`
+      UPDATE THONG_BAO 
+      SET DA_XOA = TRUE 
+      WHERE ID_CHINH_TB = ? AND ID_MUC_TIEU = ?
+    `, [id, userId]);
+
     res.json({ success: true });
   } catch (err) {
     console.error('Lỗi khi xóa thông báo:', err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Không thể xóa thông báo' });
   }
 });
+
 
 
 module.exports = router;

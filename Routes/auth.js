@@ -81,8 +81,7 @@ router.get("/logout", (req, res) => {
         res.redirect("/login");
     });
 });
-// GET - giao diện đổi mật khẩu dùng chung
-// GET - hiển thị giao diện đổi mật khẩu
+// GET - hiển thị form đổi mật khẩu
 router.get('/doi-mat-khau', async (req, res) => {
   const user = req.session.user;
   if (!user) return res.redirect('/dang-nhap');
@@ -91,13 +90,23 @@ router.get('/doi-mat-khau', async (req, res) => {
     const rows = await query('SELECT * FROM NGUOI_DUNG WHERE ID_CHINH_ND = ?', [user.ID_CHINH_ND]);
     if (rows.length === 0) return res.status(404).send('Không tìm thấy người dùng');
 
-    res.render('admin/admin', {
+    const userData = rows[0];
+    const isAdmin = userData.VAI_TRO === 'admin';
+
+    const viewParams = {
       title: 'Đổi Mật Khẩu',
-      user: rows[0],
-      content: 'auth/doi-mat-khau', // ✅ Đường dẫn tới file nội dung bên trong
+      user: userData,
       error: null,
-      success: null
-    });
+      success: null,
+      content: isAdmin ? 'auth/doi-mat-khau' : undefined,
+      viewPath: !isAdmin ? 'auth/doi-mat-khau' : undefined
+    };
+
+    console.log('User role:', isAdmin ? 'admin' : 'user');
+    console.log('Rendering layout:', isAdmin ? 'admin/admin' : 'index/index_layout');
+    console.log('Include path:', isAdmin ? viewParams.content : viewParams.viewPath);
+
+    res.render(isAdmin ? 'admin/admin' : 'index/index_layout', viewParams);
   } catch (err) {
     console.error(err);
     res.status(500).send('Lỗi máy chủ');
@@ -113,27 +122,34 @@ router.post('/doi-mat-khau', async (req, res) => {
 
   try {
     const rows = await query('SELECT * FROM NGUOI_DUNG WHERE ID_CHINH_ND = ?', [user.ID_CHINH_ND]);
+    if (rows.length === 0) return res.status(404).send('Không tìm thấy người dùng');
+
     const currentUser = rows[0];
+    const isAdmin = currentUser.VAI_TRO === 'admin';
 
     const match = await bcrypt.compare(matKhauCu, currentUser.MAT_KHAU);
     if (!match) {
-      return res.render('admin/admin', {
+      const viewParams = {
         title: 'Đổi Mật Khẩu',
         user: currentUser,
-        content: 'auth/doi-mat-khau',
         error: 'Mật khẩu hiện tại không đúng',
-        success: null
-      });
+        success: null,
+        content: isAdmin ? 'auth/doi-mat-khau' : undefined,
+        viewPath: !isAdmin ? 'auth/auth/doi-mat-khau' : undefined
+      };
+      return res.render(isAdmin ? 'admin/admin' : 'index/index_layout', viewParams);
     }
 
     if (matKhauMoi !== xacNhanMatKhau) {
-      return res.render('admin/admin', {
+      const viewParams = {
         title: 'Đổi Mật Khẩu',
         user: currentUser,
-        content: 'auth/doi-mat-khau',
         error: 'Xác nhận mật khẩu không khớp',
-        success: null
-      });
+        success: null,
+        content: isAdmin ? 'auth/doi-mat-khau' : undefined,
+        viewPath: !isAdmin ? 'auth/auth/doi-mat-khau' : undefined
+      };
+      return res.render(isAdmin ? 'admin/admin' : 'index/index_layout', viewParams);
     }
 
     const hashed = await bcrypt.hash(matKhauMoi, 10);
@@ -142,19 +158,19 @@ router.post('/doi-mat-khau', async (req, res) => {
       [hashed, user.ID_CHINH_ND]
     );
 
-    res.render('admin/admin', {
+    const viewParams = {
       title: 'Đổi Mật Khẩu',
       user: currentUser,
-      content: 'auth/doi-mat-khau',
       error: null,
-      success: 'Đổi mật khẩu thành công!'
-    });
+      success: 'Đổi mật khẩu thành công!',
+      content: isAdmin ? 'auth/doi-mat-khau' : undefined,
+      viewPath: !isAdmin ? 'auth/doi-mat-khau' : undefined
+    };
+    res.render(isAdmin ? 'admin/admin' : 'index/index_layout', viewParams);
   } catch (err) {
     console.error(err);
     res.status(500).send('Lỗi máy chủ');
   }
 });
-
-
 
 module.exports = router;

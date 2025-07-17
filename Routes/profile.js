@@ -42,8 +42,8 @@ const upload = multer({
 router.get("/profile", ensureLoggedIn, async (req, res) => {
   const userId = req.session.user.ID_CHINH_ND;
   try {
-    // Lấy công thức của người dùng
-    const userRecipes = await query("SELECT * FROM cong_thuc WHERE ID_CHINH_ND = ?", [userId]);
+    // Lấy công thức của người dùng (This should be 'yourRecipes' for consistency with EJS)
+    const yourRecipes = await query("SELECT * FROM cong_thuc WHERE ID_CHINH_ND = ?", [userId]);
 
     // Lấy công thức yêu thích
     const favoriteRecipes = await query(`
@@ -51,7 +51,7 @@ router.get("/profile", ensureLoggedIn, async (req, res) => {
       JOIN cong_thuc c ON y.ID_CHINH_CT = c.ID_CHINH_CT 
       WHERE y.ID_CHINH_ND = ?`, [userId]);
 
-    // Lấy danh sách loại món
+    // Lấy danh sách loại món (Consider if you truly need this here)
     const categories = await query("SELECT ID_CHINH_LM AS ID_CHINH_MA, TEN_LM AS TEN_MON_AN FROM loai_mon");
 
     // Lấy danh sách nguyên liệu
@@ -77,10 +77,12 @@ router.get("/profile", ensureLoggedIn, async (req, res) => {
       viewPath: "profile",
       user: req.session.user,
       userInfo,
-      userRecipes,
+      // Pass the renamed 'yourRecipes' here
+      yourRecipes, // This was 'userRecipes' before
       favoriteRecipes,
       mon_an,
-      nguyen_lieu, // Thêm nguyen_lieu vào template
+      nguyen_lieu,
+      // categories, // Add this if you decided to keep and use categories
     });
   } catch (err) {
     console.error("Lỗi truy vấn:", err);
@@ -125,9 +127,13 @@ router.delete("/cong-thuc-cua-toi/:id", ensureLoggedIn, async (req, res) => {
   }
 });
 
-router.put("/api/profile", ensureLoggedIn, upload.single("AVARTAR_URL"), async (req, res) => {
+router.put("/api/profile", ensureLoggedIn, upload.single("hinh_anh"), async (req, res) => {
+  console.log("dữ liệu từ frontend:");
+  console.log("body", req.body);
+  console.log("file", req.file); // <-- Bây giờ sẽ có file
+
   const userId = req.session.user.ID_CHINH_ND;
-  const { TEN_NGUOI_DUNG, EMAIL_ } = req.body;
+  const { TEN_NGUOI_DUNG, EMAIL_, SO_DIEN_THOAI_ } = req.body;
   let avatarPath = req.session.user.AVARTAR_URL;
 
   if (!TEN_NGUOI_DUNG || !EMAIL_) {
@@ -140,26 +146,43 @@ router.put("/api/profile", ensureLoggedIn, upload.single("AVARTAR_URL"), async (
 
   try {
     if (req.file) {
-      const targetDir = path.join("public", "uploads", "images", "nguoidung", `${userId}`); // Cập nhật đường dẫn
+      const targetDir = path.join("public", "uploads", "images", "nguoidung", `${userId}`);
       await fs.mkdir(targetDir, { recursive: true });
+
       const fileExtension = path.extname(req.file.originalname);
       const targetPath = path.join(targetDir, `nguoidung${fileExtension}`);
       await fs.rename(req.file.path, targetPath);
-      avatarPath = `/uploads/images/nguoidung/${userId}/nguoidung${fileExtension}`; // Cập nhật đường dẫn trả về
+
+      avatarPath = `/uploads/images/nguoidung/${userId}/nguoidung${fileExtension}`;
     }
 
     await query(
-      "UPDATE nguoi_dung SET TEN_NGUOI_DUNG = ?, EMAIL_ = ?, AVARTAR_URL = ? WHERE ID_CHINH_ND = ?",
-      [TEN_NGUOI_DUNG, EMAIL_, avatarPath, userId]
+      `UPDATE nguoi_dung 
+       SET TEN_NGUOI_DUNG = ?, EMAIL_ = ?, SO_DIEN_THOAI_ = ?, AVARTAR_URL = ?
+       WHERE ID_CHINH_ND = ?`,
+      [TEN_NGUOI_DUNG, EMAIL_, SO_DIEN_THOAI_ || "", avatarPath, userId]
     );
 
-    req.session.user = { ...req.session.user, TEN_NGUOI_DUNG, EMAIL_, AVARTAR_URL: avatarPath };
-    res.json({ message: "Cập nhật hồ sơ thành công!", user: req.session.user });
+    req.session.user = {
+      ...req.session.user,
+      TEN_NGUOI_DUNG,
+      EMAIL_,
+      SO_DIEN_THOAI_,
+      AVARTAR_URL: avatarPath,
+    };
+
+    res.json({
+      message: "Cập nhật hồ sơ thành công!",
+      user: req.session.user
+    });
   } catch (err) {
     console.error("Lỗi cập nhật hồ sơ:", err);
     res.status(500).json({ error: "Lỗi server khi cập nhật hồ sơ" });
   }
 });
+
+
+
 
 router.post("/api/yeu-thich/:id", ensureLoggedIn, async (req, res) => {
   const userId = req.session.user.ID_CHINH_ND;

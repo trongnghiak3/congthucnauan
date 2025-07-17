@@ -6,21 +6,20 @@
   <title>Quản Lý Món Ăn</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body class="p-8 font-sans bg-gray-50">
-  <div class="max-w-8xl mx-auto">
-    <!-- Tabs Navigation -->
-    <div class="mb-8 border-b border-gray-300">
-      <ul class="flex space-x-4">
+<body class="p-4 font-sans bg-gray-50">
+  <div class="max-w-6xl mx-auto">
+    <div class="mb-4 border-b border-gray-300">
+      <ul class="flex space-x-2">
         <li>
           <button onclick="showTab('dishes')" id="tab-dishes"
-            class="tab-button px-6 py-3 rounded-t-lg font-semibold bg-yellow-500 text-white shadow-md hover:bg-yellow-600 focus:outline-none"
+            class="tab-button px-3 py-1 rounded-t-lg font-semibold bg-yellow-500 text-white shadow-md hover:bg-yellow-600 focus:outline-none text-sm"
             aria-selected="true" role="tab">
             Danh Sách Món Ăn
           </button>
         </li>
         <li>
           <button onclick="showTab('dishes-by-category')" id="tab-dishes-by-category"
-            class="tab-button px-6 py-3 rounded-t-lg font-semibold bg-gray-200 text-gray-600 hover:bg-gray-300 focus:outline-none"
+            class="tab-button px-3 py-1 rounded-t-lg font-semibold bg-gray-200 text-gray-600 hover:bg-gray-300 focus:outline-none text-sm"
             aria-selected="false" role="tab">
             Danh Sách Món Ăn Theo Loại Món
           </button>
@@ -28,68 +27,65 @@
       </ul>
     </div>
 
-    <!-- Tab 1: Danh Sách Món Ăn -->
     <div id="dishes" class="tab-content" role="tabpanel" aria-labelledby="tab-dishes">
-      <!-- Tiêu đề và nút thêm -->
-      <div class="flex justify-between items-center mb-6">
-        <h1 class="text-3xl font-bold text-gray-800"></h1>
+      <div class="flex justify-between items-center mb-3">
+        <h1 class="text-2xl font-bold text-gray-800"></h1>
         <button
           onclick="openAddDishModal()"
-          class="px-5 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition duration-200"
+          class="px-3 py-1.5 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition duration-200 text-sm"
         >
           ➕ Thêm Món Ăn
         </button>
       </div>
 
-      <!-- Bảng món ăn -->
       <table class="min-w-full border border-gray-300 rounded-lg overflow-hidden shadow-sm bg-white">
-        <thead class="bg-gray-100 text-gray-700 uppercase text-sm font-semibold">
+        <thead class="bg-gray-100 text-gray-700 uppercase text-xs font-semibold">
           <tr>
-            <th class="px-6 py-3 text-left border-r border-gray-300">ID</th>
-            <th class="px-6 py-3 text-left border-r border-gray-300">Tên Món Ăn</th>
-            <th class="px-6 py-3 text-left border-r border-gray-300">Loại Món</th>
-            <th class="px-6 py-3 text-left border-r border-gray-300">Mô Tả</th>
-            <th class="px-6 py-3 text-left border-r border-gray-300">Hình Ảnh</th>
-            <th class="px-6 py-3 text-left">Hành Động</th>
+            <th class="px-4 py-2 text-left border-r border-gray-300">ID</th>
+            <th class="px-4 py-2 text-left border-r border-gray-300">Tên Món Ăn</th>
+            <th class="px-4 py-2 text-left border-r border-gray-300">Loại Món</th>
+            <th class="px-4 py-2 text-left border-r border-gray-300">Mô Tả</th>
+            <th class="px-4 py-2 text-left border-r border-gray-300">Hình Ảnh</th>
+            <th class="px-4 py-2 text-left">Hành Động</th>
           </tr>
         </thead>
         <tbody class="text-gray-800 text-sm">
           <% if (monAnList && monAnList.length > 0) { %>
             <% monAnList.forEach((dish) => { %>
               <tr class="hover:bg-yellow-50 transition duration-200">
-                <td class="px-6 py-2 border-t border-gray-200"><%= dish.ID_CHINH_MA %></td>
-                <td class="px-6 py-2 border-t border-gray-200"><%= dish.TEN_MON_AN %></td>
-                <td class="px-6 py-2 border-t border-gray-200">
+                <td class="px-4 py-2 border-t border-gray-200"><%= dish.ID_CHINH_MA %></td>
+                <td class="px-4 py-2 border-t border-gray-200"><%= dish.TEN_MON_AN %></td>
+                <td class="px-4 py-2 border-t border-gray-200">
                   <% if (groupedLoaiMon[dish.ID_CHINH_MA] && groupedLoaiMon[dish.ID_CHINH_MA].loai_mon.length > 0) { %>
                     <%= groupedLoaiMon[dish.ID_CHINH_MA].loai_mon.map(lm => lm.TEN_LM).join(', ') %>
                   <% } else { %>
                     Không rõ
                   <% } %>
                 </td>
-                <td class="px-6 py-2 border-t border-gray-200 line-clamp-2"><%= dish.MO_TA_MA || 'Không có' %></td>
-                <td class="px-6 py-2 border-t border-gray-200">
+                <td class="px-4 py-2 border-t border-gray-200 line-clamp-2"><%= dish.MO_TA_MA || 'Không có' %></td>
+                <td class="px-4 py-2 border-t border-gray-200">
                   <% if (dish.HINH_ANH_MA) { %>
                     <a href="<%= dish.HINH_ANH_MA %>" target="_blank">
                       <img
                         src="<%= dish.HINH_ANH_MA %>"
                         alt="Ảnh món ăn"
-                        class="w-14 h-14 object-cover rounded shadow-sm hover:scale-105 transition transform"
+                        class="w-12 h-12 object-cover rounded shadow-sm hover:scale-105 transition transform"
                       />
                     </a>
                   <% } else { %>
                     <span class="text-gray-400 italic">Không có</span>
                   <% } %>
                 </td>
-                <td class="px-6 py-2 border-t border-gray-200 space-x-2">
+                <td class="px-4 py-2 border-t border-gray-200 space-x-1.5">
                   <button
                     onclick="openEditDishModal('<%= dish.ID_CHINH_MA %>')"
-                    class="bg-yellow-400 hover:bg-yellow-500 text-white px-3 py-2 rounded-md transition"
+                    class="bg-yellow-400 hover:bg-yellow-500 text-white px-2.5 py-1.5 rounded-md transition text-xs"
                   >
                     ✏ Sửa
                   </button>
                   <button
                     onclick="confirmDeleteDish('<%= dish.ID_CHINH_MA %>')"
-                    class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-md transition"
+                    class="bg-red-600 hover:bg-red-700 text-white px-2.5 py-1.5 rounded-md transition text-xs"
                   >
                     🗑 Xóa
                   </button>
@@ -98,20 +94,19 @@
             <% }) %>
           <% } else { %>
             <tr>
-              <td colspan="6" class="text-center py-6 text-gray-400 italic">Không có món ăn nào để hiển thị.</td>
+              <td colspan="6" class="text-center py-4 text-gray-400 italic text-sm">Không có món ăn nào để hiển thị.</td>
             </tr>
           <% } %>
         </tbody>
       </table>
 
-      <!-- Phân trang -->
       <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
-        <div class="mt-6 flex justify-center space-x-2">
+        <div class="mt-4 flex justify-center space-x-2">
           <% if (currentPage > 1) { %>
             <a
               href="#"
               onclick="loadPage('/admin/mon-an?page=<%= currentPage - 1 %>&pageCategories=<%= currentPageCategories %>', document.querySelector('#content')); return false;"
-              class="px-4 py-2 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 transition"
+              class="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 transition text-sm"
             >
               ‹ Trước
             </a>
@@ -120,7 +115,7 @@
             <a
               href="#"
               onclick="loadPage('/admin/mon-an?page=<%= i %>&pageCategories=<%= currentPageCategories %>', document.querySelector('#content')); return false;"
-              class="px-4 py-2 rounded-lg border text-sm <%= i === currentPage ? 'bg-yellow-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100' %>"
+              class="px-3 py-1 rounded-lg border text-sm <%= i === currentPage ? 'bg-yellow-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100' %>"
             >
               <%= i %>
             </a>
@@ -129,7 +124,7 @@
             <a
               href="#"
               onclick="loadPage('/admin/mon-an?page=<%= currentPage + 1 %>&pageCategories=<%= currentPageCategories %>', document.querySelector('#content')); return false;"
-              class="px-4 py-2 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 transition"
+              class="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 transition text-sm"
             >
               Sau ›
             </a>
@@ -138,26 +133,25 @@
       <% } %>
     </div>
 
-    <!-- Tab 2: Danh Sách Món Ăn Theo Loại Món -->
-<div id="dishes-by-category" class="tab-content hidden" role="tabpanel" aria-labelledby="tab-dishes-by-category">
-  <div class="flex flex-col md:flex-row justify-between items-center px-6 py-4 bg-white border-b border-gray-200">
-    <div class="w-full md:w-1/2 mb-3 md:mb-0">
+    <div id="dishes-by-category" class="tab-content hidden" role="tabpanel" aria-labelledby="tab-dishes-by-category">
+  <div class="flex flex-col md:flex-row justify-between items-center px-4 py-2 bg-white border-b border-gray-200">
+    <div class="w-full md:w-1/2 mb-2 md:mb-0">
       <input type="text" id="searchDish" onkeyup="filterDishes()" placeholder="Tìm kiếm món ăn..."
-        class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-1 focus:ring-yellow-400 transition" />
+        class="w-full border border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-yellow-400 transition" />
     </div>
-    <div class="text-gray-600 text-sm">
+    <div class="text-gray-600 text-xs">
       Tổng số món ăn: <span id="totalDishes" class="font-semibold text-gray-800">
         <%= Object.values(groupedLoaiMon).reduce((sum, g) => sum + g.loai_mon.length, 0) %>
       </span>
     </div>
   </div>
-  <div class="overflow-x-auto px-6 py-4 bg-white rounded-b-lg border border-t-0 border-gray-200">
+  <div class="overflow-x-auto px-4 py-2 bg-white rounded-b-lg border border-t-0 border-gray-200">
     <table class="min-w-full text-sm text-gray-700">
       <thead>
-        <tr class="bg-gray-100 text-gray-700 uppercase text-sm font-medium select-none">
-          <th class="px-6 py-3 border-r border-gray-300 text-center">STT</th>
-          <th class="px-6 py-3 border-r border-gray-300 text-left">Tên Món Ăn</th>
-          <th class="px-6 py-3 border-r border-gray-300 text-left">Loại Món</th>
+        <tr class="bg-gray-100 text-gray-700 uppercase text-xs font-medium select-none">
+          <th class="px-4 py-2 border-r border-gray-300 text-center">STT</th>
+          <th class="px-4 py-2 border-r border-gray-300 text-left">Tên Món Ăn</th>
+          <th class="px-4 py-2 border-r border-gray-300 text-left">Loại Món</th>
         </tr>
       </thead>
       <tbody>
@@ -165,33 +159,33 @@
           <% Object.keys(groupedLoaiMon).forEach((id, index) => { %>
             <tr class="hover:bg-gray-50 transition" onclick="toggleDishes('<%= id %>')" data-group-id="<%= id %>">
               <td colspan="3"
-                class="py-3 px-4 text-center font-medium text-gray-900 border-t border-gray-100 bg-gray-50 rounded hover:bg-gray-100 cursor-pointer">
+                class="py-2 px-3 text-center font-medium text-gray-900 border-t border-gray-100 bg-gray-50 rounded hover:bg-gray-100 cursor-pointer text-sm">
                 <%= groupedLoaiMon[id].TEN_MON_AN %>
               </td>
             </tr>
             <% groupedLoaiMon[id].loai_mon.forEach((lm, lmIndex) => { %>
               <tr class="dish-row hidden border-b border-gray-100" data-group="<%= id %>">
-                <td class="p-3 text-center"><%= lmIndex + 1 %></td>
-                <td class="p-3 text-left"><%= groupedLoaiMon[id].TEN_MON_AN %></td>
-                <td class="p-3 text-left"><%= lm.TEN_LM %></td>
+                <td class="p-2 text-center text-sm"><%= lmIndex + 1 %></td>
+                <td class="p-2 text-left text-sm"><%= groupedLoaiMon[id].TEN_MON_AN %></td>
+                <td class="p-2 text-left text-sm"><%= lm.TEN_LM %></td>
               </tr>
             <% }) %>
           <% }) %>
         <% } else { %>
           <tr>
-            <td colspan="3" class="text-center py-6 text-gray-400 italic">Không có món ăn nào trong loại món!</td>
+            <td colspan="3" class="text-center py-4 text-gray-400 italic text-sm">Không có món ăn nào trong loại món!</td>
           </tr>
         <% } %>
       </tbody>
     </table>
   </div>
   <% if (typeof totalPagesCategories !== 'undefined' && totalPagesCategories > 1) { %>
-    <div class="mt-6 flex justify-center space-x-2">
+    <div class="mt-4 flex justify-center space-x-2">
       <% if (currentPageCategories > 1) { %>
         <a
           href="#"
           onclick="loadPage('/admin/mon-an?page=<%= currentPage %>&pageCategories=<%= currentPageCategories - 1 %>', document.querySelector('#content')); return false;"
-          class="px-4 py-2 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 transition"
+          class="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 transition text-sm"
         >
           ‹ Trước
         </a>
@@ -200,7 +194,7 @@
         <a
           href="#"
           onclick="loadPage('/admin/mon-an?page=<%= currentPage %>&pageCategories=<%= i %>', document.querySelector('#content')); return false;"
-          class="px-4 py-2 rounded-lg border text-sm <%= i === currentPageCategories ? 'bg-yellow-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100' %>"
+          class="px-3 py-1 rounded-lg border text-sm <%= i === currentPageCategories ? 'bg-yellow-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100' %>"
         >
           <%= i %>
         </a>
@@ -209,7 +203,7 @@
         <a
           href="#"
           onclick="loadPage('/admin/mon-an?page=<%= currentPage %>&pageCategories=<%= currentPageCategories + 1 %>', document.querySelector('#content')); return false;"
-          class="px-4 py-2 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 transition"
+          class="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 transition text-sm"
         >
           Sau ›
         </a>
@@ -218,48 +212,47 @@
   <% } %>
 </div>
 
-   <!-- Modal Thêm/Sửa Món Ăn -->
-<div id="dishModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
-  <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
-    <h2 id="modalTitle" class="text-2xl font-semibold mb-4 text-gray-800">Thêm Món Ăn</h2>
+    <div id="dishModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+  <div class="bg-white p-4 rounded-lg shadow-lg w-full max-w-sm">
+    <h2 id="modalTitle" class="text-lg font-semibold mb-3 text-gray-800">Thêm Món Ăn</h2>
     <form id="dishForm" enctype="multipart/form-data" data-dish-id="">
       <input type="hidden" id="dishId" name="ID_CHINH_MA" />
-      <div class="mb-4">
+      <div class="mb-3">
         <label for="tenMonAn" class="block text-sm font-medium text-gray-700">Tên Món Ăn</label>
         <input
           type="text"
           id="tenMonAn"
           name="TEN_MON_AN"
-          class="mt-1 p-2 w-full border rounded-lg focus:ring-yellow-500 focus:border-yellow-500"
+          class="mt-1 p-1.5 w-full border rounded-lg focus:ring-yellow-500 focus:border-yellow-500 text-sm"
           required
         />
       </div>
-    <div class="mb-4">
-  <label for="loaiMon" class="block text-sm font-medium text-gray-700">Loại Món</label>
-  <select id="loaiMon" name="ID_CHINH_LM" multiple
-    class="mt-1 p-2 w-full border rounded-lg focus:ring-yellow-500 focus:border-yellow-500" required>
-    <option value="">Chọn loại món</option>
-    <% if (categories && categories.length > 0) { %>
-      <% categories.forEach(category => { %>
-        <option value="<%= category.ID_CHINH_LM %>"><%= category.TEN_LM %></option>
-      <% }) %>
-    <% } %>
-  </select>
-</div>
-      <div class="mb-4">
+      <div class="mb-3">
+        <label for="loaiMon" class="block text-sm font-medium text-gray-700">Loại Món</label>
+        <select id="loaiMon" name="ID_CHINH_LM" multiple
+          class="mt-1 p-1.5 w-full border rounded-lg focus:ring-yellow-500 focus:border-yellow-500 text-sm" required>
+          <option value="">Chọn loại món</option>
+          <% if (categories && categories.length > 0) { %>
+            <% categories.forEach(category => { %>
+              <option value="<%= category.ID_CHINH_LM %>"><%= category.TEN_LM %></option>
+            <% }) %>
+          <% } %>
+        </select>
+      </div>
+      <div class="mb-3">
         <label for="moTa" class="block text-sm font-medium text-gray-700">Mô Tả</label>
         <textarea
           id="moTa"
           name="MO_TA_MA"
-          class="mt-1 p-2 w-full border rounded-lg focus:ring-yellow-500 focus:border-yellow-500"
+          class="mt-1 p-1.5 w-full border rounded-lg focus:ring-yellow-500 focus:border-yellow-500 text-sm"
         ></textarea>
       </div>
-      <div class="mb-4">
+      <div class="mb-3">
         <label class="block text-sm font-medium text-gray-700 mb-1">Hình Ảnh</label>
         <img
           id="imagePreview"
           src="/default.jpg"
-          class="mt-2 w-40 h-40 object-cover rounded-lg border cursor-pointer"
+          class="mt-1 w-28 h-28 object-cover rounded-lg border cursor-pointer"
           onclick="document.getElementById('hinhAnh').click()"
         />
         <input
@@ -275,14 +268,14 @@
         <button
           type="button"
           onclick="closeDishModal()"
-          class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition"
+          class="px-3 py-1 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition text-sm"
         >
           Hủy
         </button>
         <button
           type="submit"
           id="submitButton"
-          class="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition"
+          class="px-3 py-1 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition text-sm"
         >
           Thêm
         </button>

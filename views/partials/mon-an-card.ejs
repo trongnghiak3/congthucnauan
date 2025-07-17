@@ -1,0 +1,33 @@
+<div 
+  class="group bg-white rounded-2xl overflow-hidden shadow hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 cursor-pointer"
+  onclick="window.location.href='/cong-thuc?monAnId=<%= mon.ID_CHINH_MA %>'"
+>
+  <!-- Ảnh món ăn -->
+  <div class="relative h-48 overflow-hidden">
+    <% if (mon.HINH_ANH_MA) { %>
+      <img src="<%= mon.HINH_ANH_MA %>"
+           alt="<%= mon.TEN_MON_AN %>"
+           class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+    <% } else { %>
+      <div class="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400 text-sm">
+        <i class="fas fa-image mr-1.5"></i> Không có ảnh
+      </div>
+    <% } %>
+
+    <% if (mon.LOAI_MON) { %>
+      <span class="absolute top-2 left-2 bg-amber-500 text-white text-xs font-semibold px-2 py-0.5 rounded-full shadow">
+        <%= mon.LOAI_MON %>
+      </span>
+    <% } %>
+  </div>
+
+  <!-- Nội dung -->
+  <div class="p-4">
+    <h3 class="text-lg font-bold text-gray-800 truncate group-hover:text-amber-600 transition-colors">
+      <%= mon.TEN_MON_AN %>
+    </h3>
+    <p class="text-sm text-gray-600 mt-1 line-clamp-2">
+      <%= mon.MO_TA_MA || "Chưa có mô tả" %>
+    </p>
+  </div>
+</div>

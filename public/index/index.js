@@ -1,16 +1,41 @@
 document.addEventListener("DOMContentLoaded", function () {
-      // Toggle mobile menu
-      document.getElementById("menu-toggle").addEventListener("click", () => {
-        const menu = document.getElementById("mobile-menu");
-        menu.classList.toggle("hidden");
-      });
+ // Ẩn/hiện menu di động
+document.getElementById("nut-chuyen-menu")?.addEventListener("click", () => {
+  const menuDiDong = document.getElementById("menu-di-dong");
+  menuDiDong.classList.toggle("an");
+});
 
-      // Toggle user dropdown
-      document.getElementById("user-avatar")?.addEventListener("click", () => {
-        const dropdown = document.getElementById("user-dropdown");
+// Ẩn/hiện menu thả xuống của người dùng
+document.getElementById("anh-dai-dien-nguoi-dung")?.addEventListener("click", () => {
+  const menuThaSuaXuong = document.getElementById("menu-tha-xuong-nguoi-dung");
+  menuThaSuaXuong.classList.toggle("an");
+});
+
+// Bạn có một đoạn code lặp lại cho menu di động ở cuối,
+// chúng ta có thể bỏ đoạn này đi hoặc điều chỉnh cho khớp
+// với cách đặt tên mới nếu bạn muốn giữ lại một bản sao cho mục đích khác.
+// Ví dụ:
+const nutChuyenMenu = document.getElementById("nut-chuyen-menu");
+const menuDiDong = document.getElementById("menu-di-dong");
+nutChuyenMenu?.addEventListener("click", () => { // Thêm ?. ở đây để đảm bảo an toàn nếu phần tử không tồn tại
+  menuDiDong?.classList.toggle("an"); // Thêm ?. ở đây
+});
+
+
+
+
+
+
+
+
+
+    const avatar = document.getElementById("user-avatar");
+    const dropdown = document.getElementById("user-dropdown");
+    if (avatar && dropdown) {
+      avatar.addEventListener("click", () => {
         dropdown.classList.toggle("hidden");
       });
-
+    }
     document.addEventListener("DOMContentLoaded", function () {
       const searchInput = document.getElementById("searchInput");
       const filterButtons = document.querySelectorAll(".filter-btn");
@@ -211,293 +236,293 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
 
-  // Preview hình ảnh
-  const hinhAnhInput = document.getElementById('hinh_anh');
-  if (hinhAnhInput) {
-    hinhAnhInput.addEventListener('change', function (event) {
-      const file = event.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function (e) {
-          document.getElementById('image_preview').src = e.target.result;
-        };
-        reader.readAsDataURL(file);
-      }
-    });
-  } else {
-    console.error('Phần tử hinh_anh không tìm thấy!');
-  }
+//   // Preview hình ảnh
+//   const hinhAnhInput = document.getElementById('hinh_anh');
+//   if (hinhAnhInput) {
+//     hinhAnhInput.addEventListener('change', function (event) {
+//       const file = event.target.files[0];
+//       if (file) {
+//         const reader = new FileReader();
+//         reader.onload = function (e) {
+//           document.getElementById('image_preview').src = e.target.result;
+//         };
+//         reader.readAsDataURL(file);
+//       }
+//     });
+//   } else {
+//     console.error('Phần tử hinh_anh không tìm thấy!');
+//   }
 
-  // Preview video
-  const videoFileInput = document.getElementById('video_file');
-  if (videoFileInput) {
-    videoFileInput.addEventListener('change', function (event) {
-      const file = event.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function (e) {
-          document.getElementById('video_preview').src = e.target.result;
-        };
-        reader.readAsDataURL(file);
-      }
-    });
-  } else {
-    console.error('Phần tử video_file không tìm thấy!');
-  }
+//   // Preview video
+//   const videoFileInput = document.getElementById('video_file');
+//   if (videoFileInput) {
+//     videoFileInput.addEventListener('change', function (event) {
+//       const file = event.target.files[0];
+//       if (file) {
+//         const reader = new FileReader();
+//         reader.onload = function (e) {
+//           document.getElementById('video_preview').src = e.target.result;
+//         };
+//         reader.readAsDataURL(file);
+//       }
+//     });
+//   } else {
+//     console.error('Phần tử video_file không tìm thấy!');
+//   }
 
-  // Xử lý submit form
-// Trong khối document.addEventListener("DOMContentLoaded", ...)
-const addRecipeForm = document.getElementById('add-recipe-form');
-  if (addRecipeForm) {
-    addRecipeForm.addEventListener('submit', async function (event) {
-      event.preventDefault();
-      console.log('Gửi form');
-      const formData = new FormData(this);
+//   // Xử lý submit form
+// // Trong khối document.addEventListener("DOMContentLoaded", ...)
+// const addRecipeForm = document.getElementById('add-recipe-form');
+//   if (addRecipeForm) {
+//     addRecipeForm.addEventListener('submit', async function (event) {
+//       event.preventDefault();
+//       console.log('Gửi form');
+//       const formData = new FormData(this);
 
-      // In dữ liệu form để debug
-      for (let [key, value] of formData.entries()) {
-        console.log(key, value);
-      }
+//       // In dữ liệu form để debug
+//       for (let [key, value] of formData.entries()) {
+//         console.log(key, value);
+//       }
 
-      // Kiểm tra các trường bắt buộc
-      const tenCongThuc = formData.get('TEN_CT');
-      const moTa = formData.get('MOTA');
-      const idChinhMa = formData.get('id_chinh_ma');
-      const thoiGianNau = formData.get('THOI_GIAN_NAU');
-      const doKho = formData.get('DO_KHO');
-      const soPhanAn = formData.get('SO_PHAN_AN');
+//       // Kiểm tra các trường bắt buộc
+//       const tenCongThuc = formData.get('TEN_CT');
+//       const moTa = formData.get('MOTA');
+//       const idChinhMa = formData.get('id_chinh_ma');
+//       const thoiGianNau = formData.get('THOI_GIAN_NAU');
+//       const doKho = formData.get('DO_KHO');
+//       const soPhanAn = formData.get('SO_PHAN_AN');
 
-      if (!tenCongThuc?.trim()) {
-        alert('Vui lòng nhập tên công thức!');
-        return;
-      }
-      if (!moTa?.trim()) {
-        alert('Vui lòng nhập mô tả!');
-        return;
-      }
-      if (!idChinhMa) {
-        alert('Vui lòng chọn món ăn!');
-        return;
-      }
-      if (!thoiGianNau || parseFloat(thoiGianNau) <= 0) {
-        alert('Vui lòng nhập thời gian nấu hợp lệ!');
-        return;
-      }
-      if (!doKho) {
-        alert('Vui lòng chọn độ khó!');
-        return;
-      }
-      if (!soPhanAn || parseInt(soPhanAn) <= 0) {
-        alert('Vui lòng nhập số phần ăn hợp lệ!');
-        return;
-      }
+//       if (!tenCongThuc?.trim()) {
+//         alert('Vui lòng nhập tên công thức!');
+//         return;
+//       }
+//       if (!moTa?.trim()) {
+//         alert('Vui lòng nhập mô tả!');
+//         return;
+//       }
+//       if (!idChinhMa) {
+//         alert('Vui lòng chọn món ăn!');
+//         return;
+//       }
+//       if (!thoiGianNau || parseFloat(thoiGianNau) <= 0) {
+//         alert('Vui lòng nhập thời gian nấu hợp lệ!');
+//         return;
+//       }
+//       if (!doKho) {
+//         alert('Vui lòng chọn độ khó!');
+//         return;
+//       }
+//       if (!soPhanAn || parseInt(soPhanAn) <= 0) {
+//         alert('Vui lòng nhập số phần ăn hợp lệ!');
+//         return;
+//       }
 
-      // Kiểm tra nguyên liệu
-      const nguyenLieuIds = document.querySelectorAll('select[name="nguyen_lieu_id[]"]');
-      const tenKhac = document.querySelectorAll('input[name="ten_nguyen_lieu_khac[]"]');
-      const soLuong = document.querySelectorAll('input[name="so_luong[]"]');
-      if (nguyenLieuIds.length === 0) {
-        alert('Vui lòng thêm ít nhất một nguyên liệu!');
-        return;
-      }
-      for (let i = 0; i < nguyenLieuIds.length; i++) {
-        if (nguyenLieuIds[i].value === 'khac' && !tenKhac[i].value.trim()) {
-          alert(`Vui lòng nhập tên nguyên liệu mới cho nguyên liệu thứ ${i + 1}!`);
-          return;
-        }
-        if (!soLuong[i].value || parseFloat(soLuong[i].value) <= 0) {
-          alert(`Vui lòng nhập số lượng hợp lệ cho nguyên liệu thứ ${i + 1}!`);
-          return;
-        }
-      }
+//       // Kiểm tra nguyên liệu
+//       const nguyenLieuIds = document.querySelectorAll('select[name="nguyen_lieu_id[]"]');
+//       const tenKhac = document.querySelectorAll('input[name="ten_nguyen_lieu_khac[]"]');
+//       const soLuong = document.querySelectorAll('input[name="so_luong[]"]');
+//       if (nguyenLieuIds.length === 0) {
+//         alert('Vui lòng thêm ít nhất một nguyên liệu!');
+//         return;
+//       }
+//       for (let i = 0; i < nguyenLieuIds.length; i++) {
+//         if (nguyenLieuIds[i].value === 'khac' && !tenKhac[i].value.trim()) {
+//           alert(`Vui lòng nhập tên nguyên liệu mới cho nguyên liệu thứ ${i + 1}!`);
+//           return;
+//         }
+//         if (!soLuong[i].value || parseFloat(soLuong[i].value) <= 0) {
+//           alert(`Vui lòng nhập số lượng hợp lệ cho nguyên liệu thứ ${i + 1}!`);
+//           return;
+//         }
+//       }
 
-      // Kiểm tra bước nấu
-      const tenBuoc = document.querySelectorAll('input[name="ten_buoc[]"]');
-      const buocNau = document.querySelectorAll('textarea[name="buoc_nau[]"]');
-      if (tenBuoc.length === 0 || buocNau.length === 0 || tenBuoc.length !== buocNau.length) {
-        alert('Vui lòng thêm ít nhất một bước nấu!');
-        return;
-      }
-      for (let i = 0; i < tenBuoc.length; i++) {
-        if (!tenBuoc[i].value.trim() || !buocNau[i].value.trim()) {
-          alert(`Vui lòng nhập tên và mô tả cho bước nấu thứ ${i + 1}!`);
-          return;
-        }
-      }
+//       // Kiểm tra bước nấu
+//       const tenBuoc = document.querySelectorAll('input[name="ten_buoc[]"]');
+//       const buocNau = document.querySelectorAll('textarea[name="buoc_nau[]"]');
+//       if (tenBuoc.length === 0 || buocNau.length === 0 || tenBuoc.length !== buocNau.length) {
+//         alert('Vui lòng thêm ít nhất một bước nấu!');
+//         return;
+//       }
+//       for (let i = 0; i < tenBuoc.length; i++) {
+//         if (!tenBuoc[i].value.trim() || !buocNau[i].value.trim()) {
+//           alert(`Vui lòng nhập tên và mô tả cho bước nấu thứ ${i + 1}!`);
+//           return;
+//         }
+//       }
 
-      const submitButton = document.querySelector('#step2 button[type="submit"]');
-      const loadingIcon = document.createElement('i');
-      loadingIcon.className = 'fas fa-spinner fa-spin ml-2';
-      submitButton.appendChild(loadingIcon);
-      submitButton.disabled = true;
+//       const submitButton = document.querySelector('#step2 button[type="submit"]');
+//       const loadingIcon = document.createElement('i');
+//       loadingIcon.className = 'fas fa-spinner fa-spin ml-2';
+//       submitButton.appendChild(loadingIcon);
+//       submitButton.disabled = true;
 
-      try {
-        const response = await fetch('/dang-cong-thuc', {
-          method: 'POST',
-          body: formData,
-        });
-        if (!response.ok) {
-          if (response.status === 404) {
-            throw new Error('Không tìm thấy endpoint /dang-cong-thuc. Kiểm tra server và route!');
-          }
-          const errorData = await response.json();
-          throw new Error(errorData.message || `Lỗi HTTP! Status: ${response.status}`);
-        }
-        const data = await response.json();
-        console.log('Phản hồi:', data);
-        if (data.message) {
-          alert(data.message);
-          if (data.recipeId) {
-            window.location.href = '/dang-cong-thuc';
-          }
-        } else {
-          alert('Có lỗi xảy ra khi đăng công thức!');
-        }
-      } catch (error) {
-        console.error('Lỗi:', error);
-        alert(error.message || 'Không thể kết nối đến server!');
-      } finally {
-        submitButton.disabled = false;
-        submitButton.removeChild(loadingIcon);
-      }
-    });
-  } else {
-    console.error('Phần tử add-recipe-form không tìm thấy!');
-  }
-});
- // Các hàm hỗ trợ khác
- // Các hàm hỗ trợ (giữ nguyên từ mã trước)
- // Hàm hỗ trợ cho nguyên liệu
-  function onNguyenLieuChange(select) {
-    const parent = select.closest('.nguyen_lieu_item');
-    const donViInput = parent.querySelector('input[name="don_vi[]"]');
-    const inputKhac = parent.querySelector('input[name="ten_nguyen_lieu_khac[]"]');
-    const inputDonViKhac = parent.querySelector('input[name="don_vi_khac[]"]');
+//       try {
+//         const response = await fetch('/dang-cong-thuc', {
+//           method: 'POST',
+//           body: formData,
+//         });
+//         if (!response.ok) {
+//           if (response.status === 404) {
+//             throw new Error('Không tìm thấy endpoint /dang-cong-thuc. Kiểm tra server và route!');
+//           }
+//           const errorData = await response.json();
+//           throw new Error(errorData.message || `Lỗi HTTP! Status: ${response.status}`);
+//         }
+//         const data = await response.json();
+//         console.log('Phản hồi:', data);
+//         if (data.message) {
+//           alert(data.message);
+//           if (data.recipeId) {
+//             window.location.href = '/dang-cong-thuc';
+//           }
+//         } else {
+//           alert('Có lỗi xảy ra khi đăng công thức!');
+//         }
+//       } catch (error) {
+//         console.error('Lỗi:', error);
+//         alert(error.message || 'Không thể kết nối đến server!');
+//       } finally {
+//         submitButton.disabled = false;
+//         submitButton.removeChild(loadingIcon);
+//       }
+//     });
+//   } else {
+//     console.error('Phần tử add-recipe-form không tìm thấy!');
+//   }
+// });
+//  // Các hàm hỗ trợ khác
+//  // Các hàm hỗ trợ (giữ nguyên từ mã trước)
+//  // Hàm hỗ trợ cho nguyên liệu
+//   function onNguyenLieuChange(select) {
+//     const parent = select.closest('.nguyen_lieu_item');
+//     const donViInput = parent.querySelector('input[name="don_vi[]"]');
+//     const inputKhac = parent.querySelector('input[name="ten_nguyen_lieu_khac[]"]');
+//     const inputDonViKhac = parent.querySelector('input[name="don_vi_khac[]"]');
 
-    if (select.value === 'khac') {
-      inputKhac.classList.remove('hidden');
-      inputKhac.required = true;
-      inputDonViKhac.classList.remove('hidden');
-      inputDonViKhac.required = true;
-      donViInput.classList.add('hidden');
-      donViInput.value = '';
-    } else {
-      const selectedOption = select.options[select.selectedIndex];
-      const donVi = selectedOption.getAttribute('data-donvi') || '';
-      donViInput.value = donVi;
-      donViInput.classList.remove('hidden');
-      inputKhac.classList.add('hidden');
-      inputKhac.required = false;
-      inputKhac.value = '';
-      inputDonViKhac.classList.add('hidden');
-      inputDonViKhac.required = false;
-      inputDonViKhac.value = '';
-    }
-  }
+//     if (select.value === 'khac') {
+//       inputKhac.classList.remove('hidden');
+//       inputKhac.required = true;
+//       inputDonViKhac.classList.remove('hidden');
+//       inputDonViKhac.required = true;
+//       donViInput.classList.add('hidden');
+//       donViInput.value = '';
+//     } else {
+//       const selectedOption = select.options[select.selectedIndex];
+//       const donVi = selectedOption.getAttribute('data-donvi') || '';
+//       donViInput.value = donVi;
+//       donViInput.classList.remove('hidden');
+//       inputKhac.classList.add('hidden');
+//       inputKhac.required = false;
+//       inputKhac.value = '';
+//       inputDonViKhac.classList.add('hidden');
+//       inputDonViKhac.required = false;
+//       inputDonViKhac.value = '';
+//     }
+//   }
 
-  function addNguyenLieu() {
-    const container = document.getElementById('nguyen_lieu_container');
-    const template = container.querySelector('.nguyen_lieu_item');
-    const item = template.cloneNode(true);
+//   function addNguyenLieu() {
+//     const container = document.getElementById('nguyen_lieu_container');
+//     const template = container.querySelector('.nguyen_lieu_item');
+//     const item = template.cloneNode(true);
 
-    item.querySelectorAll('input, select').forEach((el) => {
-      if (el.tagName === 'SELECT') {
-        el.value = '';
-        el.onchange = () => onNguyenLieuChange(el);
-      } else {
-        el.value = '';
-        if (el.name === 'ten_nguyen_lieu_khac[]' || el.name === 'don_vi_khac[]') {
-          el.classList.add('hidden');
-          el.required = false;
-        } else if (el.name === 'don_vi[]') {
-          el.classList.remove('hidden');
-          el.readOnly = true;
-        } else if (el.name === 'so_luong[]') {
-          el.required = true;
-          el.min = '0.01';
-        } else if (el.name === 'ghi_chu[]') {
-          el.required = false;
-        }
-      }
-    });
+//     item.querySelectorAll('input, select').forEach((el) => {
+//       if (el.tagName === 'SELECT') {
+//         el.value = '';
+//         el.onchange = () => onNguyenLieuChange(el);
+//       } else {
+//         el.value = '';
+//         if (el.name === 'ten_nguyen_lieu_khac[]' || el.name === 'don_vi_khac[]') {
+//           el.classList.add('hidden');
+//           el.required = false;
+//         } else if (el.name === 'don_vi[]') {
+//           el.classList.remove('hidden');
+//           el.readOnly = true;
+//         } else if (el.name === 'so_luong[]') {
+//           el.required = true;
+//           el.min = '0.01';
+//         } else if (el.name === 'ghi_chu[]') {
+//           el.required = false;
+//         }
+//       }
+//     });
 
-    container.appendChild(item);
-  }
+//     container.appendChild(item);
+//   }
 
-  function removeNguyenLieu(button) {
-    const item = button.closest('.nguyen_lieu_item');
-    if (document.querySelectorAll('.nguyen_lieu_item').length > 1) {
-      item.remove();
-    } else {
-      alert('Phải có ít nhất một nguyên liệu!');
-    }
-  }
+//   function removeNguyenLieu(button) {
+//     const item = button.closest('.nguyen_lieu_item');
+//     if (document.querySelectorAll('.nguyen_lieu_item').length > 1) {
+//       item.remove();
+//     } else {
+//       alert('Phải có ít nhất một nguyên liệu!');
+//     }
+//   }
 
-  // Hàm hỗ trợ cho bước nấu
-  function updateStepNumbers() {
-    const steps = document.querySelectorAll('#buoc_nau_container .buoc_nau_item');
-    steps.forEach((step, index) => {
-      const stepNumberSpan = step.querySelector('.step-number');
-      if (stepNumberSpan) {
-        stepNumberSpan.textContent = `${index + 1}.`;
-      }
-    });
-  }
+//   // Hàm hỗ trợ cho bước nấu
+//   function updateStepNumbers() {
+//     const steps = document.querySelectorAll('#buoc_nau_container .buoc_nau_item');
+//     steps.forEach((step, index) => {
+//       const stepNumberSpan = step.querySelector('.step-number');
+//       if (stepNumberSpan) {
+//         stepNumberSpan.textContent = `${index + 1}.`;
+//       }
+//     });
+//   }
 
-  function addBuocNau() {
-    const container = document.getElementById('buoc_nau_container');
-    const newStep = document.createElement('div');
-    newStep.className = 'buoc_nau_item space-y-2 relative flex flex-col';
-    newStep.innerHTML = `
-      <div class="flex items-center space-x-2">
-        <span class="step-number font-bold text-yellow-600"></span>
-        <input type="text" name="ten_buoc[]" placeholder="Tên bước..." class="flex-grow p-2 border rounded-lg" required>
-        <button type="button" class="text-red-500 hover:text-red-700" onclick="removeBuocNau(this)">❌</button>
-      </div>
-      <textarea name="buoc_nau[]" rows="2" placeholder="Mô tả bước..." class="w-full p-2 border rounded-lg" required></textarea>
-    `;
-    container.appendChild(newStep);
-    updateStepNumbers();
-  }
+//   function addBuocNau() {
+//     const container = document.getElementById('buoc_nau_container');
+//     const newStep = document.createElement('div');
+//     newStep.className = 'buoc_nau_item space-y-2 relative flex flex-col';
+//     newStep.innerHTML = `
+//       <div class="flex items-center space-x-2">
+//         <span class="step-number font-bold text-yellow-600"></span>
+//         <input type="text" name="ten_buoc[]" placeholder="Tên bước..." class="flex-grow p-2 border rounded-lg" required>
+//         <button type="button" class="text-red-500 hover:text-red-700" onclick="removeBuocNau(this)">❌</button>
+//       </div>
+//       <textarea name="buoc_nau[]" rows="2" placeholder="Mô tả bước..." class="w-full p-2 border rounded-lg" required></textarea>
+//     `;
+//     container.appendChild(newStep);
+//     updateStepNumbers();
+//   }
 
- function removeBuocNau(btn) {
-  const stepItem = btn.closest('.buoc_nau_item');
-  if (document.querySelectorAll('.buoc_nau_item').length > 1) {
-    stepItem.remove();
-    updateStepNumbers();
-  } else {
-    alert('Phải có ít nhất một bước nấu!');
-  }
-}
-  // Chuyển bước
-  const btnNextStep = document.getElementById('btnNextStep');
-  if (btnNextStep) {
-    btnNextStep.addEventListener('click', function () {
-      document.getElementById('step1').style.display = 'none';
-      document.getElementById('step2').style.display = 'block';
-    });
-  }
+//  function removeBuocNau(btn) {
+//   const stepItem = btn.closest('.buoc_nau_item');
+//   if (document.querySelectorAll('.buoc_nau_item').length > 1) {
+//     stepItem.remove();
+//     updateStepNumbers();
+//   } else {
+//     alert('Phải có ít nhất một bước nấu!');
+//   }
+// }
+//   // Chuyển bước
+//   const btnNextStep = document.getElementById('btnNextStep');
+//   if (btnNextStep) {
+//     btnNextStep.addEventListener('click', function () {
+//       document.getElementById('step1').style.display = 'none';
+//       document.getElementById('step2').style.display = 'block';
+//     });
+//   }
 
-  const btnPrevStep = document.getElementById('btnPrevStep');
-  if (btnPrevStep) {
-    btnPrevStep.addEventListener('click', function () {
-      document.getElementById('step2').style.display = 'none';
-      document.getElementById('step1').style.display = 'block';
-    });
-  }
+//   const btnPrevStep = document.getElementById('btnPrevStep');
+//   if (btnPrevStep) {
+//     btnPrevStep.addEventListener('click', function () {
+//       document.getElementById('step2').style.display = 'none';
+//       document.getElementById('step1').style.display = 'block';
+//     });
+//   }
 
-    const toggle = document.getElementById('category-toggle');
-    const menu = document.querySelector('.dropdown-menu');
+//     const toggle = document.getElementById('category-toggle');
+//     const menu = document.querySelector('.dropdown-menu');
 
-    toggle.addEventListener('click', (e) => {
-        e.preventDefault();
-        menu.classList.toggle('hidden');
-    });
+//     toggle.addEventListener('click', (e) => {
+//         e.preventDefault();
+//         menu.classList.toggle('hidden');
+//     });
 
-    document.addEventListener('click', (e) => {
-        if (!toggle.contains(e.target) && !menu.contains(e.target)) {
-            menu.classList.add('hidden');
-        }
+//     document.addEventListener('click', (e) => {
+//         if (!toggle.contains(e.target) && !menu.contains(e.target)) {
+//             menu.classList.add('hidden');
+//         }
     });
 
   // // Modal Profile

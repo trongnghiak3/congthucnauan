@@ -1,75 +1,72 @@
 <div id="favorites-by-user" class="tab-content" role="tabpanel" aria-labelledby="tab-favorites-by-user">
-  <div class="flex flex-col md:flex-row justify-between items-center px-6 py-4 bg-white border-b border-gray-200">
-    <div class="text-gray-600 text-sm">
+  <div class="flex flex-col md:flex-row justify-between items-center px-4 py-2 bg-white border-b border-gray-200">
+    <div class="text-gray-600 text-xs">
       Tổng người dùng đã yêu thích: <span class="font-semibold text-gray-800">
         <%= Object.keys(groupedFavorites).length %>
       </span>
     </div>
   </div>
 
-  <div class="overflow-x-auto px-6 py-4 bg-white rounded-b-lg border border-t-0 border-gray-200">
+  <div class="overflow-x-auto px-4 py-2 bg-white rounded-b-lg border border-t-0 border-gray-200">
     <table class="min-w-full text-sm text-gray-700">
       <thead>
-        <tr class="bg-gray-100 text-gray-700 uppercase text-sm font-medium select-none">
-          <th class="px-6 py-3 border-r border-gray-300 text-center">STT</th>
-          <th class="px-6 py-3 border-r border-gray-300 text-left">Tên Công Thức</th>
-          <th class="px-6 py-3 text-left">Ngày Yêu Thích</th>
+        <tr class="bg-gray-100 text-gray-700 uppercase text-xs font-medium select-none">
+          <th class="px-4 py-2 border-r border-gray-300 text-center">STT</th>
+          <th class="px-4 py-2 border-r border-gray-300 text-left">Tên Công Thức</th>
+          <th class="px-4 py-2 text-left">Ngày Yêu Thích</th>
         </tr>
       </thead>
-      <tbody>
+      <tbody class="text-gray-800 text-sm">
         <% if (groupedFavorites && Object.keys(groupedFavorites).length > 0) { %>
-          <% Object.keys(groupedFavorites).forEach((userId, index) => { 
-               const list = groupedFavorites[userId];
-               const first = list[0];
+          <% Object.keys(groupedFavorites).forEach((userId, index) => {
+                const list = groupedFavorites[userId];
+                const first = list[0];
           %>
-            <!-- Tiêu đề nhóm: Người dùng -->
             <tr class="hover:bg-yellow-50 transition" onclick="toggleFavorites('<%= userId %>')" data-group-id="<%= userId %>">
               <td colspan="3"
-                class="py-3 px-4 text-center font-medium text-gray-900 border-t border-gray-100 bg-gray-50 rounded hover:bg-gray-100 cursor-pointer">
+                class="py-2 px-3 text-center font-medium text-gray-900 border-t border-gray-100 bg-gray-50 rounded hover:bg-gray-100 cursor-pointer text-sm">
                 👤 <%= first.TEN_NGUOI_DUNG %> – <%= first.EMAIL_ %>
               </td>
             </tr>
 
-            <!-- Danh sách công thức yêu thích -->
             <% list.forEach((item, i) => { %>
               <tr class="favorite-row hidden border-b border-gray-100" data-group="<%= userId %>">
-                <td class="p-3 text-center"><%= i + 1 %></td>
-                <td class="p-3 text-left"><%= item.TEN_CT %></td>
-                <td class="p-3 text-left"><%= new Date(item.NGAY_TAO_YT).toLocaleDateString('vi-VN') %></td>
+                <td class="p-2 text-center text-sm"><%= i + 1 %></td>
+                <td class="p-2 text-left text-sm"><%= item.TEN_CT %></td>
+                <td class="p-2 text-left text-sm"><%= new Date(item.NGAY_TAO_YT).toLocaleDateString('vi-VN') %></td>
               </tr>
             <% }) %>
           <% }) %>
         <% } else { %>
           <tr>
-            <td colspan="3" class="text-center py-6 text-gray-400 italic">Không có dữ liệu yêu thích.</td>
+            <td colspan="3" class="text-center py-4 text-gray-400 italic text-sm">Không có dữ liệu yêu thích.</td>
           </tr>
         <% } %>
       </tbody>
     </table>
   </div>
 
-  <!-- Phân trang -->
   <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
-    <div class="mt-6 flex justify-center space-x-2">
+    <div class="mt-4 flex justify-center space-x-2">
       <% if (currentPage > 1) { %>
         <a
           href="#"
           onclick="loadPage('/admin/yeu-thich?page=<%= currentPage - 1 %>', document.querySelector('#content')); return false;"
-          class="px-4 py-2 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 transition"
+          class="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 transition text-sm"
         >‹ Trước</a>
       <% } %>
       <% for (let i = 1; i <= totalPages; i++) { %>
         <a
           href="#"
           onclick="loadPage('/admin/yeu-thich?page=<%= i %>', document.querySelector('#content')); return false;"
-          class="px-4 py-2 rounded-lg border text-sm <%= i === currentPage ? 'bg-yellow-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100' %>"
+          class="px-3 py-1 rounded-lg border text-sm <%= i === currentPage ? 'bg-yellow-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100' %>"
         ><%= i %></a>
       <% } %>
       <% if (currentPage < totalPages) { %>
         <a
           href="#"
           onclick="loadPage('/admin/yeu-thich?page=<%= currentPage + 1 %>', document.querySelector('#content')); return false;"
-          class="px-4 py-2 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 transition"
+          class="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 transition text-sm"
         >Sau ›</a>
       <% } %>
     </div>

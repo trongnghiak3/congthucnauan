@@ -13,81 +13,59 @@
 </head>
 <body class="bg-yellow-50 m-0 p-0">
   <div class="w-screen h-screen flex overflow-hidden">
-    <!-- Cột hình ảnh bên trái -->
     <div class="hidden md:block w-1/2 h-full">
-      <img 
-        src="https://images.unsplash.com/photo-1600891964599-f61ba0e24092?auto=format&fit=crop&w=1600&q=80" 
-        alt="Hình ảnh món ăn" 
+      <img
+        src="https://images.unsplash.com/photo-1600891964599-f61ba0e24092?auto=format&fit=crop&w=1600&q=80"
+        alt="Hình ảnh món ăn"
         class="w-full h-full object-cover"
       />
     </div>
 
-    <!-- Cột form bên phải -->
-    <div class="w-full md:w-1/2 h-full flex items-center justify-center bg-white p-6 md:p-14">
-      <div class="w-full max-w-xl">
-        <h2 class="text-5xl font-extrabold text-yellow-600 mb-4 text-center">Chào mừng đến với <span class="text-gray-800">KemzRecipe</span></h2>
-        <p class="text-center text-gray-600 mb-10 text-xl leading-relaxed">
-          Đăng nhập để khám phá<br> hàng ngàn công thức nấu ăn hấp dẫn! 🍱
+    <div class="w-full md:w-1/2 h-full flex items-center justify-center bg-white p-4 md:p-10">
+      <div class="w-full max-w-lg"> <h2 class="text-4xl font-extrabold text-yellow-600 mb-3 text-center">Chào mừng đến với <span class="text-gray-800">KemzRecipe</span></h2> <p class="text-center text-gray-600 mb-8 text-lg leading-normal"> Đăng nhập để khám phá<br> hàng ngàn công thức nấu ăn hấp dẫn! 🍱
         </p>
 
-        <form action="/login" method="POST" class="space-y-8 text-lg">
-          <!-- Email -->
-          <div>
-            <label for="email" class="block text-gray-800 font-semibold mb-2">📧 Email</label>
-            <input 
-              type="email" 
-              id="email" 
-              name="email" 
-              required 
+        <form action="/login" method="POST" class="space-y-6 text-base"> <div>
+            <label for="email" class="block text-gray-800 font-semibold mb-1.5">📧 Email</label> <input
+              type="email"
+              id="email"
+              name="email"
+              required
               placeholder="you@example.com"
-              class="w-full p-5 border border-gray-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-yellow-400 transition text-base"
-            />
+              class="w-full p-3.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-3 focus:ring-yellow-400 transition text-sm" />
           </div>
 
-          <!-- Mật khẩu -->
-          <!-- Mật khẩu -->
-<div>
-  <label for="password" class="block text-gray-800 font-semibold mb-2">🔒 Mật khẩu</label>
-  <div class="relative">
-    <input 
-      type="password" 
-      id="password" 
-      name="password" 
-      required 
-      placeholder="••••••••"
-      class="w-full p-5 border border-gray-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-yellow-400 transition text-base pr-14"
-    />
-    <!-- Icon mắt để toggle -->
-    <button 
-      type="button" 
-      id="togglePassword" 
-      class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500"
-    >
-      👁️
-    </button>
-  </div>
-</div>
-
-
-          <!-- Nút đăng nhập -->
           <div>
-            <button 
-              type="submit" 
-              class="w-full bg-yellow-500 hover:bg-yellow-600 text-white py-4 rounded-xl font-semibold text-xl transition duration-200 shadow-lg"
-            >
+            <label for="password" class="block text-gray-800 font-semibold mb-1.5">🔒 Mật khẩu</label> <div class="relative">
+              <input
+                type="password"
+                id="password"
+                name="password"
+                required
+                placeholder="••••••••"
+                class="w-full p-3.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-3 focus:ring-yellow-400 transition text-sm pr-12" />
+              <button
+                type="button"
+                id="togglePassword"
+                class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm" >
+                👁️
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <button
+              type="submit"
+              class="w-full bg-yellow-500 hover:bg-yellow-600 text-white py-3 rounded-lg font-semibold text-lg transition duration-200 shadow-md" >
               🔓 Đăng Nhập
             </button>
           </div>
 
-          <!-- Quên mật khẩu -->
           <div class="text-center">
-            <a href="/doi-mat-khau" class="text-base text-yellow-600 hover:underline font-medium">Quên mật khẩu?</a>
-          </div>
+            <a href="/doi-mat-khau" class="text-sm text-yellow-600 hover:underline font-medium">Quên mật khẩu?</a> </div>
 
-          <!-- Đăng ký -->
           <div class="text-center mt-3">
-            <p class="text-base text-gray-600">
-              Bạn chưa có tài khoản?
+            <p class="text-sm text-gray-600"> Bạn chưa có tài khoản?
               <a href="/register" class="text-yellow-600 hover:underline font-semibold">Đăng ký ngay</a>
             </p>
           </div>

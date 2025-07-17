@@ -1,0 +1,77 @@
+<div class="max-w-7xl mx-auto px-4 py-8 md:py-12 lg:py-16">
+  <div class="mb-10 text-center">
+    <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold text-amber-700 leading-tight tracking-tight mb-3 animate__animated animate__fadeInDown">
+      Danh mục: <span class="block mt-2 md:inline-block"><%= category.TEN_LM %></span>
+    </h1>
+    <p class="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto animate__animated animate__fadeInUp animate__delay-0-5s">
+      Khám phá các món ăn ngon và công thức độc đáo trong danh mục này, được tuyển chọn kỹ lưỡng để bạn dễ dàng tìm thấy món ưng ý.
+    </p>
+  </div>
+
+  <hr class="my-12 border-t-2 border-amber-100 animate__animated animate__fadeIn animate__delay-1s">
+
+  <% if (monAnList.length === 0) { %>
+  <div class="flex flex-col items-center justify-center py-24 bg-gradient-to-br from-white to-amber-50 rounded-2xl shadow-xl border border-amber-100 text-center px-8 animate__animated animate__fadeInUp animate__delay-1-5s">
+    <i class="fas fa-utensils-alt text-8xl text-amber-400 mb-8 animate-pulse-slow"></i>
+    <p class="text-3xl text-gray-700 font-extrabold mb-4">Ối! Chưa có công thức nào ở đây...</p>
+    <p class="text-lg text-gray-600 max-w-lg mb-10 leading-relaxed">
+      Có vẻ như danh mục "<span class="font-semibold text-amber-600"><%= category.TEN_LM %></span>" đang chờ đợi những công thức đầu tiên.
+      Hãy thử quay lại sau nhé, hoặc khám phá thêm từ các danh mục khác!
+    </p>
+    <a
+      href="/danh-muc"
+      class="inline-flex items-center px-10 py-5 bg-amber-600 text-white rounded-full text-xl font-bold hover:bg-amber-700 transition-all duration-300 shadow-2xl transform hover:scale-105"
+    >
+      <i class="fas fa-list-alt mr-3 text-2xl"></i> Xem tất cả danh mục
+    </a>
+  </div>
+  <% } else { %>
+  <div
+    class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8 lg:gap-10"
+  >
+    <% monAnList.forEach(mon => { %>
+    <%- include("../partials/mon-an-card", { mon: mon }) %>
+    <% }) %>
+  </div>
+  <% } %>
+</div>
+
+<style>
+  /* Base styles for recipe-card are presumed from your mon-an-card partial */
+  /* If mon-an-card doesn't include these, add them to a shared CSS file or here */
+  .recipe-card {
+    border-radius: 1rem; /* Adjust if your partial uses a different rounding */
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease-in-out;
+  }
+  .recipe-card:hover {
+    transform: translateY(-8px) scale(1.02); /* More pronounced lift */
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2); /* Stronger shadow on hover */
+  }
+  .recipe-card img {
+    transition: transform 0.6s ease-in-out; /* Smooth transition for image */
+  }
+  .recipe-card:hover img {
+    transform: scale(1.1); /* Zoom in effect for image on hover */
+  }
+
+  /* Keyframes for subtle animations */
+  @keyframes pulse-slow {
+    0%, 100% {
+      transform: scale(1);
+      opacity: 0.8;
+    }
+    50% {
+      transform: scale(1.05);
+      opacity: 1;
+    }
+  }
+
+  .animate-pulse-slow {
+    animation: pulse-slow 2s infinite ease-in-out;
+  }
+
+  /* If you want the animate.css effects, link it in your main layout file */
+  /* <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" /> */
+</style>

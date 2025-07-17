@@ -2,62 +2,69 @@ console.log("script.js đã tải thành công!");
 // console.log("User hiện tại:", req.user);
 // Hàm tải trang bằng AJAX
 function loadPage(url, element) {
-  console.log("🔄 Bắt đầu tải trang từ URL:", url);
-  const content = document.querySelector("#content");
+    console.log("🔄 Bắt đầu tải trang từ URL:", url);
+    const content = document.querySelector("#content");
 
-  if (!content) {
-    console.error("❌ Không tìm thấy phần tử #content trong DOM");
-    return;
-  }
-
-  content.innerHTML = '<div class="text-center py-8 text-yellow-600">⏳ Đang tải...</div>';
-
-  fetch(url, {
-    headers: {
-      'Accept': 'text/html' // ✅ Thêm để đảm bảo server trả về HTML
+    if (!content) {
+        console.error("❌ Không tìm thấy phần tử #content trong DOM");
+        return;
     }
-  })
+
+    content.innerHTML = '<div class="text-center py-8 text-yellow-600">⏳ Đang tải...</div>';
+
+    fetch(url, {
+        headers: {
+            'Accept': 'text/html'
+        }
+    })
     .then(async (response) => {
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`❌ Lỗi HTTP ${response.status}:`, errorText);
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      return response.text();
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error(`❌ Lỗi HTTP ${response.status}:`, errorText);
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.text();
     })
     .then((data) => {
-      console.log("📦 HTML trả về:", data.slice(0, 500), "...");
+        console.log("📦 HTML trả về (đã cắt):", data.slice(0, 500), "...");
 
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(data, "text/html");
-      const newContent = doc.querySelector("#content")?.innerHTML;
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(data, "text/html");
+        const newContentHTML = doc.querySelector("#content")?.innerHTML;
 
-      if (newContent) {
-        content.innerHTML = newContent;
-      } else {
-        content.innerHTML = '<div class="text-center py-8 text-red-600">⚠️ Không tìm thấy nội dung để hiển thị.</div>';
-      }
+        if (newContentHTML) {
+            content.innerHTML = newContentHTML; // <--- Dòng này thay thế nội dung DOM cũ
 
-      document.querySelectorAll(".sidebar-item").forEach((item) => {
-        item.classList.remove("active");
-      });
-      if (element) {
-        element.classList.add("active");
-      }
+            // ***** DÒNG CỰC KỲ QUAN TRỌNG *****
+            // Gọi lại hàm gắn tất cả các sự kiện cần thiết cho nội dung mới được tải
+            // Bao gồm sự kiện cho các nút Sửa/Xóa và sự kiện submit của form modal
+            bindUserEventListeners(); // Hãy đảm bảo hàm này tìm và gắn sự kiện cho CÁC NÚT trong bảng VÀ form
+            // **********************************
 
-      window.history.pushState({ path: url }, "", url);
+        } else {
+            content.innerHTML = '<div class="text-center py-8 text-red-600">⚠️ Không tìm thấy nội dung để hiển thị.</div>';
+        }
 
-      if (typeof initializePage === 'function') {
-        initializePage(url);
-      }
+        document.querySelectorAll(".sidebar-item").forEach((item) => {
+            item.classList.remove("active");
+        });
+        if (element) {
+            element.classList.add("active");
+        }
+
+        window.history.pushState({ path: url }, "", url);
+
+        if (typeof initializePage === 'function') {
+            initializePage(url);
+        }
     })
     .catch((err) => {
-      console.error("🚨 Lỗi fetch hoặc DOM:", err);
-      content.innerHTML = `
-        <div class="bg-red-100 text-red-700 p-4 rounded-lg mt-4 shadow">
-          ❌ Không thể tải trang: <strong>${err.message}</strong><br>
-          🔍 Kiểm tra xem file EJS có bị lỗi hoặc thiếu không.<br>
-        </div>`;
+        console.error("🚨 Lỗi fetch hoặc DOM:", err);
+        content.innerHTML = `
+            <div class="bg-red-100 text-red-700 p-4 rounded-lg mt-4 shadow">
+              ❌ Không thể tải trang: <strong>${err.message}</strong><br>
+              🔍 Kiểm tra xem file EJS có bị lỗi hoặc thiếu không.<br>
+            </div>`;
     });
 }
 
@@ -88,6 +95,19 @@ function initializeRecipesList() {
         const recipeId = button.getAttribute('onclick').match(/'([^']+)'/)[1];
         button.onclick = () => confirmDelete(recipeId);
     });
+    
+  document.querySelectorAll('.tom-select').forEach((el) => {
+  if (el.tomselect) {
+    el.tomselect.destroy(); // ✅ Xóa instance cũ nếu có
+  }
+
+  new TomSelect(el, {
+    create: false,
+    maxOptions: 500,
+    allowEmptyOption: true,
+    placeholder: 'Tìm hoặc chọn nguyên liệu...'
+  });
+});
 }
 
 function onNguyenLieuChange(select) {
@@ -118,33 +138,46 @@ function onNguyenLieuChange(select) {
 }
 
 function addNguyenLieu() {
-    const container = document.getElementById('nguyen_lieu_container');
-    const template = container.querySelector('.nguyen_lieu_item');
-    const item = template.cloneNode(true);
+  const container = document.getElementById('nguyen_lieu_container');
+  const template = document.getElementById('template_nguyen_lieu');
 
-    item.querySelectorAll('input, select').forEach(el => {
-        if (el.tagName === 'SELECT') {
-            el.value = '';
-            el.onchange = () => onNguyenLieuChange(el);
-        } else {
-            el.value = '';
-            if (el.name === 'ten_nguyen_lieu_khac[]' || el.name === 'don_vi_khac[]') {
-                el.classList.add('hidden');
-                el.required = false;
-            } else if (el.name === 'don_vi[]') {
-                el.classList.remove('hidden');
-                el.readOnly = true;
-            } else if (el.name === 'so_luong[]') {
-                el.required = true;
-                el.min = '0.01';
-            } else if (el.name === 'ghi_chu[]') {
-                el.required = false;
-            }
-        }
+  if (!template) {
+    console.error("❌ Không tìm thấy template_nguyen_lieu");
+    return;
+  }
+
+  const clone = template.content.cloneNode(true);
+  const item = clone.querySelector('.nguyen_lieu_item');
+
+  const select = item.querySelector('select[name="nguyen_lieu_id[]"]');
+  if (select) {
+    const ts = new TomSelect(select, {
+      create: false,
+      maxOptions: 500,
+      allowEmptyOption: true,
+      placeholder: 'Tìm hoặc chọn nguyên liệu...'
     });
 
-    container.appendChild(item);
+    ts.on('change', () => onNguyenLieuChange(select));
+  }
+
+  container.appendChild(clone);
 }
+
+  function removeVideo() {
+    const video = document.getElementById('video_preview');
+    const removeInput = document.getElementById('remove_video');
+
+    // Ẩn video
+    video.src = '';
+    video.style.display = 'none';
+
+    // Đánh dấu cần xoá video khi submit
+    if (removeInput) {
+      removeInput.value = '1';
+    }
+  }
+
 
 function removeNguyenLieu(button) {
     const item = button.closest('.nguyen_lieu_item');
@@ -205,19 +238,31 @@ function initializeAddRecipe() {
     const btnPrevStep = document.getElementById('btnPrevStep');
     const recipeId = form ? form.dataset.recipeId : '';
 
-    if (btnNextStep && step1 && step2) {
-        btnNextStep.addEventListener('click', () => {
-            step1.style.display = 'none';
-            step2.style.display = 'block';
-        });
-    }
+   if (btnNextStep && step1 && step2) {
+    btnNextStep.addEventListener("click", () => {
+      step1.classList.add("hidden");
+      step2.classList.remove("hidden");
+    });
+  }
 
-    if (btnPrevStep && step1 && step2) {
-        btnPrevStep.addEventListener('click', () => {
-            step2.style.display = 'none';
-            step1.style.display = 'block';
-        });
-    }
+  if (btnPrevStep && step1 && step2) {
+    btnPrevStep.addEventListener("click", () => {
+      step2.classList.add("hidden");
+      step1.classList.remove("hidden");
+    });
+  }
+document.querySelectorAll('.tom-select').forEach((el) => {
+  if (!el.tomselect) {
+    const tom = new TomSelect(el, {
+      create: false,
+      maxOptions: 500,
+      allowEmptyOption: true,
+      placeholder: 'Tìm hoặc chọn nguyên liệu...'
+    });
+
+    tom.on('change', () => onNguyenLieuChange(el));
+  }
+});
 
     document.getElementById('hinh_anh')?.addEventListener('change', (event) => {
         const file = event.target.files[0];
@@ -506,7 +551,8 @@ function initializePage(url) {
     { path: '/admin/phan-hoi-binh-luan', handler: bindphbinhluanEventListeners, name: 'bindphbinhluanEventListeners' },
     { path: '/admin/binh-luan-cam-xuc', handler: bindCamXucBinhLuanEventListeners, name: 'bindCamXucBinhLuanEventListeners' },
     { path: '/admin/phan-hoi-cam-xuc', handler: bindPhanHoiCamXucEventListeners, name: 'bindPhanHoiCamXucEventListeners' },
-    { path: '/admin/trang-ca-nhan', handler: bindTrangCaNhanEventListeners, name: 'bindTrangCaNhanEventListeners' }
+    { path: '/admin/trang-ca-nhan', handler: bindTrangCaNhanEventListeners, name: 'bindTrangCaNhanEventListeners' },
+    { path: '/admin/thong-bao', handler: bindThongBaoEventListeners, name: 'bindThongBaoEventListeners' }
   ];
 
   let matched = false;

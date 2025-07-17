@@ -112,7 +112,7 @@
                     <div class="nguyen_lieu_item flex flex-wrap items-center gap-2">
                         <select name="nguyen_lieu_id[]" onchange="onNguyenLieuChange(this)"
                             class="p-2 border rounded-lg">
-                            <option disabled <%=i===0 ? 'selected' : '' %>>Chọn nguyên liệu
+                            <option disabled <%=i===0 ? 'selected' : '' %>>
                             </option>
                             <% nguyen_lieu.forEach(nl=> { %> <!-- Sử dụng nguyen_lieu đã truyền từ backend -->
                                 <option value="<%= nl.ID_CHINH_NL %>"

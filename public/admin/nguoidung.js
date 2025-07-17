@@ -197,59 +197,75 @@ function bindFormSubmitUser() {
     form.addEventListener('submit', handleUserFormSubmit);
     console.log('Đã gắn sự kiện submit cho #userForm tại', new Date().toISOString());
 
-    async function handleUserFormSubmit(e) {
-      e.preventDefault();
-      console.log('Form #userForm submitted tại', new Date().toISOString());
-      console.log('Dataset khi submit:', form.dataset);
+   async function handleUserFormSubmit(e) {
+  e.preventDefault();
+  console.log('Form #userForm submitted tại', new Date().toISOString());
+  console.log('Dataset khi submit:', form.dataset);
 
-      const userId = form.dataset.userId;
-      const isEdit = !!userId;
+  const userId = form.dataset.userId;
+  const isEdit = !!userId;
 
-      if (isEdit && !userId) {
-        console.error('ID người dùng không hợp lệ:', userId);
-        showError('Lỗi: ID người dùng không hợp lệ!');
-        return;
-      }
+  if (isEdit && !userId) {
+    console.error('ID người dùng không hợp lệ:', userId);
+    showError('Lỗi: ID người dùng không hợp lệ!');
+    return;
+  }
 
-      const formData = new FormData(form);
-      const url = isEdit ? `/admin/nguoi-dung/${userId}` : `/admin/nguoi-dung`;
-      const method = isEdit ? 'PUT' : 'POST';
-      console.log('Gửi yêu cầu:', { url, method, formData: [...formData] });
+  const formData = new FormData(form);
 
-      try {
-        const res = await fetch(url, {
-          method: method,
-          body: formData,
-        });
+  // 👉 Kiểm tra số điện thoại và email
+  const soDienThoai = formData.get('SO_DIEN_THOAI_');
+  const email = formData.get('EMAIL_');
 
-        let data;
-        try {
-          data = await res.json();
-        } catch (err) {
-          if (err instanceof SyntaxError) {
-            const text = await res.text();
-            console.error('Phản hồi không phải JSON:', text);
-            showError(text || 'Lỗi server: Phản hồi không hợp lệ');
-            return;
-          }
-          throw err;
-        }
+  const phoneRegex = /^0\d{9}$/;
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-        console.log('Phản hồi từ server:', data);
+  if (!phoneRegex.test(soDienThoai)) {
+    showError('Số điện thoại không hợp lệ. Phải gồm 10 chữ số và bắt đầu bằng số 0.');
+    return;
+  }
 
-        if (!res.ok) {
-          showError(data.message || `Lỗi: ${res.statusText}`);
-          return;
-        }
+  if (!emailRegex.test(email)) {
+    showError('Email không hợp lệ. Vui lòng nhập đúng định dạng email.');
+    return;
+  }
 
-        showAdminNotification(isEdit ? 'Cập nhật người dùng thành công!' : 'Thêm người dùng thành công!');
-        closeUserModal();
-        loadPage('/admin/nguoi-dung?page=1', document.querySelector('#content'));
-      } catch (err) {
-        console.error('Lỗi khi gửi yêu cầu:', err);
-        showError('Lỗi: ' + err.message);
-      }
+  const url = isEdit ? `/admin/nguoi-dung/${userId}` : `/admin/nguoi-dung`;
+  const method = isEdit ? 'PUT' : 'POST';
+  console.log('Gửi yêu cầu:', { url, method, formData: [...formData] });
+
+  try {
+    const res = await fetch(url, {
+      method: method,
+      body: formData,
+    });
+
+    let data;
+    try {
+      data = await res.json();
+    } catch (err) {
+      const text = await res.text();
+      console.error('Phản hồi không phải JSON:', text);
+      showError(text || 'Lỗi server: Phản hồi không hợp lệ');
+      return;
     }
+
+    console.log('Phản hồi từ server:', data);
+
+    if (!res.ok) {
+      showError(data.message || `Lỗi: ${res.statusText}`);
+      return;
+    }
+
+    showAdminNotification(isEdit ? 'Cập nhật người dùng thành công!' : 'Thêm người dùng thành công!');
+    closeUserModal();
+    loadPage('/admin/nguoi-dung?page=1', document.querySelector('#content'));
+  } catch (err) {
+    console.error('Lỗi khi gửi yêu cầu:', err);
+    showError('Lỗi: ' + err.message);
+  }
+}
+
   }
 
 // Hàm xóa người dùng

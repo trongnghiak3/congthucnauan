@@ -1,259 +1,306 @@
-<!-- views/admin/ingredients.ejs -->
-<body class=" p-6 font-sans text-gray-800">
-  <div class="max-w-8xl mx-auto bg-white p-8 rounded-lg shadow-lg">
-    <!-- Tabs Navigation -->
-    <div class="mb-8 border-b border-gray-300">
-      <ul class="flex space-x-4">
-        <li>
-          <button onclick="showTab('ingredients')" id="tab-ingredients"
-            class="tab-button px-6 py-3 rounded-t-lg font-semibold bg-yellow-500 text-white shadow-md hover:bg-yellow-600 focus:outline-none"
-            aria-selected="true" role="tab">
-            Danh Sách Nguyên Liệu
-          </button>
-        </li>
-        <li>
-          <button onclick="showTab('ingredient-recipes')" id="tab-ingredient-recipes"
-            class="tab-button px-6 py-3 rounded-t-lg font-semibold bg-gray-200 text-gray-600 hover:bg-gray-300 focus:outline-none"
-            aria-selected="false" role="tab">
-            Danh Sách Công Thức Nguyên Liệu
-          </button>
-        </li>
-      </ul>
-    </div>
+<!DOCTYPE html>
+<html lang="vi">
 
-    <!-- <h1 class="text-4xl font-extrabold mb-10">
-      <%= title %>
-    </h1> -->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Nguyên Liệu</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
 
-    <!-- Tab 1: Danh Sách Nguyên Liệu -->
-    <div id="ingredients" class="tab-content" role="tabpanel" aria-labelledby="tab-ingredients">
-      <button onclick="openAddModal()"
-        class="flex float-end mb-4 px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600">Thêm Nguyên Liệu</button>
-
-      <table class="min-w-full border border-gray-300 rounded-lg overflow-hidden shadow-sm">
-        <thead class="bg-gray-100 text-gray-700 uppercase text-sm font-medium select-none">
-          <tr>
-            <th class="px-6 py-3 border-r border-gray-300 text-left">ID</th>
-            <th class="px-6 py-3 border-r border-gray-300 text-left">Tên Nguyên Liệu</th>
-            <th class="px-6 py-3 border-r border-gray-300 text-left">Đơn Vị</th>
-            <th class="px-6 py-3 text-left">Hành Động</th>
-          </tr>
-        </thead>
-        <tbody class="text-gray-800">
-          <% if (ingredients && ingredients.length > 0) { %>
-            <% ingredients.forEach(ingredient => { %>
-              <tr class="hover:bg-yellow-50 transition duration-200">
-                <td class="px-6 py-3 border-t border-gray-200"><%= ingredient.ID_CHINH_NL %></td>
-                <td class="px-6 py-3 border-t border-gray-200"><%= ingredient.TEN_NL %></td>
-                <td class="px-6 py-3 border-t border-gray-200"><%= ingredient.DON_VI %></td>
-                <td class="px-6 py-3 border-t border-gray-200 space-x-3">
-                  <button onclick="openEditModal(
-                    '<%= ingredient.ID_CHINH_NL %>', 
-                    '<%= encodeURIComponent(ingredient.TEN_NL) %>', 
-                    '<%= encodeURIComponent(ingredient.DON_VI) %>'
-                  )"
-                    class="bg-yellow-400 hover:bg-yellow-500 text-white px-4 py-1 rounded shadow-sm transition duration-200">
-                    ✏ Sửa
-                  </button>
-                  <button onclick="confirmDeleteIngredient('<%= ingredient.ID_CHINH_NL %>')"
-                    class="bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded shadow-sm transition duration-200">
-                    🗑 Xóa
-                  </button>
-                </td>
-              </tr>
-            <% }) %>
-          <% } else { %>
-            <tr>
-              <td colspan="4" class="text-center py-6 text-gray-400 italic">
-                Không có nguyên liệu nào!
-              </td>
-            </tr>
-          <% } %>
-        </tbody>
-      </table>
-
-      <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
-        <div class="mt-6 flex justify-center space-x-2">
-          <% if (currentPage > 1) { %>
-            <a href="#" onclick="loadPage('/admin/nguyen-lieu?page=<%= currentPage - 1 %>'); return false;"
-              class="px-4 py-2 rounded border bg-white text-gray-700 hover:bg-gray-100">
-              ‹ Trước
-            </a>
-          <% } %>
-          <% for (let i = 1; i <= totalPages; i++) { %>
-            <a href="#" onclick="loadPage('/admin/nguyen-lieu?page=<%= i %>'); return false;"
-              class="px-4 py-2 rounded border text-sm <%= i === currentPage ? 'bg-yellow-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100' %>">
-              <%= i %>
-            </a>
-          <% } %>
-          <% if (currentPage < totalPages) { %>
-            <a href="#" onclick="loadPage('/admin/nguyen-lieu?page=<%= currentPage + 1 %>'); return false;"
-              class="px-4 py-2 rounded border bg-white text-gray-700 hover:bg-gray-100">
-              Sau ›
-            </a>
-          <% } %>
+<body class="p-4 font-sans text-gray-800">
+    <div class="max-w-6xl mx-auto bg-white p-4 rounded-lg shadow-md h-full">
+        <div class="mb-4 border-b border-gray-200">
+            <ul class="flex space-x-2">
+                <li>
+                    <button onclick="showTab('ingredients')" id="tab-ingredients"
+                        class="tab-button px-3 py-1 rounded-t font-semibold bg-yellow-500 text-white shadow-md hover:bg-yellow-600 focus:outline-none transition text-sm"
+                        aria-selected="true" role="tab">
+                        Danh Sách Nguyên Liệu
+                    </button>
+                </li>
+                <li>
+                    <button onclick="showTab('ingredient-recipes')" id="tab-ingredient-recipes"
+                        class="tab-button px-3 py-1 rounded-t font-semibold bg-gray-200 text-gray-600 hover:bg-gray-300 focus:outline-none transition text-sm"
+                        aria-selected="false" role="tab">
+                        Danh Sách Công Thức Nguyên Liệu
+                    </button>
+                </li>
+            </ul>
         </div>
-      <% } %>
-    </div>
 
- 
-  <!-- Tab 2: Danh Sách Công Thức Nguyên Liệu -->
-<!-- Tab 2: Danh Sách Công Thức Nguyên Liệu -->
-<div id="ingredient-recipes" class="tab-content hidden" role="tabpanel" aria-labelledby="tab-ingredient-recipes">
-  <!-- Header -->
-  <div class="flex flex-col md:flex-row justify-between items-center px-6 py-4 bg-white border-b border-gray-200">
-    <div class="w-full md:w-1/2 mb-3 md:mb-0">
-      <input type="text" id="searchRecipe" onkeyup="filterRecipes()" placeholder="Tìm kiếm công thức..."
-        class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-1 focus:ring-yellow-400 transition" />
-    </div>
-<div class="text-gray-600 text-sm">
-  Tổng số công thức:
-  <span id="totalRecipes" class="font-semibold text-gray-800">
-    <%= totalRecipes %>
-  </span>
-</div>
+        <div id="ingredients" class="tab-content" role="tabpanel" aria-labelledby="tab-ingredients">
+            <button onclick="openAddModal()"
+                class="mb-3 px-3 py-1 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 text-sm shadow-md transition">
+                Thêm Nguyên Liệu
+            </button>
 
-  </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full border border-gray-300 rounded-lg overflow-hidden shadow-sm">
+                    <thead class="bg-gray-100 text-gray-700 uppercase text-xs font-medium select-none">
+                        <tr>
+                            <th class="px-4 py-2 border-r border-gray-300 text-left">ID</th>
+                            <th class="px-4 py-2 border-r border-gray-300 text-left">Tên Nguyên Liệu</th>
+                            <th class="px-4 py-2 border-r border-gray-300 text-left">Đơn Vị</th>
+                            <th class="px-4 py-2 text-left">Hành Động</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-gray-800 text-sm">
+                        <% if (ingredients && ingredients.length > 0) { %>
+                            <% ingredients.forEach(ingredient => { %>
+                                <tr class="hover:bg-yellow-50 transition duration-200">
+                                    <td class="px-4 py-2 border-t border-gray-200">
+                                        <%= ingredient.ID_CHINH_NL %>
+                                    </td>
+                                    <td class="px-4 py-2 border-t border-gray-200">
+                                        <%= ingredient.TEN_NL %>
+                                    </td>
+                                    <td class="px-4 py-2 border-t border-gray-200">
+                                        <%= ingredient.DON_VI %>
+                                    </td>
+                                    <td class="px-4 py-2 border-t border-gray-200 space-x-2">
+                                        <button onclick="openEditModal(
+                                        '<%= ingredient.ID_CHINH_NL %>',
+                                        '<%= encodeURIComponent(ingredient.TEN_NL) %>',
+                                        '<%= encodeURIComponent(ingredient.DON_VI) %>'
+                                    )"
+                                            class="bg-yellow-400 hover:bg-yellow-500 text-white px-2 py-1 rounded-lg shadow-sm text-sm transition duration-200">
+                                            ✏ Sửa
+                                        </button>
+                                        <button onclick="confirmDeleteIngredient('<%= ingredient.ID_CHINH_NL %>')"
+                                            class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded-lg shadow-sm text-sm transition duration-200">
+                                            🗑 Xóa
+                                        </button>
+                                    </td>
+                                </tr>
+                                <% }) %>
+                                    <% } else { %>
+                                        <tr>
+                                            <td colspan="4" class="text-center py-3 text-gray-400 italic text-sm">
+                                                Không có nguyên liệu nào!
+                                            </td>
+                                        </tr>
+                                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+            <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
+                <div class="mt-4 flex justify-center space-x-2">
+                    <% if (currentPage > 1) { %>
+                        <a href="#" onclick="loadPage('/admin/nguyen-lieu?page=<%= currentPage - 1 %>'); return false;"
+                            class="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 text-sm transition">
+                            ‹ Trước
+                        </a>
+                        <% } %>
 
-  <!-- Table -->
-  <div class="overflow-x-auto px-6 py-4 bg-white rounded-b-lg border border-t-0 border-gray-200">
-    <table class="min-w-full text-sm text-gray-700">
-      <thead>
-        <tr class="bg-gray-100">
-          <th class="p-3 text-center">STT</th>
-          <th class="p-3 text-left">Tên Nguyên Liệu</th>
-          <th class="p-3 text-center">Số Lượng</th>
-          <th class="p-3 text-left">Ghi Chú</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% if (groupedRecipes && Object.keys(groupedRecipes).length > 0) { %>
-          <% Object.keys(groupedRecipes).forEach((id, index) => { %>
-            <!-- Công thức -->
-            <tr class="hover:bg-gray-50 transition" onclick="toggleIngredients('<%= id %>')"
-              data-group-id="<%= id %>">
-              <td colspan="4"
-                class="py-3 px-4 text-center font-medium text-gray-900 border-t border-gray-100 bg-gray-50 rounded hover:bg-gray-100 cursor-pointer">
-                <%= groupedRecipes[id].ten_ct %>
-                <% if (groupedRecipes[id].ngay_cap_nhat_ct) { %>
-                  (<%= new Date(groupedRecipes[id].ngay_cap_nhat_ct).toLocaleDateString('vi-VN') %>)
+                            <%
+                            const maxButtons = 5;
+                            let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
+                            let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+
+                            if (endPage - startPage < maxButtons - 1) {
+                              startPage = Math.max(1, endPage - maxButtons + 1);
+                            }
+
+                            if (startPage > 1) {
+                        %>
+                                <a href="#" onclick="loadPage('/admin/nguyen-lieu?page=1'); return false;"
+                                    class="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 text-sm">1</a>
+                                <% if (startPage > 2) { %>
+                                    <span class="px-2 text-sm">...</span>
+                                    <% } %>
+                                        <% } %>
+
+                                            <% for (let i = startPage; i <= endPage; i++) { %>
+                                                <a href="#"
+                                                    onclick="loadPage('/admin/nguyen-lieu?page=<%= i %>'); return false;"
+                                                    class="px-3 py-1 rounded-lg border text-sm <%= i === currentPage ? 'bg-yellow-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100' %> transition">
+                                                    <%= i %>
+                                                </a>
+                                                <% } %>
+
+                                                    <% if (endPage < totalPages) { %>
+                                                        <% if (endPage < totalPages - 1) { %>
+                                                            <span class="px-2 text-sm">...</span>
+                                                            <% } %>
+                                                                <a href="#"
+                                                                    onclick="loadPage('/admin/nguyen-lieu?page=<%= totalPages %>'); return false;"
+                                                                    class="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 text-sm">
+                                                                    <%= totalPages %>
+                                                                </a>
+                                                                <% } %>
+
+                                                                    <% if (currentPage < totalPages) { %>
+                                                                        <a href="#"
+                                                                            onclick="loadPage('/admin/nguyen-lieu?page=<%= currentPage + 1 %>'); return false;"
+                                                                            class="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 text-sm transition">
+                                                                            Sau ›
+                                                                        </a>
+                                                                        <% } %>
+                </div>
                 <% } %>
-              </td>
-            </tr>
-
-            <!-- Nguyên liệu -->
-            <% groupedRecipes[id].nguyen_lieu.forEach((nl, index) => { %>
-              <tr class="ingredient-row hidden border-b border-gray-100" data-group="<%= id %>">
-                <td class="p-3 text-center">
-                  <%= index + 1 %>
-                </td>
-                <td class="p-3 text-left">
-                  <%= nl.ten_nl %>
-                </td>
-                <td class="p-3 text-center">
-                  <%= nl.so_luong %> <%= nl.don_vi %>
-                </td>
-                <td class="p-3 text-left">
-                  <%= nl.ghi_chu %>
-                </td>
-              </tr>
-            <% }); %>
-          <% }); %>
-        <% } else { %>
-          <tr>
-            <td colspan="4" class="text-center py-6 text-gray-400 italic">
-              Không có công thức nguyên liệu nào!
-            </td>
-          </tr>
-        <% } %>
-      </tbody>
-    </table>
-  </div>
-     <% if (typeof totalPagesRecipes !=='undefined' && totalPagesRecipes> 1) { %>
-        <div class="mt-6 flex justify-center space-x-2">
-          <% if (currentPageRecipes> 1) { %>
-            <a href="#"
-              onclick="loadPage('/admin/nguyen-lieu?page=<%= currentPage %>&pageRecipes=<%= currentPageRecipes - 1 %>'); return false;"
-              class="px-4 py-2 rounded border bg-white text-gray-700 hover:bg-gray-100">
-              ‹ Trước
-            </a>
-            <% } %>
-
-              <% for (let i=1; i <=totalPagesRecipes; i++) { %>
-                <a href="#"
-                  onclick="loadPage('/admin/nguyen-lieu?page=<%= currentPage %>&pageRecipes=<%= i %>'); return false;"
-                  class="px-4 py-2 rounded border text-sm <%= i === currentPageRecipes ? 'bg-yellow-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100' %>">
-                  <%= i %>
-                </a>
-                <% } %>
-
-                  <% if (currentPageRecipes < totalPagesRecipes) { %>
-                    <a href="#"
-                      onclick="loadPage('/admin/nguyen-lieu?page=<%= currentPage %>&pageRecipes=<%= currentPageRecipes + 1 %>'); return false;"
-                      class="px-4 py-2 rounded border bg-white text-gray-700 hover:bg-gray-100">
-                      Sau ›
-                    </a>
-                    <% } %>
         </div>
-        <% } %>
-</div>
 
-    <!-- Modal Thêm Nguyên Liệu -->
-    <div id="addModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
-      <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
-        <h2 class="text-2xl font-semibold mb-4">Thêm Nguyên Liệu</h2>
-        <form id="addIngredientForm" method="POST" action="/admin/nguyen-lieu">
-          <div class="mb-4">
-            <label for="addTenNguyenLieu" class="block text-sm font-medium text-gray-700">Tên Nguyên Liệu</label>
-            <input type="text" id="addTenNguyenLieu" name="TEN_NL"
-              class="mt-1 p-2 w-full border rounded-lg focus:ring-yellow-500 focus:border-yellow-500" required />
-          </div>
-          <div class="mb-4">
-            <label for="addDonVi" class="block text-sm font-medium text-gray-700">Đơn Vị</label>
-            <input type="text" id="addDonVi" name="DON_VI"
-              class="mt-1 p-2 w-full border rounded-lg focus:ring-yellow-500 focus:border-yellow-500" required />
-          </div>
-          <div class="flex justify-end space-x-2">
-            <button type="button" onclick="closeAddModal()"
-              class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">
-              Hủy
-            </button>
-            <button type="submit" class="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600">
-              Thêm
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        <div id="ingredient-recipes" class="tab-content hidden" role="tabpanel" aria-labelledby="tab-ingredient-recipes">
+            <div
+                class="flex flex-col md:flex-row justify-between items-center px-4 py-2 bg-white border-b border-gray-200">
+                <div class="w-full md:w-1/2 mb-2 md:mb-0">
+                    <input type="text" id="searchRecipe" onkeyup="filterRecipes()" placeholder="Tìm kiếm công thức..."
+                        class="w-full border border-gray-300 rounded-lg px-3 py-1 text-sm focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition" />
+                </div>
+                <div class="text-gray-600 text-xs">
+                    Tổng số công thức: <span id="totalRecipes" class="font-semibold text-gray-800">
+                        <%= totalRecipes %>
+                    </span>
+                </div>
+            </div>
 
-  
-      <!-- Modal Sửa Nguyên Liệu -->
-    <div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
-      <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
-        <h2 class="text-2xl font-semibold mb-4">Sửa Nguyên Liệu</h2>
-        <form id="editIngredientForm">
-          <input type="hidden" id="editId" name="id_chinh" />
-          <div class="mb-4">
-            <label for="editTenNguyenLieu" class="block text-sm font-medium text-gray-700">Tên Nguyên Liệu</label>
-            <input type="text" id="editTenNguyenLieu" name="ten_nguyen_lieu"
-              class="mt-1 p-2 w-full border rounded-lg focus:ring-yellow-500 focus:border-yellow-500" required />
-          </div>
-          <div class="mb-4">
-            <label for="editDonVi" class="block text-sm font-medium text-gray-700">Đơn Vị</label>
-            <input type="text" id="editDonVi" name="don_vi"
-              class="mt-1 p-2 w-full border rounded-lg focus:ring-yellow-500 focus:border-yellow-500" required />
-          </div>
-          <div class="flex justify-end space-x-2">
-            <button type="button" onclick="closeEditModal()"
-              class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">
-              Hủy
-            </button>
-            <button type="submit" class="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600">
-              Lưu
-            </button>
-          </div>
-        </form>
-      </div>
+            <div class="overflow-x-auto px-4 py-2 bg-white rounded-b-lg border border-t-0 border-gray-200">
+                <table class="min-w-full text-sm text-gray-700">
+                    <thead>
+                        <tr class="bg-gray-100">
+                            <th class="p-2 text-center">STT</th>
+                            <th class="p-2 text-left">Tên Nguyên Liệu</th>
+                            <th class="p-2 text-center">Số Lượng</th>
+                            <th class="p-2 text-left">Ghi Chú</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (groupedRecipes && Object.keys(groupedRecipes).length > 0) { %>
+                            <% Object.keys(groupedRecipes).forEach((id, index) => { %>
+                                <tr class="hover:bg-gray-50 transition" onclick="toggleIngredients('<%= id %>')"
+                                    data-group-id="<%= id %>">
+                                    <td colspan="4"
+                                        class="py-2 px-3 text-center font-medium text-gray-900 border-t border-gray-100 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer text-sm transition">
+                                        <%= groupedRecipes[id].ten_ct %>
+                                            <% if (groupedRecipes[id].ngay_cap_nhat_ct) { %>
+                                                (<%= new
+                                                    Date(groupedRecipes[id].ngay_cap_nhat_ct).toLocaleDateString('vi-VN')
+                                                    %>)
+                                                <% } %>
+                                    </td>
+                                </tr>
+
+                                <% groupedRecipes[id].nguyen_lieu.forEach((nl, index) => { %>
+                                    <tr class="ingredient-row hidden border-b border-gray-100" data-group="<%= id %>">
+                                        <td class="p-2 text-center text-sm">
+                                            <%= index + 1 %>
+                                        </td>
+                                        <td class="p-2 text-left text-sm">
+                                            <%= nl.ten_nl %>
+                                        </td>
+                                        <td class="p-2 text-center text-sm">
+                                            <%= nl.so_luong %>
+                                                <%= nl.don_vi %>
+                                        </td>
+                                        <td class="p-2 text-left text-sm">
+                                            <%= nl.ghi_chu %>
+                                        </td>
+                                    </tr>
+                                    <% }); %>
+                                        <% }); %>
+                                            <% } else { %>
+                                                <tr>
+                                                    <td colspan="4" class="text-center py-3 text-gray-400 italic text-sm">
+                                                        Không có công thức nguyên liệu nào!
+                                                    </td>
+                                                </tr>
+                                                <% } %>
+                    </tbody>
+                </table>
+            </div>
+            <% if (typeof totalPagesRecipes !== 'undefined' && totalPagesRecipes > 1) { %>
+                <div class="mt-4 flex justify-center space-x-2">
+                    <% if (currentPageRecipes > 1) { %>
+                        <a href="#"
+                            onclick="loadPage('/admin/nguyen-lieu?page=<%= currentPage %>&pageRecipes=<%= currentPageRecipes - 1 %>'); return false;"
+                            class="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 text-sm transition">
+                            ‹ Trước
+                        </a>
+                        <% } %>
+
+                            <% for (let i = 1; i <= totalPagesRecipes; i++) { %>
+                                <a href="#"
+                                    onclick="loadPage('/admin/nguyen-lieu?page=<%= currentPage %>&pageRecipes=<%= i %>'); return false;"
+                                    class="px-3 py-1 rounded-lg border text-sm <%= i === currentPageRecipes ? 'bg-yellow-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100' %> transition">
+                                    <%= i %>
+                                </a>
+                                <% } %>
+
+                                    <% if (currentPageRecipes < totalPagesRecipes) { %>
+                                        <a href="#"
+                                            onclick="loadPage('/admin/nguyen-lieu?page=<%= currentPage %>&pageRecipes=<%= currentPageRecipes + 1 %>'); return false;"
+                                            class="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 text-sm transition">
+                                            Sau ›
+                                        </a>
+                                        <% } %>
+                </div>
+                <% } %>
+        </div>
+
+        <div id="addModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+            <div class="bg-white p-4 rounded-lg shadow-lg w-full max-w-sm">
+                <h2 class="text-lg font-semibold mb-3">Thêm Nguyên Liệu</h2>
+                <form id="addIngredientForm" method="POST" action="/admin/nguyen-lieu">
+                    <div class="mb-3">
+                        <label for="addTenNguyenLieu" class="block text-sm font-semibold text-gray-700">Tên Nguyên
+                            Liệu</label>
+                        <input type="text" id="addTenNguyenLieu" name="TEN_NL"
+                            class="mt-1 p-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition text-base"
+                            required />
+                    </div>
+                    <div class="mb-3">
+                        <label for="addDonVi" class="block text-sm font-semibold text-gray-700">Đơn Vị</label>
+                        <input type="text" id="addDonVi" name="DON_VI"
+                            class="mt-1 p-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition text-base"
+                            required />
+                    </div>
+                    <div class="flex justify-end space-x-2">
+                        <button type="button" onclick="closeAddModal()"
+                            class="px-3 py-1 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 text-sm transition">
+                            Hủy
+                        </button>
+                        <button type="submit"
+                            class="px-3 py-1 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 text-sm transition">
+                            Thêm
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+            <div class="bg-white p-4 rounded-lg shadow-lg w-full max-w-sm">
+                <h2 class="text-lg font-semibold mb-3">Sửa Nguyên Liệu</h2>
+                <form id="editIngredientForm">
+                    <input type="hidden" id="editId" name="id_chinh" />
+                    <div class="mb-3">
+                        <label for="editTenNguyenLieu" class="block text-sm font-semibold text-gray-700">Tên Nguyên
+                            Liệu</label>
+                        <input type="text" id="editTenNguyenLieu" name="ten_nguyen_lieu"
+                            class="mt-1 p-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition text-base"
+                            required />
+                    </div>
+                    <div class="mb-3">
+                        <label for="editDonVi" class="block text-sm font-semibold text-gray-700">Đơn Vị</label>
+                        <input type="text" id="editDonVi" name="don_vi"
+                            class="mt-1 p-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition text-base"
+                            required />
+                    </div>
+                    <div class="flex justify-end space-x-2">
+                        <button type="button" onclick="closeEditModal()"
+                            class="px-3 py-1 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 text-sm transition">
+                            Hủy
+                        </button>
+                        <button type="submit"
+                            class="px-3 py-1 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 text-sm transition">
+                            Lưu
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
-  </div>
 </body>
+
+</html>
