@@ -24,18 +24,20 @@
         </div>
         <nav class="flex flex-col space-y-2 text-sm font-medium">
           <% const items = [
-            { url: '/admin/cong-thuc', icon: 'utensils', label: 'Công Thức', color: 'text-yellow-700' },
-            { url: '/admin/nguyen-lieu', icon: 'seedling', label: 'Nguyên Liệu', color: 'text-green-600' },
-            { url: '/admin/loai-mon', icon: 'bowl-rice', label: 'Loại Món', color: 'text-amber-600' },
-            { url: '/admin/nguoi-dung', icon: 'user', label: 'Người Dùng', color: 'text-gray-700' },
-            { url: '/admin/mon-an', icon: 'drumstick-bite', label: 'Món Ăn', color: 'text-orange-500' },
-            { url: '/admin/yeu-thich', icon: 'heart', label: 'Yêu Thích', color: 'text-red-500' },
-            { url: '/admin/danh-gia', icon: 'star', label: 'Đánh Giá', color: 'text-yellow-500' },
-            { url: '/admin/binh-luan', icon: 'comment', label: 'Bình Luận', color: 'text-blue-600' },
-            { url: '/admin/phan-hoi-binh-luan', icon: 'comments', label: 'Phản Hồi Bình Luận', color: 'text-blue-400' },
-            { url: '/admin/binh-luan-cam-xuc', icon: 'face-smile', label: 'Cảm Xúc Bình Luận', color: 'text-pink-500' },
-            { url: '/admin/phan-hoi-cam-xuc', icon: 'face-laugh-squint', label: 'Cảm Xúc Phản Hồi', color: 'text-purple-500' },
-          ]; %>
+            // Thêm Trang Chủ vào đây
+            { url: '/admin', icon: 'home', label: 'Trang Chủ', color: 'text-white' }, // Hoặc màu khác bạn muốn
+            { url: '/admin/cong-thuc', icon: 'utensils', label: 'Công Thức', color: 'text-yellow-700' },
+            { url: '/admin/nguyen-lieu', icon: 'seedling', label: 'Nguyên Liệu', color: 'text-green-600' },
+            { url: '/admin/loai-mon', icon: 'bowl-rice', label: 'Loại Món', color: 'text-amber-600' },
+            { url: '/admin/nguoi-dung', icon: 'user', label: 'Người Dùng', color: 'text-gray-700' },
+            { url: '/admin/mon-an', icon: 'drumstick-bite', label: 'Món Ăn', color: 'text-orange-500' },
+            { url: '/admin/yeu-thich', icon: 'heart', label: 'Yêu Thích', color: 'text-red-500' },
+            { url: '/admin/danh-gia', icon: 'star', label: 'Đánh Giá', color: 'text-yellow-500' },
+            { url: '/admin/binh-luan', icon: 'comment', label: 'Bình Luận', color: 'text-blue-600' },
+            { url: '/admin/phan-hoi-binh-luan', icon: 'comments', label: 'Phản Hồi Bình Luận', color: 'text-blue-400' },
+            { url: '/admin/binh-luan-cam-xuc', icon: 'face-smile', label: 'Cảm Xúc Bình Luận', color: 'text-pink-500' },
+            { url: '/admin/phan-hoi-cam-xuc', icon: 'face-laugh-squint', label: 'Cảm Xúc Phản Hồi', color: 'text-purple-500' },
+          ]; %>
 
           <% items.forEach(item => { %>
             <a href="<%= item.url %>" onclick="event.preventDefault(); loadPage('<%= item.url %>', this)"

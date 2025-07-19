@@ -1,0 +1,63 @@
+<div class="p-6 bg-white rounded-lg shadow-md">
+    <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">Tổng Quan Hệ Thống</h2>
+
+    <% if (data && data.stats) { %>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div class="bg-gradient-to-r from-yellow-400 to-amber-500 rounded-xl shadow-lg p-5 text-white flex flex-col items-center justify-center transition-transform transform hover:scale-105 duration-300">
+            <i class="fas fa-utensils text-4xl mb-3"></i>
+            <h3 class="text-xl font-semibold mb-1">Công Thức</h3>
+            <p class="text-3xl font-bold"><%= data.stats.cong_thuc %></p>
+        </div>
+
+        <div class="bg-gradient-to-r from-teal-400 to-green-500 rounded-xl shadow-lg p-5 text-white flex flex-col items-center justify-center transition-transform transform hover:scale-105 duration-300">
+            <i class="fas fa-bowl-rice text-4xl mb-3"></i>
+            <h3 class="text-xl font-semibold mb-1">Loại Món</h3>
+            <p class="text-3xl font-bold"><%= data.stats.loai_mon %></p>
+        </div>
+
+        <div class="bg-gradient-to-r from-orange-400 to-red-500 rounded-xl shadow-lg p-5 text-white flex flex-col items-center justify-center transition-transform transform hover:scale-105 duration-300">
+            <i class="fas fa-drumstick-bite text-4xl mb-3"></i>
+            <h3 class="text-xl font-semibold mb-1">Món Ăn</h3>
+            <p class="text-3xl font-bold"><%= data.stats.mon_an %></p>
+        </div>
+
+        <div class="bg-gradient-to-r from-blue-400 to-indigo-500 rounded-xl shadow-lg p-5 text-white flex flex-col items-center justify-center transition-transform transform hover:scale-105 duration-300">
+            <i class="fas fa-comment text-4xl mb-3"></i>
+            <h3 class="text-xl font-semibold mb-1">Bình Luận</h3>
+            <p class="text-3xl font-bold"><%= data.stats.binh_luan %></p>
+        </div>
+
+        <div class="bg-gradient-to-r from-purple-400 to-pink-500 rounded-xl shadow-lg p-5 text-white flex flex-col items-center justify-center transition-transform transform hover:scale-105 duration-300">
+            <i class="fas fa-comments text-4xl mb-3"></i>
+            <h3 class="text-xl font-semibold mb-1">Phản Hồi BL</h3>
+            <p class="text-3xl font-bold"><%= data.stats.phan_hoi_binh_luan %></p>
+        </div>
+
+        <div class="bg-gradient-to-r from-lime-400 to-green-600 rounded-xl shadow-lg p-5 text-white flex flex-col items-center justify-center transition-transform transform hover:scale-105 duration-300">
+            <i class="fas fa-seedling text-4xl mb-3"></i>
+            <h3 class="text-xl font-semibold mb-1">Nguyên Liệu</h3>
+            <p class="text-3xl font-bold"><%= data.stats.nguyen_lieu %></p>
+        </div>
+
+        <div class="bg-gradient-to-r from-amber-400 to-yellow-600 rounded-xl shadow-lg p-5 text-white flex flex-col items-center justify-center transition-transform transform hover:scale-105 duration-300">
+            <i class="fas fa-star text-4xl mb-3"></i>
+            <h3 class="text-xl font-semibold mb-1">Đánh Giá</h3>
+            <p class="text-3xl font-bold"><%= data.stats.danh_gia %></p>
+        </div>
+
+        <div class="bg-gradient-to-r from-pink-400 to-red-600 rounded-xl shadow-lg p-5 text-white flex flex-col items-center justify-center transition-transform transform hover:scale-105 duration-300">
+            <i class="fas fa-heart text-4xl mb-3"></i>
+            <h3 class="text-xl font-semibold mb-1">Yêu Thích</h3>
+            <p class="text-3xl font-bold"><%= data.stats.yeu_thich %></p>
+        </div>
+
+        <div class="bg-gradient-to-r from-gray-400 to-gray-600 rounded-xl shadow-lg p-5 text-white flex flex-col items-center justify-center transition-transform transform hover:scale-105 duration-300">
+            <i class="fas fa-user text-4xl mb-3"></i>
+            <h3 class="text-xl font-semibold mb-1">Người Dùng</h3>
+            <p class="text-3xl font-bold"><%= data.stats.nguoi_dung %></p>
+        </div>
+    </div>
+    <% } else { %>
+        <div class="text-center py-6 text-gray-500">Không có dữ liệu thống kê để hiển thị.</div>
+    <% } %>
+</div>

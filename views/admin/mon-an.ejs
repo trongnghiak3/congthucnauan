@@ -100,37 +100,37 @@
         </tbody>
       </table>
 
-      <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
-        <div class="mt-4 flex justify-center space-x-2">
-          <% if (currentPage > 1) { %>
-            <a
-              href="#"
-              onclick="loadPage('/admin/mon-an?page=<%= currentPage - 1 %>&pageCategories=<%= currentPageCategories %>', document.querySelector('#content')); return false;"
-              class="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 transition text-sm"
-            >
-              ‹ Trước
-            </a>
-          <% } %>
-          <% for (let i = 1; i <= totalPages; i++) { %>
-            <a
-              href="#"
-              onclick="loadPage('/admin/mon-an?page=<%= i %>&pageCategories=<%= currentPageCategories %>', document.querySelector('#content')); return false;"
-              class="px-3 py-1 rounded-lg border text-sm <%= i === currentPage ? 'bg-yellow-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100' %>"
-            >
-              <%= i %>
-            </a>
-          <% } %>
-          <% if (currentPage < totalPages) { %>
-            <a
-              href="#"
-              onclick="loadPage('/admin/mon-an?page=<%= currentPage + 1 %>&pageCategories=<%= currentPageCategories %>', document.querySelector('#content')); return false;"
-              class="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 transition text-sm"
-            >
-              Sau ›
-            </a>
-          <% } %>
-        </div>
-      <% } %>
+   <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
+  <div class="mt-4 flex justify-center space-x-2">
+    <% if (currentPage > 1) { %>
+      <a
+        href="#"
+        onclick="loadPage('/admin/mon-an?page=<%= currentPage - 1 %>&pageCategories=<%= currentPageCategories %>', document.querySelector('#content')); return false;"
+        class="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 text-sm transition">
+        ‹ Trước
+      </a>
+    <% } %>
+
+    <% for (let i = 1; i <= totalPages; i++) { %>
+      <a
+        href="#"
+        onclick="loadPage('/admin/mon-an?page=<%= i %>&pageCategories=<%= currentPageCategories %>', document.querySelector('#content')); return false;"
+        class="px-3 py-1 rounded-lg border text-sm <%= i === currentPage ? 'bg-yellow-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100' %> transition">
+        <%= i %>
+      </a>
+    <% } %>
+
+    <% if (currentPage < totalPages) { %>
+      <a
+        href="#"
+        onclick="loadPage('/admin/mon-an?page=<%= currentPage + 1 %>&pageCategories=<%= currentPageCategories %>', document.querySelector('#content')); return false;"
+        class="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 text-sm transition">
+        Sau ›
+      </a>
+    <% } %>
+  </div>
+<% } %>
+
     </div>
 
     <div id="dishes-by-category" class="tab-content hidden" role="tabpanel" aria-labelledby="tab-dishes-by-category">

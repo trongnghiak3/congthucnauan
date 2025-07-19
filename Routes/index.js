@@ -253,170 +253,199 @@ router.get("/danh-muc/:slug", async (req, res) => {
   });
 });
 
-// Route danh sách công thức
 
 
-router.get("/cong-thuc", async (req, res) => {
-  try {
-    const {
-      category = "",
-      ingredient = "",
-      time = "",
-      difficulty = "",
-      monAnId = "",
-      search = "",
-      sort = "default",
-      page = 1
-    } = req.query;
 
-    const filters = { category, ingredient, time, difficulty, monAnId, search, sort, page };
-    const limit = 12; // Số công thức mỗi trang
-    const offset = (page - 1) * limit;
+router.get("/cong-thuc", async (req, res) => { // Giả sử query đã được import
+    try {
+        const {
+            loaiMon = "",
+            nguyenLieu = "",
+            thoiGian = "",
+            doKho = "",
+            monAnId = "",
+            timKiem = "",
+            sapXep = "mac-dinh",
+            trang = 1,
+            soPhan = "" // Thêm biến soPhan vào đây
+        } = req.query;
 
-    // Xây dựng truy vấn công thức
-    let baseSql = `
-      SELECT 
-        cong_thuc.*, 
-        mon_an.TEN_MON_AN,
-        GROUP_CONCAT(DISTINCT loai_mon.ID_CHINH_LM) as loai_mon_ids,
-        GROUP_CONCAT(DISTINCT CONCAT(nd.TEN_NGUOI_DUNG, ':', cx.LOAI_CAM_XUC_BL)) as reaction_users,
-        GROUP_CONCAT(DISTINCT cx.LOAI_CAM_XUC_BL) as reaction_types,
-        COUNT(DISTINCT cx.ID_CHINH_CXBL) as total_reactions
-      FROM cong_thuc
-      LEFT JOIN mon_an ON cong_thuc.ID_CHINH_MA = mon_an.ID_CHINH_MA
-      LEFT JOIN mon_an_loai_mon ON mon_an.ID_CHINH_MA = mon_an_loai_mon.ID_CHINH_MA
-      LEFT JOIN loai_mon ON mon_an_loai_mon.ID_CHINH_LM = loai_mon.ID_CHINH_LM
-      LEFT JOIN cong_thuc_nguyen_lieu ON cong_thuc.ID_CHINH_CT = cong_thuc_nguyen_lieu.ID_CHINH_CT
-      LEFT JOIN nguyen_lieu ON cong_thuc_nguyen_lieu.ID_CHINH_NL = nguyen_lieu.ID_CHINH_NL
-      LEFT JOIN binh_luan bl ON cong_thuc.ID_CHINH_CT = bl.ID_CHINH_CT
-      LEFT JOIN binh_luan_cam_xuc cx ON bl.ID_CHINH_BL = cx.ID_CHINH_BL
-      LEFT JOIN nguoi_dung nd ON cx.ID_CHINH_ND = nd.ID_CHINH_ND
-      WHERE cong_thuc.TRANG_THAI_DUYET_ = 'Đã duyệt'
-    `;
+        const filters = { loaiMon, nguyenLieu, thoiGian, doKho, monAnId, timKiem, sapXep, trang, soPhan }; // Cập nhật filters
+        const gioiHan = 12;
+        const boQua = (parseInt(trang) - 1) * gioiHan;
 
-    const conditions = [];
-    const params = [];
+        let baseSql = `
+            SELECT
+                cong_thuc.*,
+                mon_an.TEN_MON_AN,
+                GROUP_CONCAT(DISTINCT loai_mon.ID_CHINH_LM) as loai_mon_ids,
+                GROUP_CONCAT(DISTINCT CONCAT(nd.TEN_NGUOI_DUNG, ':', cx.LOAI_CAM_XUC_BL)) as reaction_users_raw,
+                GROUP_CONCAT(DISTINCT cx.LOAI_CAM_XUC_BL) as reaction_types_raw,
+                COUNT(DISTINCT cx.ID_CHINH_CXBL) as total_reactions
+            FROM cong_thuc
+            LEFT JOIN mon_an ON cong_thuc.ID_CHINH_MA = mon_an.ID_CHINH_MA
+            LEFT JOIN mon_an_loai_mon ON mon_an.ID_CHINH_MA = mon_an_loai_mon.ID_CHINH_MA
+            LEFT JOIN loai_mon ON mon_an_loai_mon.ID_CHINH_LM = loai_mon.ID_CHINH_LM
+            LEFT JOIN cong_thuc_nguyen_lieu ON cong_thuc.ID_CHINH_CT = cong_thuc_nguyen_lieu.ID_CHINH_CT
+            LEFT JOIN nguyen_lieu ON cong_thuc_nguyen_lieu.ID_CHINH_NL = nguyen_lieu.ID_CHINH_NL
+            LEFT JOIN binh_luan bl ON cong_thuc.ID_CHINH_CT = bl.ID_CHINH_CT
+            LEFT JOIN binh_luan_cam_xuc cx ON bl.ID_CHINH_BL = cx.ID_CHINH_BL
+            LEFT JOIN nguoi_dung nd ON cx.ID_CHINH_ND = nd.ID_CHINH_ND
+            WHERE cong_thuc.TRANG_THAI_DUYET_ = 'Đã duyệt'
+        `;
 
-    if (category) {
-      conditions.push("loai_mon.ID_CHINH_LM = ?");
-      params.push(category);
-    }
-    if (ingredient) {
-      conditions.push("nguyen_lieu.TEN_NL LIKE ?");
-      params.push(`%${ingredient}%`);
-    }
-    if (time) {
-      conditions.push("TIME_TO_SEC(cong_thuc.THOI_GIAN_NAU) <= ?");
-      params.push(parseInt(time) * 60);
-    }
-    if (difficulty) {
-      conditions.push("cong_thuc.DO_KHO = ?");
-      params.push(difficulty);
-    }
-    if (monAnId) {
-      conditions.push("mon_an.ID_CHINH_MA = ?");
-      params.push(monAnId);
-    }
-    if (search) {
-      conditions.push("cong_thuc.TEN_CT LIKE ?");
-      params.push(`%${search}%`);
-    }
+        const conditions = [];
+        const params = [];
 
-    if (conditions.length > 0) {
-      baseSql += " AND " + conditions.join(" AND ");
-    }
+        if (loaiMon) {
+            conditions.push("loai_mon.ID_CHINH_LM = ?");
+            params.push(loaiMon);
+        }
+        if (nguyenLieu) {
+            conditions.push("nguyen_lieu.TEN_NL LIKE ?");
+            params.push(`%${nguyenLieu}%`);
+        }
+        if (thoiGian === "duoi-30") {
+            conditions.push("cong_thuc.THOI_GIAN_NAU <= ?");
+            params.push(30);
+        } else if (thoiGian === "30-60") {
+            conditions.push("cong_thuc.THOI_GIAN_NAU BETWEEN ? AND ?");
+            params.push(30, 60);
+        } else if (thoiGian === "tren-60") {
+            conditions.push("cong_thuc.THOI_GIAN_NAU > ?");
+            params.push(60);
+        }
 
-    baseSql += " GROUP BY cong_thuc.ID_CHINH_CT";
+        if (doKho) {
+            let doKhoValue;
+            switch(doKho) {
+                case 'de': doKhoValue = 'Dễ'; break;
+                case 'trung-binh': doKhoValue = 'Trung bình'; break;
+                case 'kho': doKhoValue = 'Khó'; break;
+                default: doKhoValue = doKho;
+            }
+            conditions.push("cong_thuc.DO_KHO = ?");
+            params.push(doKhoValue);
+        }
+        if (monAnId) {
+            conditions.push("mon_an.ID_CHINH_MA = ?");
+            params.push(monAnId);
+        }
+        if (timKiem) {
+            conditions.push("cong_thuc.TEN_CT LIKE ?");
+            params.push(`%${timKiem}%`);
+        }
 
-    // Thêm sắp xếp
-    if (sort === "time-asc") {
-      baseSql += " ORDER BY cong_thuc.THOI_GIAN_NAU ASC";
-    } else if (sort === "time-desc") {
-      baseSql += " ORDER BY cong_thuc.THOI_GIAN_NAU DESC";
-    } else if (sort === "rating-desc") {
-      baseSql += " ORDER BY (SELECT AVG(DANH_GIA) FROM danh_gia WHERE ID_CHINH_CT = cong_thuc.ID_CHINH_CT) DESC";
-    }
+        // === THAY ĐỔI LỚN TẠI ĐÂY CHO LỌC SỐ PHẦN ĂN ===
+        if (soPhan) {
+            switch(soPhan) {
+                case "1-2":
+                    conditions.push("cong_thuc.SO_PHAN_AN BETWEEN 1 AND 2");
+                    break;
+                case "3-4":
+                    conditions.push("cong_thuc.SO_PHAN_AN BETWEEN 3 AND 4");
+                    break;
+                case "5+":
+                    conditions.push("cong_thuc.SO_PHAN_AN >= 5");
+                    break;
+                // Nếu có các trường hợp khác, thêm vào đây
+            }
+        }
+        // ===============================================
 
-    // Thêm phân trang
-    baseSql += ` LIMIT ${limit} OFFSET ${offset}`;
+        if (conditions.length > 0) {
+            baseSql += " AND " + conditions.join(" AND ");
+        }
 
-    let recipes = await query(baseSql, params);
-    const categories = await query("SELECT * FROM loai_mon");
+        baseSql += " GROUP BY cong_thuc.ID_CHINH_CT";
 
-    // Xử lý từng công thức
-    recipes = await Promise.all(recipes.map(async recipe => {
-      const fileName = recipe.HINH_ANH_CT?.split('/').pop();
-      const image = fileName ? `/Uploads/images/congthuc/${recipe.ID_CHINH_CT}/${fileName}` : null;
+        if (sapXep === "thoi-gian-tang-dan") {
+            baseSql += " ORDER BY cong_thuc.THOI_GIAN_NAU ASC";
+        } else if (sapXep === "thoi-gian-giam-dan") {
+            baseSql += " ORDER BY cong_thuc.THOI_GIAN_NAU DESC";
+        } else if (sapXep === "danh-gia-cao-nhat") {
+            baseSql += " ORDER BY (SELECT AVG(DANH_GIA) FROM danh_gia WHERE ID_CHINH_CT = cong_thuc.ID_CHINH_CT) DESC";
+        } else {
+            baseSql += " ORDER BY cong_thuc.NGAY_TAO_CT DESC";
+        }
 
-      const [ratingRes] = await query("SELECT AVG(DANH_GIA) as avg FROM danh_gia WHERE ID_CHINH_CT = ?", [recipe.ID_CHINH_CT]);
-      const avgRating = ratingRes?.avg ? parseFloat(ratingRes.avg).toFixed(1) : "Chưa có";
+        baseSql += ` LIMIT ${gioiHan} OFFSET ${boQua}`;
 
-      const reactions = {};
-      const reactionUsers = [];
+        let recipes = await query(baseSql, params);
+        const categories = await query("SELECT * FROM loai_mon");
 
-      if (recipe.reaction_types && recipe.reaction_users) {
-        const usersRaw = recipe.reaction_users.split(',');
-        const types = recipe.reaction_types.split(',');
+        recipes = await Promise.all(recipes.map(async recipe => {
+            const fileName = recipe.HINH_ANH_CT?.split('/').pop();
+            const image = fileName ? `/Uploads/images/congthuc/${recipe.ID_CHINH_CT}/${fileName}` : null;
 
-        types.forEach(type => {
-          reactions[type] = usersRaw.filter(u => u.includes(`:${type}`)).length;
+            const [ratingRes] = await query("SELECT AVG(DANH_GIA) as avg FROM danh_gia WHERE ID_CHINH_CT = ?", [recipe.ID_CHINH_CT]);
+            const avgRating = ratingRes?.avg ? parseFloat(ratingRes.avg).toFixed(1) : "Chưa có";
+
+            const reactions = {};
+            const reactionUsers = [];
+
+            if (recipe.reaction_types_raw && recipe.reaction_users_raw) {
+                const usersRaw = recipe.reaction_users_raw.split(',');
+                const types = recipe.reaction_types_raw.split(',');
+
+                types.forEach(type => {
+                    reactions[type] = usersRaw.filter(u => u.includes(`:${type}`)).length;
+                });
+
+                usersRaw.forEach(entry => {
+                    const [name, type] = entry.split(':');
+                    if (name && type) reactionUsers.push({ TEN_NGUOI_DUNG: name, LOAI_CAM_XUC_BL: type });
+                });
+            }
+
+            return {
+                ...recipe,
+                HINH_ANH_CT: image,
+                DANH_GIA: avgRating,
+                SO_PHAN_AN: recipe.SO_PHAN_AN || "2-4", // Giá trị hiển thị mặc định nếu null
+                THOI_GIAN_NAU: recipe.THOI_GIAN_NAU || 30,
+                DO_KHO: recipe.DO_KHO || "Dễ",
+                reactions,
+                reaction_users: reactionUsers
+            };
+        }));
+
+        if (req.session.user) {
+            const userId = req.session.user.ID_CHINH_ND;
+            const favorites = await query("SELECT ID_CHINH_CT FROM yeu_thich WHERE ID_CHINH_ND = ?", [userId]);
+            const liked = new Set(favorites.map(f => f.ID_CHINH_CT));
+            recipes = recipes.map(r => ({ ...r, isFavorite: liked.has(r.ID_CHINH_CT) }));
+        }
+
+        const countSql = `
+            SELECT COUNT(DISTINCT cong_thuc.ID_CHINH_CT) as total
+            FROM cong_thuc
+            LEFT JOIN mon_an ON cong_thuc.ID_CHINH_MA = mon_an.ID_CHINH_MA
+            LEFT JOIN mon_an_loai_mon ON mon_an.ID_CHINH_MA = mon_an_loai_mon.ID_CHINH_MA
+            LEFT JOIN loai_mon ON mon_an_loai_mon.ID_CHINH_LM = loai_mon.ID_CHINH_LM
+            LEFT JOIN cong_thuc_nguyen_lieu ON cong_thuc.ID_CHINH_CT = cong_thuc_nguyen_lieu.ID_CHINH_CT
+            LEFT JOIN nguyen_lieu ON cong_thuc_nguyen_lieu.ID_CHINH_NL = nguyen_lieu.ID_CHINH_NL
+            WHERE cong_thuc.TRANG_THAI_DUYET_ = 'Đã duyệt'
+            ${conditions.length > 0 ? " AND " + conditions.join(" AND ") : ""}
+        `;
+        const [countResult] = await query(countSql, params);
+        const totalRecipes = countResult.total;
+
+        console.log("⛳ BỘ LỌC:", filters);
+        res.render("index/index_layout", {
+            viewPath: "cong-thuc",
+            recipes,
+            categories,
+            monAn: null,
+            filters,
+            user: req.session.user,
+            hasMore: totalRecipes > trang * gioiHan
         });
 
-        usersRaw.forEach(entry => {
-          const [name, type] = entry.split(':');
-          if (name && type) reactionUsers.push({ TEN_NGUOI_DUNG: name, LOAI_CAM_XUC_BL: type });
-        });
-      }
-
-      return {
-        ...recipe,
-        HINH_ANH_CT: image,
-        DANH_GIA: avgRating,
-        SO_PHAN_AN: recipe.SO_PHAN_AN || "2-4",
-        THOI_GIAN_NAU: recipe.THOI_GIAN_NAU || 30,
-        DO_KHO: recipe.DO_KHO || "Dễ",
-        reactions,
-        reaction_users: reactionUsers
-      };
-    }));
-
-    // Đánh dấu yêu thích nếu có user
-    if (req.session.user) {
-      const userId = req.session.user.ID_CHINH_ND;
-      const favorites = await query("SELECT ID_CHINH_CT FROM yeu_thich WHERE ID_CHINH_ND = ?", [userId]);
-      const liked = new Set(favorites.map(f => f.ID_CHINH_CT));
-      recipes = recipes.map(r => ({ ...r, isFavorite: liked.has(r.ID_CHINH_CT) }));
+    } catch (err) {
+        console.error("Lỗi truy vấn công thức:", err);
+        res.status(500).send("Lỗi server");
     }
-
-    // Lấy tổng số công thức để kiểm tra hiển thị nút "Xem Thêm"
-    const countSql = `
-      SELECT COUNT(DISTINCT cong_thuc.ID_CHINH_CT) as total
-      FROM cong_thuc
-      LEFT JOIN mon_an ON cong_thuc.ID_CHINH_MA = mon_an.ID_CHINH_MA
-      LEFT JOIN mon_an_loai_mon ON mon_an.ID_CHINH_MA = mon_an_loai_mon.ID_CHINH_MA
-      LEFT JOIN loai_mon ON mon_an_loai_mon.ID_CHINH_LM = loai_mon.ID_CHINH_LM
-      LEFT JOIN cong_thuc_nguyen_lieu ON cong_thuc.ID_CHINH_CT = cong_thuc_nguyen_lieu.ID_CHINH_CT
-      LEFT JOIN nguyen_lieu ON cong_thuc_nguyen_lieu.ID_CHINH_NL = nguyen_lieu.ID_CHINH_NL
-      WHERE cong_thuc.TRANG_THAI_DUYET_ = 'Đã duyệt'
-      ${conditions.length > 0 ? " AND " + conditions.join(" AND ") : ""}
-    `;
-    const [countResult] = await query(countSql, params);
-    const totalRecipes = countResult.total;
-
-    res.render("index/index_layout", {
-      viewPath: "cong-thuc",
-      recipes,
-      categories,
-      monAn: null, // Nếu không dùng monAnId
-      filters,
-      user: req.session.user,
-      hasMore: totalRecipes > page * limit // Kiểm tra có hiển thị nút "Xem Thêm" không
-    });
-
-  } catch (err) {
-    console.error("Lỗi truy vấn công thức:", err);
-    res.status(500).send("Lỗi server");
-  }
 });
 
 
@@ -595,18 +624,26 @@ router.get("/cong-thuc/:id", async (req, res) => {
       isFavorite = favorite.length > 0;
     }
 
-    // Lấy công thức tương tự
+    // Lấy công thức tương tự dựa trên danh mục món ăn và loại món
     const similarRecipes = await query(
       `
-      SELECT DISTINCT cong_thuc.ID_CHINH_CT, cong_thuc.TEN_CT, cong_thuc.HINH_ANH_CT,
-             GROUP_CONCAT(loai_mon.TEN_LM) AS categories
-      FROM cong_thuc
-      JOIN mon_an ON cong_thuc.ID_CHINH_MA = mon_an.ID_CHINH_MA
-      JOIN mon_an_loai_mon ON mon_an.ID_CHINH_MA = mon_an_loai_mon.ID_CHINH_MA
-      JOIN loai_mon ON mon_an_loai_mon.ID_CHINH_LM = loai_mon.ID_CHINH_LM
-      JOIN cong_thuc_nguyen_lieu ON cong_thuc.ID_CHINH_CT = cong_thuc_nguyen_lieu.ID_CHINH_CT
-      JOIN nguyen_lieu ON cong_thuc_nguyen_lieu.ID_CHINH_NL = nguyen_lieu.ID_CHINH_NL
-      WHERE cong_thuc.TRANG_THAI_DUYET_ = 'Đã duyệt'
+      SELECT DISTINCT 
+      cong_thuc.ID_CHINH_CT,
+      cong_thuc.TEN_CT,
+      cong_thuc.HINH_ANH_CT,
+      cong_thuc.THOI_GIAN_NAU,
+      cong_thuc.DO_KHO,
+      (
+        SELECT AVG(DANH_GIA)
+        FROM danh_gia
+        WHERE danh_gia.ID_CHINH_CT = cong_thuc.ID_CHINH_CT
+      ) AS DANH_GIA,
+      GROUP_CONCAT(DISTINCT loai_mon.TEN_LM) AS categories
+    FROM cong_thuc
+    JOIN mon_an ON cong_thuc.ID_CHINH_MA = mon_an.ID_CHINH_MA
+    JOIN mon_an_loai_mon ON mon_an.ID_CHINH_MA = mon_an_loai_mon.ID_CHINH_MA
+    JOIN loai_mon ON mon_an_loai_mon.ID_CHINH_LM = loai_mon.ID_CHINH_LM
+    WHERE cong_thuc.TRANG_THAI_DUYET_ = 'Đã duyệt'
       AND cong_thuc.ID_CHINH_CT != ?
       AND (
         loai_mon.ID_CHINH_LM IN (
@@ -614,17 +651,14 @@ router.get("/cong-thuc/:id", async (req, res) => {
           FROM mon_an_loai_mon 
           WHERE ID_CHINH_MA = ?
         )
-        OR nguyen_lieu.ID_CHINH_NL IN (
-          SELECT ID_CHINH_NL 
-          FROM cong_thuc_nguyen_lieu 
-          WHERE ID_CHINH_CT = ?
-        )
+        OR mon_an.ID_CHINH_MA = ?
       )
-      GROUP BY cong_thuc.ID_CHINH_CT
-      ORDER BY RAND()
-      LIMIT 4
+    GROUP BY cong_thuc.ID_CHINH_CT
+    ORDER BY RAND()
+    LIMIT 4
+
       `,
-      [recipeId, recipe.ID_CHINH_MA, recipeId]
+      [recipeId, recipe.ID_CHINH_MA, recipe.ID_CHINH_MA]
     );
 
     // Xử lý hình ảnh cho công thức tương tự
@@ -649,7 +683,8 @@ router.get("/cong-thuc/:id", async (req, res) => {
         total: ratings[0].total_ratings
       },
       user: req.session.user,
-      similarRecipes: processedSimilarRecipes
+      similarRecipes: processedSimilarRecipes,
+      session: req.session // Pass session for flash messages
     });
   } catch (err) {
     console.error("Lỗi truy vấn chi tiết công thức:", err);
@@ -732,6 +767,12 @@ router.post("/cong-thuc/:id/binh-luan", async (req, res) => {
         ['binh_luan', `Người dùng ${tenNguoiDung} đã bình luận trên công thức ${tenCongThuc}`, admin.ID_CHINH_ND, userId]
       );
     }
+
+    // Add success message to session flash
+    req.session.flash = {
+      type: 'success',
+      message: 'Bình luận đã được thêm thành công!'
+    };
 
     res.redirect(`/cong-thuc/${recipeId}`);
   } catch (err) {
@@ -941,7 +982,8 @@ router.put("/binh-luan/:id", async (req, res) => {
       return res.status(403).json({ success: false, message: "Bạn không có quyền chỉnh sửa bình luận này" });
     }
 
-    await query("UPDATE binh_luan SET NOI_DUNG = ? WHERE ID_CHINH_BL = ?", [noi_dung, commentId]);
+  await query("UPDATE binh_luan SET NOI_DUNG_BL = ? WHERE ID_CHINH_BL = ?", [noi_dung, commentId]);
+
     console.log("BODY:", req.body);
     res.json({
       success: true,

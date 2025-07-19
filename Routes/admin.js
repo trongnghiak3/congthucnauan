@@ -55,46 +55,46 @@ const deleteDirectory = async (dirPath) => {
 };
 // Trang quản lý admin
 router.get("/admin", ensureAdmin, async (req, res) => {
-  try {
-    const cong_thuc = await query("SELECT COUNT(*) AS count FROM cong_thuc");
-    const loai_mon = await query("SELECT COUNT(*) AS count FROM loai_mon");
-    const mon_an = await query("SELECT COUNT(*) AS count FROM mon_an");
-    const binh_luan = await query("SELECT COUNT(*) AS count FROM binh_luan");
-    const phan_hoi_binh_luan = await query("SELECT COUNT(*) AS count FROM phan_hoi_binh_luan");
-    const nguyen_lieu = await query("SELECT COUNT(*) AS count FROM nguyen_lieu");
-    const danh_gia = await query("SELECT COUNT(*) AS count FROM danh_gia");
-    const yeu_thich = await query("SELECT COUNT(*) AS count FROM yeu_thich");
-    const nguoi_dung = await query("SELECT COUNT(*) AS count FROM nguoi_dung");
+    try {
+        const cong_thuc = await query("SELECT COUNT(*) AS count FROM cong_thuc");
+        const loai_mon = await query("SELECT COUNT(*) AS count FROM loai_mon");
+        const mon_an = await query("SELECT COUNT(*) AS count FROM mon_an");
+        const binh_luan = await query("SELECT COUNT(*) AS count FROM binh_luan");
+        const phan_hoi_binh_luan = await query("SELECT COUNT(*) AS count FROM phan_hoi_binh_luan");
+        const nguyen_lieu = await query("SELECT COUNT(*) AS count FROM nguyen_lieu");
+        const danh_gia = await query("SELECT COUNT(*) AS count FROM danh_gia");
+        const yeu_thich = await query("SELECT COUNT(*) AS count FROM yeu_thich");
+        const nguoi_dung = await query("SELECT COUNT(*) AS count FROM nguoi_dung");
 
-    const stats = {
-      cong_thuc: cong_thuc && cong_thuc[0] && cong_thuc[0].count ? cong_thuc[0].count : 0,
-      loai_mon: loai_mon && loai_mon[0] && loai_mon[0].count ? loai_mon[0].count : 0,
-      mon_an: mon_an && mon_an[0] && mon_an[0].count ? mon_an[0].count : 0,
-      binh_luan: binh_luan && binh_luan[0] && binh_luan[0].count ? binh_luan[0].count : 0,
-      phan_hoi_binh_luan: phan_hoi_binh_luan && phan_hoi_binh_luan[0] && phan_hoi_binh_luan[0].count ? phan_hoi_binh_luan[0].count : 0,
-      nguyen_lieu: nguyen_lieu && nguyen_lieu[0] && nguyen_lieu[0].count ? nguyen_lieu[0].count : 0,
-      danh_gia: danh_gia && danh_gia[0] && danh_gia[0].count ? danh_gia[0].count : 0,
-      yeu_thich: yeu_thich && yeu_thich[0] && yeu_thich[0].count ? yeu_thich[0].count : 0,
-      nguoi_dung: nguoi_dung && nguoi_dung[0] && nguoi_dung[0].count ? nguoi_dung[0].count : 0,
-    };
+        const stats = {
+            cong_thuc: cong_thuc && cong_thuc[0] && cong_thuc[0].count ? cong_thuc[0].count : 0,
+            loai_mon: loai_mon && loai_mon[0] && loai_mon[0].count ? loai_mon[0].count : 0,
+            mon_an: mon_an && mon_an[0] && mon_an[0].count ? mon_an[0].count : 0,
+            binh_luan: binh_luan && binh_luan[0] && binh_luan[0].count ? binh_luan[0].count : 0,
+            phan_hoi_binh_luan: phan_hoi_binh_luan && phan_hoi_binh_luan[0] && phan_hoi_binh_luan[0].count ? phan_hoi_binh_luan[0].count : 0,
+            nguyen_lieu: nguyen_lieu && nguyen_lieu[0] && nguyen_lieu[0].count ? nguyen_lieu[0].count : 0,
+            danh_gia: danh_gia && danh_gia[0] && danh_gia[0].count ? danh_gia[0].count : 0,
+            yeu_thich: yeu_thich && yeu_thich[0] && yeu_thich[0].count ? yeu_thich[0].count : 0,
+            nguoi_dung: nguoi_dung && nguoi_dung[0] && nguoi_dung[0].count ? nguoi_dung[0].count : 0,
+        };
 
-    res.render("admin/admin", {
-      title: "Trang Quản Lý",
-      user: req.session.user,
-      content: null,
-      data: { stats },
-      error: null,
-    });
-  } catch (error) {
-    console.error("Lỗi lấy dữ liệu thống kê:", error.stack);
-    res.render("admin/admin", {
-      title: "Trang Quản Lý",
-      user: req.session.user,
-      content: null,
-      data: { stats: {} },
-      error: "Không thể tải dữ liệu thống kê",
-    });
-  }
+        res.render("admin/admin", {
+            title: "Trang Quản Lý",
+            user: req.session.user,
+            content: 'admin/trang-chu', // <--- THAY ĐỔI TẠI ĐÂY
+            data: { stats },
+            error: null,
+        });
+    } catch (error) {
+        console.error("Lỗi lấy dữ liệu thống kê:", error.stack);
+        res.render("admin/admin", {
+            title: "Trang Quản Lý",
+            user: req.session.user,
+            content: null, // Giữ null hoặc chuyển hướng đến một trang lỗi nếu muốn
+            data: { stats: {} },
+            error: "Không thể tải dữ liệu thống kê",
+        });
+    }
 });
 
 
@@ -104,14 +104,16 @@ router.get("/admin/cong-thuc", ensureAdmin, async (req, res) => {
     const limit = parseInt(req.query.limit) || 8;
     const offset = (page - 1) * limit;
 
-    const countResult = await query(`SELECT COUNT(*) AS total FROM cong_thuc`);
-    const total = countResult[0]?.total || 0;
-    const totalPages = Math.ceil(total / limit);
+    const search = req.query.search?.trim() || "";
+    const date = req.query.date || "";
+    const user = req.query.user?.trim() || "";
+    const food = req.query.food?.trim() || "";
+    const creator = req.query.creator || "";
 
-    const recipes = await query(`
+    let queryStr = `
       SELECT 
         ct.ID_CHINH_CT,
-        ct.ID_CHINH_ND, -- ✅ lấy thêm ID người tạo
+        ct.ID_CHINH_ND,
         ct.TEN_CT,
         ct.MOTA,
         ct.HUONG_DAN,
@@ -124,28 +126,107 @@ router.get("/admin/cong-thuc", ensureAdmin, async (req, res) => {
         ct.NGAY_CAP_NHAT_CT,
         ct.TRANG_THAI_DUYET_,
         nd.TEN_NGUOI_DUNG AS user,
-        nd.VAI_TRO AS role, -- ✅ vai trò: 'admin' hoặc 'nguoidung'
+        nd.VAI_TRO AS role,
         ma.TEN_MON_AN
       FROM cong_thuc ct
       LEFT JOIN nguoi_dung nd ON ct.ID_CHINH_ND = nd.ID_CHINH_ND
       LEFT JOIN mon_an ma ON ct.ID_CHINH_MA = ma.ID_CHINH_MA
-      ORDER BY ct.NGAY_TAO_CT DESC
-      LIMIT ? OFFSET ?
-    `, [limit, offset]);
+      WHERE 1=1
+    `;
 
-    console.log("User đăng nhập:", req.session.user); // ✅ kiểm tra session
+    const queryParams = [];
+
+    if (search) {
+      queryStr += ` AND (ct.TEN_CT LIKE ? OR ct.MOTA LIKE ?)`;
+      queryParams.push(`%${search}%`, `%${search}%`);
+    }
+
+    if (date) {
+      queryStr += ` AND DATE(ct.NGAY_TAO_CT) = ?`;
+      queryParams.push(date);
+    }
+
+    if (user) {
+      queryStr += ` AND nd.TEN_NGUOI_DUNG LIKE ?`;
+      queryParams.push(`%${user}%`);
+    }
+
+    if (food) {
+      queryStr += ` AND ma.TEN_MON_AN LIKE ?`;
+      queryParams.push(`%${food}%`);
+    }
+
+    // ✅ Lọc theo người tạo
+    if (creator === "me") {
+      queryStr += ` AND nd.ID_CHINH_ND = ?`;
+      queryParams.push(req.session.user.ID_CHINH_ND);
+    } else if (creator === "admin") {
+      queryStr += ` AND nd.VAI_TRO = 'admin' AND nd.ID_CHINH_ND != ?`;
+      queryParams.push(req.session.user.ID_CHINH_ND);
+    } else if (creator === "user") {
+      queryStr += ` AND nd.VAI_TRO = 'user'`;
+    }
+
+    queryStr += ` ORDER BY ct.NGAY_TAO_CT DESC LIMIT ? OFFSET ?`;
+    queryParams.push(limit, offset);
+
+    // === COUNT QUERY ===
+    let countQuery = `
+      SELECT COUNT(*) AS total 
+      FROM cong_thuc ct
+      LEFT JOIN nguoi_dung nd ON ct.ID_CHINH_ND = nd.ID_CHINH_ND
+      LEFT JOIN mon_an ma ON ct.ID_CHINH_MA = ma.ID_CHINH_MA
+      WHERE 1=1
+    `;
+    const countParams = [];
+
+    if (search) {
+      countQuery += ` AND (ct.TEN_CT LIKE ? OR ct.MOTA LIKE ?)`;
+      countParams.push(`%${search}%`, `%${search}%`);
+    }
+
+    if (date) {
+      countQuery += ` AND DATE(ct.NGAY_TAO_CT) = ?`;
+      countParams.push(date);
+    }
+
+    if (user) {
+      countQuery += ` AND nd.TEN_NGUOI_DUNG LIKE ?`;
+      countParams.push(`%${user}%`);
+    }
+
+    if (food) {
+      countQuery += ` AND ma.TEN_MON_AN LIKE ?`;
+      countParams.push(`%${food}%`);
+    }
+
+    // ✅ Count query - theo người tạo
+    if (creator === "me") {
+      countQuery += ` AND nd.ID_CHINH_ND = ?`;
+      countParams.push(req.session.user.ID_CHINH_ND);
+    } else if (creator === "admin") {
+      countQuery += ` AND nd.VAI_TRO = 'admin' AND nd.ID_CHINH_ND != ?`;
+      countParams.push(req.session.user.ID_CHINH_ND);
+    } else if (creator === "user") {
+      countQuery += ` AND nd.VAI_TRO = 'user'`;
+    }
+
+    const countResult = await query(countQuery, countParams);
+    const total = countResult[0]?.total || 0;
+    const totalPages = Math.ceil(total / limit);
+
+    const recipes = await query(queryStr, queryParams);
 
     res.render("admin/admin", {
       title: "Danh Sách Công Thức",
-      user: req.session.user, // ✅ truyền user đang đăng nhập
+      user: req.session.user,
       content: "admin/cong-thuc",
       recipes,
       currentPage: page,
       totalPages,
-      error: null,
+      error: recipes.length === 0 ? "Không có công thức nào để hiển thị." : null,
       stats: {},
     });
-
   } catch (err) {
     console.error("Lỗi khi lấy danh sách công thức:", err);
     res.render("admin/admin", {
@@ -160,6 +241,7 @@ router.get("/admin/cong-thuc", ensureAdmin, async (req, res) => {
     });
   }
 });
+
 
 
 
@@ -1268,6 +1350,7 @@ router.get('/admin/mon-an', ensureAdmin, async (req, res) => {
     });
   }
 });
+
 
 // POST: Thêm món ăn mới
 router.post('/admin/mon-an', ensureAdmin, upload.single('hinh_anh'), async (req, res) => {

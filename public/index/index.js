@@ -37,179 +37,179 @@ nutChuyenMenu?.addEventListener("click", () => { // Thêm ?. ở đây để đ�
       });
     }
     document.addEventListener("DOMContentLoaded", function () {
-      const searchInput = document.getElementById("searchInput");
-      const filterButtons = document.querySelectorAll(".filter-btn");
-      const portionButtons = document.querySelectorAll(".portion-btn");
-      const timeButtons = document.querySelectorAll(".time-btn");
-      const difficultyButtons = document.querySelectorAll(".difficulty-btn");
-      const sortSelect = document.getElementById("sortSelect");
-      const recipeList = document.getElementById("recipeList");
-      const noResults = document.getElementById("noResults");
-      const showMoreBtn = document.getElementById("showMoreBtn");
-      const resetFiltersBtn = document.getElementById("resetFilters");
-      const toggleSidebarBtn = document.getElementById("toggleSidebar");
-      const sidebar = document.getElementById("sidebar");
+      // const searchInput = document.getElementById("searchInput");
+      // const filterButtons = document.querySelectorAll(".filter-btn");
+      // const portionButtons = document.querySelectorAll(".portion-btn");
+      // const timeButtons = document.querySelectorAll(".time-btn");
+      // const difficultyButtons = document.querySelectorAll(".difficulty-btn");
+      // const sortSelect = document.getElementById("sortSelect");
+      // const recipeList = document.getElementById("recipeList");
+      // const noResults = document.getElementById("noResults");
+      // const showMoreBtn = document.getElementById("showMoreBtn");
+      // const resetFiltersBtn = document.getElementById("resetFilters");
+      // const toggleSidebarBtn = document.getElementById("toggleSidebar");
+      // const sidebar = document.getElementById("sidebar");
 
-      let recipeCards = Array.from(document.querySelectorAll(".recipe-card"));
-      let recipesPerPage = 8;
-      let selectedCategory = "";
-      let selectedPortion = "";
-      let selectedTime = "";
-      let selectedDifficulty = "";
-      let searchTerm = "";
-      let sortOption = "default";
-      let visibleCount = recipesPerPage;
+      // let recipeCards = Array.from(document.querySelectorAll(".recipe-card"));
+      // let recipesPerPage = 8;
+      // let selectedCategory = "";
+      // let selectedPortion = "";
+      // let selectedTime = "";
+      // let selectedDifficulty = "";
+      // let searchTerm = "";
+      // let sortOption = "default";
+      // let visibleCount = recipesPerPage;
 
-      // Debounce function
-      function debounce(func, delay) {
-        let timeout;
-        return function (...args) {
-          clearTimeout(timeout);
-          timeout = setTimeout(() => func.apply(this, args), delay);
-        };
-      }
+      // // Debounce function
+      // function debounce(func, delay) {
+      //   let timeout;
+      //   return function (...args) {
+      //     clearTimeout(timeout);
+      //     timeout = setTimeout(() => func.apply(this, args), delay);
+      //   };
+      // }
 
-      // Sắp xếp công thức
-      function sortRecipes(recipes) {
-        return recipes.sort((a, b) => {
-          const timeA = parseInt(a.getAttribute("data-time") || 0);
-          const timeB = parseInt(b.getAttribute("data-time") || 0);
-          const ratingA = parseFloat(a.querySelector(".text-xs")?.textContent.match(/\d+\.?\d*/)?.[0] || 0);
-          const ratingB = parseFloat(b.querySelector(".text-xs")?.textContent.match(/\d+\.?\d*/)?.[0] || 0);
+      // // Sắp xếp công thức
+      // function sortRecipes(recipes) {
+      //   return recipes.sort((a, b) => {
+      //     const timeA = parseInt(a.getAttribute("data-time") || 0);
+      //     const timeB = parseInt(b.getAttribute("data-time") || 0);
+      //     const ratingA = parseFloat(a.querySelector(".text-xs")?.textContent.match(/\d+\.?\d*/)?.[0] || 0);
+      //     const ratingB = parseFloat(b.querySelector(".text-xs")?.textContent.match(/\d+\.?\d*/)?.[0] || 0);
 
-          if (sortOption === "time-asc") return timeA - timeB;
-          if (sortOption === "time-desc") return timeB - timeA;
-          if (sortOption === "rating-desc") return ratingB - ratingA;
-          return 0;
-        });
-      }
+      //     if (sortOption === "time-asc") return timeA - timeB;
+      //     if (sortOption === "time-desc") return timeB - timeA;
+      //     if (sortOption === "rating-desc") return ratingB - ratingA;
+      //     return 0;
+      //   });
+      // }
 
-      // Lọc công thức
-      function getFilteredRecipes() {
-        let filtered = recipeCards.filter(recipe => {
-          const title = recipe.querySelector("h3")?.textContent.toLowerCase() || "";
-          const category = recipe.getAttribute("data-category-id") || "";
-          const portion = recipe.getAttribute("data-portion") || "";
-          const time = parseInt(recipe.getAttribute("data-time") || 0);
-          const difficulty = recipe.getAttribute("data-difficulty") || "";
+      // // Lọc công thức
+      // function getFilteredRecipes() {
+      //   let filtered = recipeCards.filter(recipe => {
+      //     const title = recipe.querySelector("h3")?.textContent.toLowerCase() || "";
+      //     const category = recipe.getAttribute("data-category-id") || "";
+      //     const portion = recipe.getAttribute("data-portion") || "";
+      //     const time = parseInt(recipe.getAttribute("data-time") || 0);
+      //     const difficulty = recipe.getAttribute("data-difficulty") || "";
 
-          const matchesSearch = title.includes(searchTerm);
-          const matchesCategory = selectedCategory === "" || category === selectedCategory;
-          let matchesPortion = true;
-          if (selectedPortion) {
-            if (selectedPortion === "1-2") matchesPortion = portion === "1-2";
-            else if (selectedPortion === "3-4") matchesPortion = portion === "3-4";
-            else if (selectedPortion === "5+") matchesPortion = portion === "5+";
-          }
-          let matchesTime = true;
-          if (selectedTime) {
-            if (selectedTime === "0-30") matchesTime = time <= 30;
-            else if (selectedTime === "30-60") matchesTime = time > 30 && time <= 60;
-            else if (selectedTime === "60+") matchesTime = time > 60;
-          }
-          const matchesDifficulty = selectedDifficulty === "" || difficulty === selectedDifficulty;
+      //     const matchesSearch = title.includes(searchTerm);
+      //     const matchesCategory = selectedCategory === "" || category === selectedCategory;
+      //     let matchesPortion = true;
+      //     if (selectedPortion) {
+      //       if (selectedPortion === "1-2") matchesPortion = portion === "1-2";
+      //       else if (selectedPortion === "3-4") matchesPortion = portion === "3-4";
+      //       else if (selectedPortion === "5+") matchesPortion = portion === "5+";
+      //     }
+      //     let matchesTime = true;
+      //     if (selectedTime) {
+      //       if (selectedTime === "0-30") matchesTime = time <= 30;
+      //       else if (selectedTime === "30-60") matchesTime = time > 30 && time <= 60;
+      //       else if (selectedTime === "60+") matchesTime = time > 60;
+      //     }
+      //     const matchesDifficulty = selectedDifficulty === "" || difficulty === selectedDifficulty;
 
-          return matchesSearch && matchesCategory && matchesPortion && matchesTime && matchesDifficulty;
-        });
-        return sortRecipes(filtered);
-      }
+      //     return matchesSearch && matchesCategory && matchesPortion && matchesTime && matchesDifficulty;
+      //   });
+      //   return sortRecipes(filtered);
+      // }
 
-      // Render công thức
-      function renderRecipes() {
-        const filteredRecipes = getFilteredRecipes();
-        recipeCards.forEach(r => r.classList.add("hidden"));
-        const toShow = filteredRecipes.slice(0, visibleCount);
-        toShow.forEach(recipe => recipe.classList.remove("hidden"));
-        noResults.classList.toggle("hidden", filteredRecipes.length > 0);
-        showMoreBtn.classList.toggle("hidden", visibleCount >= filteredRecipes.length);
-      }
+      // // Render công thức
+      // function renderRecipes() {
+      //   const filteredRecipes = getFilteredRecipes();
+      //   recipeCards.forEach(r => r.classList.add("hidden"));
+      //   const toShow = filteredRecipes.slice(0, visibleCount);
+      //   toShow.forEach(recipe => recipe.classList.remove("hidden"));
+      //   noResults.classList.toggle("hidden", filteredRecipes.length > 0);
+      //   showMoreBtn.classList.toggle("hidden", visibleCount >= filteredRecipes.length);
+      // }
 
-      function resetAndRender() {
-        visibleCount = recipesPerPage;
-        renderRecipes();
-      }
+      // function resetAndRender() {
+      //   visibleCount = recipesPerPage;
+      //   renderRecipes();
+      // }
 
-      // Sự kiện nút "Xem thêm"
-      showMoreBtn.addEventListener("click", () => {
-        visibleCount += recipesPerPage;
-        renderRecipes();
-      });
+      // // Sự kiện nút "Xem thêm"
+      // showMoreBtn.addEventListener("click", () => {
+      //   visibleCount += recipesPerPage;
+      //   renderRecipes();
+      // });
 
-      // Tìm kiếm
-      searchInput.addEventListener("input", debounce(function () {
-        searchTerm = this.value.toLowerCase();
-        resetAndRender();
-      }, 300));
+      // // Tìm kiếm
+      // searchInput.addEventListener("input", debounce(function () {
+      //   searchTerm = this.value.toLowerCase();
+      //   resetAndRender();
+      // }, 300));
 
-      // Lọc danh mục
-      filterButtons.forEach(button => {
-        button.addEventListener("click", function () {
-          filterButtons.forEach(btn => btn.classList.remove("active"));
-          this.classList.add("active");
-          selectedCategory = this.getAttribute("data-category");
-          resetAndRender();
-        });
-      });
+      // // Lọc danh mục
+      // filterButtons.forEach(button => {
+      //   button.addEventListener("click", function () {
+      //     filterButtons.forEach(btn => btn.classList.remove("active"));
+      //     this.classList.add("active");
+      //     selectedCategory = this.getAttribute("data-category");
+      //     resetAndRender();
+      //   });
+      // });
 
-      // Lọc số phần ăn
-      portionButtons.forEach(button => {
-        button.addEventListener("click", function () {
-          portionButtons.forEach(btn => btn.classList.remove("active"));
-          this.classList.add("active");
-          selectedPortion = this.getAttribute("data-portion");
-          resetAndRender();
-        });
-      });
+      // // Lọc số phần ăn
+      // portionButtons.forEach(button => {
+      //   button.addEventListener("click", function () {
+      //     portionButtons.forEach(btn => btn.classList.remove("active"));
+      //     this.classList.add("active");
+      //     selectedPortion = this.getAttribute("data-portion");
+      //     resetAndRender();
+      //   });
+      // });
 
-      // Lọc thời gian nấu
-      timeButtons.forEach(button => {
-        button.addEventListener("click", function () {
-          timeButtons.forEach(btn => btn.classList.remove("active"));
-          this.classList.add("active");
-          selectedTime = this.getAttribute("data-time");
-          resetAndRender();
-        });
-      });
+      // // Lọc thời gian nấu
+      // timeButtons.forEach(button => {
+      //   button.addEventListener("click", function () {
+      //     timeButtons.forEach(btn => btn.classList.remove("active"));
+      //     this.classList.add("active");
+      //     selectedTime = this.getAttribute("data-time");
+      //     resetAndRender();
+      //   });
+      // });
 
-      // Lọc độ khó
-      difficultyButtons.forEach(button => {
-        button.addEventListener("click", function () {
-          difficultyButtons.forEach(btn => btn.classList.remove("active"));
-          this.classList.add("active");
-          selectedDifficulty = this.getAttribute("data-difficulty");
-          resetAndRender();
-        });
-      });
+      // // Lọc độ khó
+      // difficultyButtons.forEach(button => {
+      //   button.addEventListener("click", function () {
+      //     difficultyButtons.forEach(btn => btn.classList.remove("active"));
+      //     this.classList.add("active");
+      //     selectedDifficulty = this.getAttribute("data-difficulty");
+      //     resetAndRender();
+      //   });
+      // });
 
-      // Sắp xếp
-      sortSelect.addEventListener("change", function () {
-        sortOption = this.value;
-        resetAndRender();
-      });
+      // // Sắp xếp
+      // sortSelect.addEventListener("change", function () {
+      //   sortOption = this.value;
+      //   resetAndRender();
+      // });
 
-      // Reset bộ lọc
-      resetFiltersBtn.addEventListener("click", () => {
-        selectedPortion = "";
-        selectedTime = "";
-        selectedDifficulty = "";
-        selectedCategory = "";
-        searchTerm = "";
-        sortOption = "default";
-        searchInput.value = "";
-        filterButtons.forEach(btn => btn.classList.remove("active"));
-        portionButtons.forEach(btn => btn.classList.remove("active"));
-        timeButtons.forEach(btn => btn.classList.remove("active"));
-        difficultyButtons.forEach(btn => btn.classList.remove("active"));
-        sortSelect.value = "default";
-        resetAndRender();
-      });
+      // // Reset bộ lọc
+      // resetFiltersBtn.addEventListener("click", () => {
+      //   selectedPortion = "";
+      //   selectedTime = "";
+      //   selectedDifficulty = "";
+      //   selectedCategory = "";
+      //   searchTerm = "";
+      //   sortOption = "default";
+      //   searchInput.value = "";
+      //   filterButtons.forEach(btn => btn.classList.remove("active"));
+      //   portionButtons.forEach(btn => btn.classList.remove("active"));
+      //   timeButtons.forEach(btn => btn.classList.remove("active"));
+      //   difficultyButtons.forEach(btn => btn.classList.remove("active"));
+      //   sortSelect.value = "default";
+      //   resetAndRender();
+      // });
 
-      // Toggle sidebar trên mobile
-      toggleSidebarBtn.addEventListener("click", () => {
-        sidebar.classList.toggle("open");
-      });
+      // // Toggle sidebar trên mobile
+      // toggleSidebarBtn.addEventListener("click", () => {
+      //   sidebar.classList.toggle("open");
+      // });
 
-      resetAndRender();
+      // resetAndRender();
     });
   // Chuyển bước
   const btnNextStep = document.getElementById('btnNextStep');

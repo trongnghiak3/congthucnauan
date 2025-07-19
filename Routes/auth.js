@@ -82,95 +82,122 @@ router.get("/logout", (req, res) => {
     });
 });
 // GET - hiển thị form đổi mật khẩu
+// GET - đổi mật khẩu dùng chung
+// GET - Hiển thị form đổi mật khẩu
 router.get('/doi-mat-khau', async (req, res) => {
-  const user = req.session.user;
-  if (!user) return res.redirect('/dang-nhap');
+    // Đảm bảo req.session.user tồn tại. Nếu không, chuyển hướng.
+    const user = req.session.user;
+    if (!user) {
+        console.log('User not in session, redirecting to /dang-nhap');
+        return res.redirect('/dang-nhap');
+    }
 
-  try {
-    const rows = await query('SELECT * FROM NGUOI_DUNG WHERE ID_CHINH_ND = ?', [user.ID_CHINH_ND]);
-    if (rows.length === 0) return res.status(404).send('Không tìm thấy người dùng');
+    try {
+        const rows = await query('SELECT * FROM NGUOI_DUNG WHERE ID_CHINH_ND = ?', [user.ID_CHINH_ND]);
+        if (rows.length === 0) {
+            console.log('User not found in database for ID:', user.ID_CHINH_ND);
+            return res.status(404).send('Không tìm thấy người dùng');
+        }
 
-    const userData = rows[0];
-    const isAdmin = userData.VAI_TRO === 'admin';
+        const userData = rows[0];
+        const isAdmin = userData.VAI_TRO === 'admin';
 
-    const viewParams = {
-      title: 'Đổi Mật Khẩu',
-      user: userData,
-      error: null,
-      success: null,
-      content: isAdmin ? 'auth/doi-mat-khau' : undefined,
-      viewPath: !isAdmin ? 'auth/doi-mat-khau' : undefined
-    };
+        const viewParams = {
+            title: 'Đổi Mật Khẩu',
+            user: userData,
+            error: null,
+            success: null,
+            // Nếu là admin, content sẽ chỉ đường dẫn của partial để admin layout include
+            content: isAdmin ? 'auth/doi-mat-khau' : undefined,
+            // Nếu không phải admin (user thường), viewPath sẽ chỉ đường dẫn của partial để index_layout include
+            // Đường dẫn này phải tương đối từ thư mục của index_layout.ejs
+            viewPath: !isAdmin ? '../auth/doi-mat-khau' : undefined // <-- ĐÃ SỬA CHỮA ĐƯỜNG DẪN
+        };
 
-    console.log('User role:', isAdmin ? 'admin' : 'user');
-    console.log('Rendering layout:', isAdmin ? 'admin/admin' : 'index/index_layout');
-    console.log('Include path:', isAdmin ? viewParams.content : viewParams.viewPath);
+        console.log('User role:', isAdmin ? 'admin' : 'user');
+        console.log('Rendering layout:', isAdmin ? 'admin/admin' : 'index/index_layout');
+        console.log('Include path (passed to layout):', isAdmin ? viewParams.content : viewParams.viewPath);
 
-    res.render(isAdmin ? 'admin/admin' : 'index/index_layout', viewParams);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Lỗi máy chủ');
-  }
+        res.render(isAdmin ? 'admin/admin' : 'index/index_layout', viewParams);
+    } catch (err) {
+        console.error('Error in GET /doi-mat-khau:', err);
+        res.status(500).send('Lỗi máy chủ');
+    }
 });
 
-// POST - xử lý đổi mật khẩu dùng chung
+// POST - Xử lý đổi mật khẩu dùng chung
 router.post('/doi-mat-khau', async (req, res) => {
-  const user = req.session.user;
-  if (!user) return res.redirect('/dang-nhap');
-
-  const { matKhauCu, matKhauMoi, xacNhanMatKhau } = req.body;
-
-  try {
-    const rows = await query('SELECT * FROM NGUOI_DUNG WHERE ID_CHINH_ND = ?', [user.ID_CHINH_ND]);
-    if (rows.length === 0) return res.status(404).send('Không tìm thấy người dùng');
-
-    const currentUser = rows[0];
-    const isAdmin = currentUser.VAI_TRO === 'admin';
-
-    const match = await bcrypt.compare(matKhauCu, currentUser.MAT_KHAU);
-    if (!match) {
-      const viewParams = {
-        title: 'Đổi Mật Khẩu',
-        user: currentUser,
-        error: 'Mật khẩu hiện tại không đúng',
-        success: null,
-        content: isAdmin ? 'auth/doi-mat-khau' : undefined,
-        viewPath: !isAdmin ? 'auth/auth/doi-mat-khau' : undefined
-      };
-      return res.render(isAdmin ? 'admin/admin' : 'index/index_layout', viewParams);
+    // Đảm bảo req.session.user tồn tại. Nếu không, chuyển hướng.
+    const user = req.session.user;
+    if (!user) {
+        console.log('User not in session for POST, redirecting to /dang-nhap');
+        return res.redirect('/dang-nhap');
     }
 
-    if (matKhauMoi !== xacNhanMatKhau) {
-      const viewParams = {
-        title: 'Đổi Mật Khẩu',
-        user: currentUser,
-        error: 'Xác nhận mật khẩu không khớp',
-        success: null,
-        content: isAdmin ? 'auth/doi-mat-khau' : undefined,
-        viewPath: !isAdmin ? 'auth/auth/doi-mat-khau' : undefined
-      };
-      return res.render(isAdmin ? 'admin/admin' : 'index/index_layout', viewParams);
+    const { matKhauCu, matKhauMoi, xacNhanMatKhau } = req.body;
+    console.log('Received change password request:', { matKhauCu, matKhauMoi, xacNhanMatKhau });
+
+    try {
+        const rows = await query('SELECT * FROM NGUOI_DUNG WHERE ID_CHINH_ND = ?', [user.ID_CHINH_ND]);
+        if (rows.length === 0) {
+            console.log('User not found in database for ID:', user.ID_CHINH_ND);
+            return res.status(404).send('Không tìm thấy người dùng');
+        }
+
+        const currentUser = rows[0];
+        const isAdmin = currentUser.VAI_TRO === 'admin';
+
+        // So sánh mật khẩu cũ
+        // Sử dụng bcrypt.compare cho mật khẩu đã hash
+        const match = await bcrypt.compare(matKhauCu, currentUser.MAT_KHAU);
+        if (!match) {
+            console.log('Current password mismatch for user:', currentUser.ID_CHINH_ND);
+            const viewParams = {
+                title: 'Đổi Mật Khẩu',
+                user: currentUser,
+                error: 'Mật khẩu hiện tại không đúng',
+                success: null,
+                content: isAdmin ? 'auth/doi-mat-khau' : undefined,
+                viewPath: !isAdmin ? '../auth/doi-mat-khau' : undefined // <-- ĐÃ SỬA CHỮA ĐƯỜNG DẪN
+            };
+            return res.render(isAdmin ? 'admin/admin' : 'index/index_layout', viewParams);
+        }
+
+        // Kiểm tra xác nhận mật khẩu mới
+        if (matKhauMoi !== xacNhanMatKhau) {
+            console.log('New password confirmation mismatch for user:', currentUser.ID_CHINH_ND);
+            const viewParams = {
+                title: 'Đổi Mật Khẩu',
+                user: currentUser,
+                error: 'Xác nhận mật khẩu không khớp',
+                success: null,
+                content: isAdmin ? 'auth/doi-mat-khau' : undefined,
+                viewPath: !isAdmin ? '../auth/doi-mat-khau' : undefined // <-- ĐÃ SỬA CHỮA ĐƯỜNG DẪN
+            };
+            return res.render(isAdmin ? 'admin/admin' : 'index/index_layout', viewParams);
+        }
+
+        // Hash mật khẩu mới và cập nhật vào DB
+        const hashed = await bcrypt.hash(matKhauMoi, 10);
+        await query(
+            'UPDATE NGUOI_DUNG SET MAT_KHAU = ?, NGAY_CAP_NHAT_ND = NOW() WHERE ID_CHINH_ND = ?',
+            [hashed, user.ID_CHINH_ND]
+        );
+
+        console.log('Password changed successfully for user:', currentUser.ID_CHINH_ND);
+        const viewParams = {
+            title: 'Đổi Mật Khẩu',
+            user: currentUser,
+            error: null,
+            success: 'Đổi mật khẩu thành công!',
+            content: isAdmin ? 'auth/doi-mat-khau' : undefined,
+            viewPath: !isAdmin ? '../auth/doi-mat-khau' : undefined // <-- ĐÃ SỬA CHỮA ĐƯỜNG DẪN
+        };
+        res.render(isAdmin ? 'admin/admin' : 'index/index_layout', viewParams);
+    } catch (err) {
+        console.error('Error in POST /doi-mat-khau:', err);
+        res.status(500).send('Lỗi máy chủ');
     }
-
-    const hashed = await bcrypt.hash(matKhauMoi, 10);
-    await query(
-      'UPDATE NGUOI_DUNG SET MAT_KHAU = ?, NGAY_CAP_NHAT_ND = NOW() WHERE ID_CHINH_ND = ?',
-      [hashed, user.ID_CHINH_ND]
-    );
-
-    const viewParams = {
-      title: 'Đổi Mật Khẩu',
-      user: currentUser,
-      error: null,
-      success: 'Đổi mật khẩu thành công!',
-      content: isAdmin ? 'auth/doi-mat-khau' : undefined,
-      viewPath: !isAdmin ? 'auth/doi-mat-khau' : undefined
-    };
-    res.render(isAdmin ? 'admin/admin' : 'index/index_layout', viewParams);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Lỗi máy chủ');
-  }
 });
 
 module.exports = router;

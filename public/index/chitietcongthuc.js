@@ -1,100 +1,194 @@
+document.addEventListener('DOMContentLoaded', () => {
+  const comments = document.querySelectorAll('.comment');
+  comments.forEach((comment) => {
+    const contextMenuBtn = comment.querySelector('.context-menu-btn');
+    const contextMenu = comment.querySelector('.context-menu');
+    const replyForm = comment.querySelector('.reply-form');
+    const editForm = comment.querySelector('.edit-form');
+    const commentId = comment.getAttribute('data-comment-id');
+    const commentType = comment.getAttribute('data-type');
 
-  console.log("JS hồ sơ đã hoạt động");
-
-  // Mở modal
-  function openModalProfile() {
-    const modal = document.getElementById('updateProfileModal');
-    if (!modal) return console.error('Modal không tìm thấy!');
-    modal.classList.remove('hidden');
-    setTimeout(() => modal.querySelector('.modal')?.classList.add('show'), 10);
-  }
-
-  // Đóng modal
-  function closeModalProfile() {
-    const modal = document.getElementById('updateProfileModal');
-    if (!modal) return console.error('Modal không tìm thấy khi đóng!');
-    modal.querySelector('.modal')?.classList.remove('show');
-    setTimeout(() => modal.classList.add('hidden'), 400);
-  }
-
-  // Xử lý preview ảnh đại diện
-  document.getElementById('avatarInput')?.addEventListener('change', function (e) {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = function (evt) {
-        const preview = document.getElementById('avatarPreview');
-        const avatarImg = document.getElementById('avatar-img');
-        if (preview) preview.src = evt.target.result;
-        if (avatarImg) avatarImg.src = evt.target.result;
-      };
-      reader.readAsDataURL(file);
-    }
-  });
-
-  // Đổi tab
-  function switchTab(tabName, el) {
-    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
-    document.getElementById(`${tabName}-tab`)?.classList.remove('hidden');
-
-    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active-tab', 'border-yellow-500', 'text-yellow-600'));
-    el.classList.add('active-tab', 'border-yellow-500', 'text-yellow-600');
-  }
-
-  document.addEventListener('DOMContentLoaded', () => {
-    // Đánh dấu tab hiện tại
-    document.querySelector('.tab-btn.active-tab')?.classList.add('border-yellow-500', 'text-yellow-600');
-
-    // Submit form cập nhật hồ sơ
-    const form = document.getElementById('updateProfileForm');
-    if (form) {
-      form.addEventListener('submit', async function (e) {
+    if (contextMenuBtn) {
+      contextMenuBtn.addEventListener('click', (e) => {
         e.preventDefault();
+        document.querySelectorAll('.context-menu').forEach((menu) => menu.classList.add('hidden'));
+        contextMenu.classList.toggle('hidden');
+        const rect = comment.getBoundingClientRect();
+        const menuWidth = 120;
+        const menuHeight = contextMenu.offsetHeight;
+        let top = e.clientY - rect.top + 20;
+        let left = e.clientX - rect.left - 10;
+        if (e.clientX + menuWidth > window.innerWidth) left = rect.width - menuWidth - 10;
+        if (e.clientY + menuHeight > window.innerHeight) top = rect.height - menuHeight - 10;
+        contextMenu.style.top = `${top}px`;
+        contextMenu.style.left = `${left}px`;
+      });
+    }
 
-        const saveBtn = document.getElementById('saveButton');
-        const loadingIcon = document.getElementById('loadingIcon');
-        if (!saveBtn || !loadingIcon) return alert('Không tìm thấy nút Lưu hoặc icon loading');
+    const replyBtn = comment.querySelector('.reply-btn');
+    if (replyBtn) {
+      replyBtn.addEventListener('click', () => {
+        if (editForm) editForm.classList.add('hidden');
+        replyForm.classList.toggle('hidden');
+        contextMenu.classList.add('hidden');
+        console.log(`Toggled reply form for ${commentType} ID: ${commentId}`);
+      });
+    }
 
-        saveBtn.disabled = true;
-        loadingIcon.classList.remove('hidden');
+    const editBtn = comment.querySelector('.edit-btn');
+    if (editBtn) {
+      editBtn.addEventListener('click', () => {
+        document.querySelectorAll('.edit-form').forEach((form) => form.classList.add('hidden'));
+        document.querySelectorAll('.reply-form').forEach((form) => form.classList.add('hidden'));
+        if (editForm) editForm.classList.toggle('hidden');
+        if (contextMenu) contextMenu.classList.add('hidden');
+      });
+    }
 
-        const formData = new FormData(this);
-
+    if (editForm) {
+      editForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const noiDung = editForm.querySelector('textarea[name="noi_dung"]').value;
+        if (!noiDung) {
+          showError('Nội dung không được để trống');
+          return;
+        }
+        const actionUrl = editForm.getAttribute('action');
+        if (!actionUrl) {
+          showError('Không tìm thấy URL để gửi yêu cầu');
+          return;
+        }
+        const formData = new URLSearchParams();
+        formData.append('noi_dung', noiDung);
         try {
-          const res = await fetch('/api/profile', {
+          const response = await fetch(actionUrl, {
             method: 'PUT',
-            body: formData
+            body: formData,
+            headers: { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' },
           });
-
-          const data = await res.json();
-          console.log('Phản hồi:', data);
-
-          if (data.error) {
-            alert(data.error);
+          if (!response.ok) {
+            const text = await response.text();
+            console.error('Phản hồi không thành công:', response.status, text);
+            showError(`Cập nhật không thành công: ${text}`);
+            return;
+          }
+          const data = await response.json();
+          if (data.success) {
+            const contentElement = comment.querySelector('.comment-content');
+            if (contentElement) contentElement.textContent = data.updatedContent;
+            editForm.classList.add('hidden');
+            showAdminNotification('Cập nhật thành công', 'success');
           } else {
-            alert(data.message || 'Cập nhật thành công!');
-            closeModalProfile();
-
-            // Cập nhật lại giao diện
-            if (data.user) {
-              document.getElementById('avatar-img')?.setAttribute('src', data.user.AVARTAR_URL || 'https://i.imgur.com/2Nv5jVb.png');
-              const nameEl = document.querySelector('h2.text-xl, h2.text-2xl.font-bold');
-              const emailEl = document.querySelector('p.text-gray-600.mt-2');
-              if (nameEl) nameEl.textContent = data.user.TEN_NGUOI_DUNG || 'Chưa có tên';
-              if (emailEl) emailEl.textContent = `📧 ${data.user.EMAIL_ || 'Chưa có email'}`;
-
-              const errorMsg = document.querySelector('.error-message');
-              if (errorMsg && data.user.TEN_NGUOI_DUNG && data.user.EMAIL_) errorMsg.remove();
-            }
+            showError(data.message || 'Cập nhật không thành công');
           }
         } catch (err) {
-          console.error(err);
-          alert('Có lỗi khi cập nhật hồ sơ!');
-        } finally {
-          saveBtn.disabled = false;
-          loadingIcon.classList.add('hidden');
+          console.error('Lỗi khi gửi yêu cầu:', err.message, err.stack);
+          showError(`Lỗi khi gửi yêu cầu: ${err.message}`);
         }
       });
     }
+
+    // Logic xóa tương tự như PUT
+   const deleteForm = comment.querySelector('.delete-form');
+if (deleteForm) {
+  deleteForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!confirm('Bạn có chắc chắn muốn xóa?')) return;
+    const actionUrl = deleteForm.action; // Lấy action từ form
+    try {
+      const response = await fetch(actionUrl, {
+        method: 'DELETE', // Sử dụng DELETE trực tiếp
+        headers: { 'Accept': 'application/json' },
+      });
+      const data = await response.json();
+      if (data.success) {
+        comment.remove(); // Xóa phần tử HTML
+        showAdminNotification(`${commentType === 'reply' ? 'Xóa phản hồi' : 'Xóa bình luận'} thành công`, 'success');
+      } else {
+        showError(data.message || 'Xóa không thành công');
+      }
+    } catch (err) {
+      console.error('Lỗi khi xóa:', err);
+      showError('Lỗi khi gửi yêu cầu xóa');
+    }
+  });
+}
   });
 
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.context-menu') && !e.target.closest('.context-menu-btn')) {
+      document.querySelectorAll('.context-menu').forEach((menu) => menu.classList.add('hidden'));
+    }
+  });
+
+  const scrollTopBtn = document.getElementById('scrollTopBtn');
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 300) {
+      scrollTopBtn.classList.remove('opacity-0', 'invisible');
+      scrollTopBtn.classList.add('opacity-100', 'visible');
+    } else {
+      scrollTopBtn.classList.remove('opacity-100', 'visible');
+      scrollTopBtn.classList.add('opacity-0', 'invisible');
+    }
+  });
+  scrollTopBtn.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  document.querySelectorAll('.toggle-replies-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const targetId = btn.dataset.target;
+      const targetEl = document.getElementById(targetId);
+      if (targetEl) targetEl.classList.toggle('hidden');
+    });
+  });
+
+  // Hàm thông báo lỗi
+  function showError(message) {
+    showAdminNotification(message, 'error');
+  }
+
+  // Hàm hiển thị thông báo
+  function showAdminNotification(message, type = 'success') {
+    const notif = document.getElementById('admin-notification');
+    if (!notif) {
+      console.error('Phần tử admin-notification không tồn tại!');
+      alert(message); // Fallback nếu không có admin-notification
+      return;
+    }
+    notif.innerHTML = '';
+
+    const icons = {
+      success: '✅',
+      error: '❌',
+      info: 'ℹ️',
+      warning: '⚠️'
+    };
+    const bgColors = {
+      success: 'bg-green-500',
+      error: 'bg-red-500',
+      info: 'bg-blue-500',
+      warning: 'bg-yellow-500'
+    };
+
+    notif.className = `fixed top-5 right-5 z-50 flex items-start gap-3 px-4 py-3 rounded-xl text-white shadow-xl transform transition-all duration-300 ease-in-out opacity-0 ${bgColors[type] || bgColors.success}`;
+    notif.innerHTML = `
+      <div class="text-2xl">${icons[type] || icons.success}</div>
+      <div class="text-sm font-medium">${message}</div>
+    `;
+
+    notif.classList.remove('hidden');
+    setTimeout(() => {
+      notif.classList.add('opacity-100', 'translate-y-0');
+    }, 10);
+
+    setTimeout(() => {
+      notif.classList.remove('opacity-100');
+      notif.classList.add('opacity-0');
+    }, 3000);
+
+    setTimeout(() => {
+      notif.classList.add('hidden');
+    }, 3500);
+  }
+});

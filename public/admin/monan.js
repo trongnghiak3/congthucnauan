@@ -325,7 +325,97 @@ document.addEventListener('DOMContentLoaded', () => {
           });
         }
       }
+function fetchCategories(page, pageCategories) {
+  fetch(`/admin/mon-an/categories?page=${page}&pageCategories=${pageCategories}`)
+    .then(response => response.json())
+    .then(data => {
+      if (data.error) {
+        console.error('Lỗi:', data.error);
+        return;
+      }
 
+      // Cập nhật tổng số
+      document.getElementById('totalDishes').textContent = data.totalCategories;
+
+      // Cập nhật bảng
+      const tbody = document.getElementById('category-table-body');
+      tbody.innerHTML = '';
+      let stt = data.offsetCategories;
+
+      if (Object.keys(data.groupedLoaiMon).length > 0) {
+        Object.keys(data.groupedLoaiMon).forEach(id => {
+          // Thêm hàng tiêu đề
+          const headerRow = document.createElement('tr');
+          headerRow.className = 'hover:bg-gray-50 transition';
+          headerRow.setAttribute('onclick', `toggleDishes('${id}')`);
+          headerRow.setAttribute('data-group-id', id);
+          headerRow.innerHTML = `
+            <td colspan="3" class="py-2 px-3 text-center font-medium text-gray-900 border-t border-gray-100 bg-gray-50 rounded hover:bg-gray-100 cursor-pointer text-sm">
+              ${data.groupedLoaiMon[id].TEN_MON_AN}
+            </td>
+          `;
+          tbody.appendChild(headerRow);
+
+          // Thêm các hàng chi tiết
+          data.groupedLoaiMon[id].loai_mon.forEach((lm, lmIndex) => {
+            const row = document.createElement('tr');
+            row.className = 'dish-row hidden border-b border-gray-100';
+            row.setAttribute('data-group', id);
+            row.innerHTML = `
+              <td class="p-2 text-center text-sm">${stt + lmIndex + 1}</td>
+              <td class="p-2 text-left text-sm">${data.groupedLoaiMon[id].TEN_MON_AN}</td>
+              <td class="p-2 text-left text-sm">${lm.TEN_LM}</td>
+            `;
+            tbody.appendChild(row);
+          });
+
+          stt += data.groupedLoaiMon[id].loai_mon.length;
+        });
+      } else {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td colspan="3" class="text-center py-4 text-gray-400 italic text-sm">Không có món ăn nào trong loại món!</td>
+        `;
+        tbody.appendChild(row);
+      }
+
+      // Cập nhật phân trang
+      const pagination = document.getElementById('pagination');
+      pagination.innerHTML = '';
+      if (data.totalPagesCategories > 1) {
+        // Nút Trước
+        if (data.currentPageCategories > 1) {
+          const prev = document.createElement('a');
+          prev.href = '#';
+          prev.setAttribute('onclick', `fetchCategories(${page}, ${data.currentPageCategories - 1}); return false;`);
+          prev.className = 'px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 transition text-sm';
+          prev.textContent = '‹ Trước';
+          pagination.appendChild(prev);
+        }
+
+        // Các nút số trang
+        for (let i = 1; i <= data.totalPagesCategories; i++) {
+          const pageLink = document.createElement('a');
+          pageLink.href = '#';
+          pageLink.setAttribute('onclick', `fetchCategories(${page}, ${i}); return false;`);
+          pageLink.className = `px-3 py-1 rounded-lg border text-sm ${i === data.currentPageCategories ? 'bg-yellow-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'}`;
+          pageLink.textContent = i;
+          pagination.appendChild(pageLink);
+        }
+
+        // Nút Sau
+        if (data.currentPageCategories < data.totalPagesCategories) {
+          const next = document.createElement('a');
+          next.href = '#';
+          next.setAttribute('onclick', `fetchCategories(${page}, ${data.currentPageCategories + 1}); return false;`);
+          next.className = 'px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 transition text-sm';
+          next.textContent = 'Sau ›';
+          pagination.appendChild(next);
+        }
+      }
+    })
+    .catch(error => console.error('Lỗi khi tải dữ liệu:', error));
+}
    // Hàm lọc món ăn ở Tab 2
 function filterDishes() {
   const input = document.getElementById('searchDish').value.toLowerCase().trim();
@@ -394,6 +484,7 @@ function toggleDishes(groupId) {
   rows.forEach(row => row.classList.toggle('hidden'));
   console.log(`Chuyển đổi hiển thị nhóm món ăn ID: ${groupId}`);
 }
+
 // Hàm gắn sự kiện cho món ăn
 function bindDishEventListeners() {
   console.log('Gọi bindDishEventListeners cho /admin/mon-an');

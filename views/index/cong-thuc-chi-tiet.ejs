@@ -1,430 +1,258 @@
 <div class="max-w-7xl mx-auto px-4 py-8 font-roboto">
-  <div class="bg-white rounded-3xl shadow-2xl overflow-hidden mb-6">
-    <div class="relative">
-      <% if (recipe.HINH_ANH_CT) { %>
+  <!-- Flash Message -->
+  <% if (session.flash && session.flash.type === 'success') { %>
+    <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6 rounded-lg shadow-md animate-slide-in">
+      <p class="font-medium"><%= session.flash.message %></p>
+    </div>
+  <% } %>
+
+  <!-- Recipe Header -->
+<div class="bg-white rounded-3xl shadow-2xl overflow-hidden mb-8">
+  <!-- Hình ảnh món ăn -->
+  <div class="relative">
+    <% if (recipe.HINH_ANH_CT) { %>
       <img
         src="<%= recipe.HINH_ANH_CT %>"
         alt="<%= recipe.TEN_CT %>"
-        class="w-full h-[350px] md:h-[450px] object-cover object-center transition-transform duration-500 hover:scale-105 rounded-t-3xl"
+        class="w-full h-[350px] md:h-[500px] object-cover object-center transition-transform duration-500 hover:scale-105 rounded-t-3xl"
       />
-      <% } else { %>
+    <% } else { %>
       <div
-        class="w-full h-[350px] md:h-[450px] bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center text-gray-500 rounded-t-3xl"
+        class="w-full h-[350px] md:h-[500px] bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center text-gray-500 rounded-t-3xl"
       >
-        <i class="fas fa-image text-5xl opacity-75"></i>
+        <i class="fas fa-image text-5xl opacity-70"></i>
         <span class="ml-3 text-xl font-semibold">Không có ảnh</span>
       </div>
-      <% } %>
-      <div
-        class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4 sm:p-6 md:p-8"
-      >
-        <h1
-          class="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white drop-shadow-2xl px-3 py-1 rounded-lg inline-block leading-tight"
-        >
-          <%= recipe.TEN_CT %>
-        </h1>
-      </div>
-    </div>
+    <% } %>
 
-  <div class="p-4 sm:p-6 md:p-8">
-  <p class="text-gray-700 text-base sm:text-lg leading-relaxed mb-5">
-    <%= recipe.MOTA %>
-  </p>
-  <div
-    class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 text-xs sm:text-sm text-gray-600 mb-6"
-  >
-    <span
-      class="info-badge bg-yellow-100 text-yellow-800 rounded-full py-1.5 px-3 shadow-sm"
-    >
-      <i class="fas fa-clock mr-1.5"></i>
-      <% const recipeMinutes = recipe.THOI_GIAN_NAU ?
-      parseInt(recipe.THOI_GIAN_NAU) : 0; let recipeTimeDisplay = ''; if
-      (recipeMinutes >= 60) { const hours = Math.floor(recipeMinutes / 60);
-      const remainingMinutes = recipeMinutes % 60; recipeTimeDisplay =
-      `${hours} giờ${remainingMinutes > 0 ? ` ${remainingMinutes} phút` :
-      ''}`; } else { recipeTimeDisplay = `${recipeMinutes} phút`; } %> <%=
-      recipeTimeDisplay %>
-    </span>
-    <span
-      class="info-badge bg-pink-100 text-pink-800 rounded-full py-1.5 px-3 shadow-sm"
-    >
-      <i class="fas fa-fire mr-1.5"></i> Độ khó: <%= recipe.DO_KHO %>
-    </span>
-    <span
-      class="info-badge bg-emerald-100 text-emerald-800 rounded-full py-1.5 px-3 shadow-sm"
-    >
-      <i class="fas fa-utensils mr-1.5"></i> Khẩu phần: <%= recipe.SO_PHAN_AN
-      %> người
-    </span>
-    <span
-      class="info-badge bg-blue-100 text-blue-800 rounded-full py-1.5 px-3 shadow-sm"
-    >
-      <i class="fas fa-star mr-1.5"></i>
-      <%= typeof ratings.average === 'number' ? ratings.average.toFixed(1) :
-      ratings.average %> sao (<%= ratings.total %> đánh giá)
-    </span>
-    <span
-      class="info-badge bg-red-100 text-red-800 rounded-full py-1.5 px-3 shadow-sm"
-    >
-      <i class="fas fa-heart mr-1.5"></i> <%= likes %> lượt yêu thích
-    </span>
+    <!-- Tên công thức -->
+    <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4 sm:p-6 md:p-8">
+   <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold text-gray-800  drop-shadow-xl px-4 py-2 rounded-xl inline-block leading-tight">
+        <%= recipe.TEN_CT %>
+      </h1>
+    </div>
+  </div>
+  <!-- Thông tin chi tiết -->
+  <div class="p-5 sm:p-6 md:p-8">
+    <!-- Mô tả -->
+    <p class="text-gray-800 text-base sm:text-lg leading-relaxed mb-6">
+      <%= recipe.MOTA %>
+    </p>
+
+    <!-- Thông tin phụ (badge) -->
+   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 text-sm text-gray-800">
+  <!-- Item chung style -->
+  <span class="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 shadow-sm hover:shadow-md transition">
+    <i class="fas fa-clock text-yellow-500"></i>
+    <% const recipeMinutes = recipe.THOI_GIAN_NAU ? parseInt(recipe.THOI_GIAN_NAU) : 0; %>
+    <% let recipeTimeDisplay = ''; %>
+    <% if (recipeMinutes >= 60) { %>
+      <% const hours = Math.floor(recipeMinutes / 60); %>
+      <% const remainingMinutes = recipeMinutes % 60; %>
+      <% recipeTimeDisplay = `${hours} giờ${remainingMinutes > 0 ? ` ${remainingMinutes} phút` : ''}`; %>
+    <% } else { %>
+      <% recipeTimeDisplay = `${recipeMinutes} phút`; %>
+    <% } %>
+    <%= recipeTimeDisplay %>
+  </span>
+
+  <span class="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 shadow-sm hover:shadow-md transition">
+    <i class="fas fa-fire text-rose-500"></i>
+    Độ khó: <%= recipe.DO_KHO %>
+  </span>
+
+  <span class="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 shadow-sm hover:shadow-md transition">
+    <i class="fas fa-utensils text-emerald-500"></i>
+    <%= recipe.SO_PHAN_AN %> người
+  </span>
+
+  <span class="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 shadow-sm hover:shadow-md transition">
+    <i class="fas fa-star text-yellow-400"></i>
+    <%= typeof ratings.average === 'number' ? ratings.average.toFixed(1) : ratings.average %> sao
+    (<%= ratings.total %> đánh giá)
+  </span>
+
+  <span class="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 shadow-sm hover:shadow-md transition">
+    <i class="fas fa-heart text-red-500"></i>
+    <%= likes %> yêu thích
+  </span>
+</div>
+
   </div>
 </div>
-  </div>
 
+
+  <!-- Main Content -->
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     <div class="lg:col-span-2">
+      <!-- Ingredients -->
       <div class="bg-white rounded-3xl shadow-xl p-5 sm:p-7 mb-6">
         <h3
-          class="text-2xl font-bold text-yellow-500 mb-5 flex items-center border-b pb-3 border-yellow-200"
+          class="text-2xl font-bold text-gray-700 mb-5 flex items-center border-b pb-3 border-yellow-200"
         >
-          <i class="fas fa-carrot mr-2.5 text-yellow-500 text-xl"></i> Nguyên
-          liệu
+          <i class="fas fa-carrot mr-2.5 text-yellow-500 text-xl"></i> Nguyên liệu
         </h3>
         <ul class="space-y-3">
           <% ingredients.forEach(ingredient => { %>
-          <li
-            class="flex justify-between items-center bg-gray-50 rounded-xl p-3 shadow-sm hover:shadow-md transition-shadow duration-200"
-          >
-            <div class="flex items-center text-gray-800 text-base">
-              <i class="fas fa-leaf text-green-600 mr-2.5 text-lg"></i>
-              <%= ingredient.TEN_NL %> <% if (ingredient.GHI_CHU) { %> (<%=
-              ingredient.GHI_CHU %>) <% } %>
-            </div>
-            <span class="font-semibold text-gray-900 text-base">
-              <%= ingredient.SO_LUONG %> <%= ingredient.DON_VI %>
-            </span>
-          </li>
+            <li
+              class="flex justify-between items-center bg-gray-50 rounded-xl p-3 shadow-sm hover:shadow-md transition-shadow duration-200"
+            >
+              <div class="flex items-center text-gray-800 text-base">
+                <i class="fas fa-leaf text-green-600 mr-2.5 text-lg"></i>
+                <%= ingredient.TEN_NL %> <% if (ingredient.GHI_CHU) { %> (<%= ingredient.GHI_CHU %>) <% } %>
+              </div>
+              <span class="font-semibold text-gray-900 text-base">
+                <%= ingredient.SO_LUONG %> <%= ingredient.DON_VI %>
+              </span>
+            </li>
           <% }) %>
         </ul>
       </div>
 
+      <!-- Instructions -->
       <div class="bg-white rounded-3xl shadow-xl p-5 sm:p-7 mb-6">
         <h3
-          class="text-2xl font-bold text-yellow-500 mb-5 flex items-center border-b pb-3 border-yellow-200"
+          class="text-2xl font-bold text-gray-700 mmb-5 flex items-center border-b pb-3 border-yellow-200"
         >
-          <i class="fas fa-book-open mr-2.5 text-yellow-500 text-xl"></i> Hướng
-          dẫn
+          <i class="fas fa-book-open mr-2.5 text-yellow-500 text-xl"></i> Hướng dẫn
         </h3>
         <p class="text-gray-700 leading-relaxed text-base whitespace-pre-line">
           <%= recipe.HUONG_DAN %>
         </p>
       </div>
 
+      <!-- Video -->
       <% if (recipe.VIDEO) { %>
-      <div class="bg-white rounded-3xl shadow-xl p-5 sm:p-7 mb-6">
-        <h3
-          class="text-2xl font-bold text-yellow-500 mb-5 flex items-center border-b pb-3 border-yellow-200"
-        >
-          <i class="fas fa-video mr-2.5 text-yellow-600 text-xl"></i> Video
-          hướng dẫn
-        </h3>
-        <div class="relative pt-[56.25%] rounded-xl overflow-hidden shadow-md">
-          <video controls class="absolute top-0 left-0 w-full h-full">
-            <source src="<%= recipe.VIDEO %>" type="video/mp4" />
-            Trình duyệt của bạn không hỗ trợ thẻ video.
-          </video>
+        <div class="bg-white rounded-3xl shadow-xl p-5 sm:p-7 mb-6">
+          <h3
+            class="text-2xl font-bold text-gray-700 m mb-5 flex items-center border-b pb-3 border-yellow-200"
+          >
+            <i class="fas fa-video mr-2.5 text-yellow-500 text-xl"></i> Video hướng dẫn
+          </h3>
+          <div class="relative pt-[56.25%] rounded-xl overflow-hidden shadow-md">
+            <video controls class="absolute top-0 left-0 w-full h-full">
+              <source src="<%= recipe.VIDEO %>" type="video/mp4" />
+              Trình duyệt của bạn không hỗ trợ thẻ video.
+            </video>
+          </div>
         </div>
-      </div>
       <% } %>
 
+      <!-- Comments -->
       <div class="bg-white rounded-3xl shadow-xl p-5 sm:p-7 mb-6">
         <h3
-          class="text-2xl font-bold text-yellow-500 mb-5 flex items-center border-b pb-3 border-yellow-200"
+          class="text-2xl font-bold text-gray-700 m mb-5 flex items-center border-b pb-3 border-yellow-200"
         >
-          <i class="fas fa-comments mr-2.5 text-yellow-500 text-xl"></i> Bình
-          luận
+          <i class="fas fa-comments mr-2.5 text-yellow-500 text-xl"></i> Bình luận
         </h3>
         <% if (user) { %>
-        <form
-          action="/cong-thuc/<%= recipe.ID_CHINH_CT %>/binh-luan"
-          method="POST"
-          class="mb-6 p-3 bg-gray-50 rounded-2xl shadow-inner"
-        >
-          <textarea
-            name="noi_dung"
-            class="w-full p-3 border border-gray-300 rounded-xl focus:ring-3 focus:ring-yellow-200 focus:border-yellow-400 transition duration-300 ease-in-out text-sm text-gray-800 resize-y"
-            placeholder="Viết bình luận của bạn..."
-            required
-            rows="3"
-          ></textarea>
-          <button
-            type="submit"
-            class="mt-3 px-6 py-2.5 bg-yellow-500 text-white font-semibold rounded-full hover:bg-yellow-700 transition duration-300 ease-in-out shadow-md hover:shadow-lg text-sm"
+          <form
+            action="/cong-thuc/<%= recipe.ID_CHINH_CT %>/binh-luan"
+            method="POST"
+            class="mb-6 p-3 bg-gray-50 rounded-2xl shadow-inner"
           >
-            Gửi bình luận
-          </button>
-        </form>
+            <textarea
+              name="noi_dung"
+              class="w-full p-3 border border-gray-300 rounded-xl focus:ring-3 focus:ring-yellow-200 focus:border-yellow-400 transition duration-300 ease-in-out text-sm text-gray-800 resize-y"
+              placeholder="Viết bình luận của bạn..."
+              required
+              rows="3"
+            ></textarea>
+            <button
+              type="submit"
+              class="mt-3 px-6 py-2.5 bg-yellow-600 text-white font-semibold rounded-full hover:bg-yellow-700 transition duration-300 ease-in-out shadow-md hover:shadow-lg text-sm"
+            >
+              Gửi bình luận
+            </button>
+          </form>
         <% } else { %>
-        <p class="text-gray-500 text-base mb-5 p-3 bg-yellow-50 rounded-xl">
-          Vui lòng
-          <a href="/login" class="text-yellow-700 font-semibold hover:underline"
-            >đăng nhập</a
-          >
-          để bình luận.
-        </p>
+          <p class="text-gray-500 text-base mb-5 p-3 bg-yellow-50 rounded-xl">
+            Vui lòng
+            <a href="/login" class="text-yellow-700 font-semibold hover:underline"
+              >đăng nhập</a
+            >
+            để bình luận.
+          </p>
         <% } %>
 
         <div class="space-y-5">
           <% comments.forEach(comment => { %>
-          <div
-            class="bg-gray-50 rounded-xl p-4 shadow-sm relative comment"
-            data-comment-id="<%= comment.ID_CHINH_BL %>"
-            data-type="comment"
-          >
-            <div class="flex items-start">
-              <img
-                src="<%= comment.AVARTAR_URL || '/Uploads/default-avatar.png' %>"
-                alt="Avatar"
-                class="w-12 h-12 rounded-full mr-3 object-cover border-2 border-yellow-300 shadow-md"
-              />
-              <div class="flex-1">
-                <div class="flex justify-between items-center mb-1">
-                  <p class="font-bold text-gray-900 text-base">
-                    <%= comment.TEN_NGUOI_DUNG %>
-                  </p>
-                  <div class="flex items-center space-x-2">
-                    <p class="text-xs text-gray-500">
-                      <%= new
-                      Date(comment.NGAY_TAO_BL).toLocaleDateString('vi-VN') %>
+            <div
+              class="bg-gray-50 rounded-xl p-4 shadow-sm relative comment"
+              data-comment-id="<%= comment.ID_CHINH_BL %>"
+              data-type="comment"
+            >
+              <div class="flex items-start">
+               <%
+  const avatarPath = comment.AVARTAR_URL
+    ? `/Uploads/images/nguoidung/${comment.ID_CHINH_ND}.png`
+    : '/Uploads/default-avatar.png';
+%>
+<img
+  src="<%= avatarPath %>"
+  alt="Avatar"
+  class="w-12 h-12 rounded-full mr-3 object-cover border-2 border-yellow-300 shadow-md"
+/>
+
+                <div class="flex-1">
+                  <div class="flex justify-between items-center mb-1">
+                    <p class="font-bold text-gray-900 text-base">
+                      <%= comment.TEN_NGUOI_DUNG %>
                     </p>
-                    <% if (user) { %>
-                    <button
-                      class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-200 transition context-menu-btn text-gray-600"
-                    >
-                      <i class="fas fa-ellipsis-h text-base"></i>
-                    </button>
-                    <% } %>
-                  </div>
-                </div>
-                <p class="text-gray-700 mt-1.5 comment-content leading-relaxed text-sm">
-                  <%= comment.NOI_DUNG_BL %>
-                </p>
-                <div class="flex items-center space-x-3 mt-2.5">
-                  <% const emotionIcons = { like: '👍', love: '❤️', haha: '😂',
-                  wow: '😮', sad: '😢', angry: '😡' }; const reactionSummary =
-                  comment.reactions ? Object.keys(comment.reactions).map(emo =>
-                  emotionIcons[emo]).join('') : ''; const totalReactions =
-                  comment.reactions ? Object.values(comment.reactions).reduce((sum,
-                  count) => sum + count, 0) : 0; %> <% if (reactionSummary) { %>
-                  <div class="relative group">
-                    <span
-                      class="text-xs text-gray-600 cursor-pointer flex items-center bg-gray-100 px-2.5 py-1 rounded-full shadow-sm hover:shadow-md transition duration-200"
-                    >
-                      <%= reactionSummary %>
-                      <span class="ml-1 font-medium"
-                        ><%= totalReactions %></span
-                      >
-                    </span>
-                    <div
-                      class="absolute hidden group-hover:block bg-white border border-gray-200 rounded-lg p-2.5 z-10 min-w-[140px] shadow-lg top-full mt-1.5 left-0"
-                    >
-                      <% comment.reaction_users &&
-                      comment.reaction_users.forEach(user => { %>
-                      <p class="text-xs text-gray-700 py-0.5 border-b border-gray-100 last:border-b-0">
-                        <span class="font-semibold"
-                          ><%= user.TEN_NGUOI_DUNG %></span
-                        >
-                        <%= emotionIcons[user.LOAI_CAM_XUC_BL.toLowerCase()] %>
+                    <div class="flex items-center space-x-2">
+                      <p class="text-xs text-gray-500">
+                        <%= new Date(comment.NGAY_TAO_BL).toLocaleDateString('vi-VN') %>
                       </p>
-                      <% }) %>
-                    </div>
-                  </div>
-                  <% } %> <% if (user) { %>
-                  <div class="relative group">
-                    <button
-                      class="text-xs text-gray-600 hover:text-yellow-700 flex items-center space-x-0.5 px-2.5 py-1 rounded-full bg-gray-100 hover:bg-yellow-50 transition duration-200"
-                    >
-                      <i class="far fa-smile mr-0.5"></i>
-                      <span>Thả cảm xúc</span>
-                    </button>
-                    <div
-                      class="absolute hidden group-hover:block bg-white shadow-lg rounded-full p-1.5 z-10 whitespace-nowrap -top-10 left-1/2 -translate-x-1/2 flex space-x-1.5 border border-gray-200"
-                    >
-                      <% ['like', 'love', 'haha', 'wow', 'sad',
-                      'angry'].forEach(emotion => { %>
-                      <form
-                        action="/binh-luan/<%= comment.ID_CHINH_BL %>/cam-xuc"
-                        method="POST"
-                        class="inline"
-                      >
-                        <input
-                          type="hidden"
-                          name="loai_cam_xuc"
-                          value="<%= emotion %>"
-                        />
+                      <% if (user) { %>
                         <button
-                          type="submit"
-                          class="text-xl p-1 rounded-full hover:bg-gray-100 transform hover:scale-110 transition-transform"
+                          class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-200 transition context-menu-btn text-gray-600"
                         >
-                          <%= emotionIcons[emotion] %>
+                          <i class="fas fa-ellipsis-h text-base"></i>
                         </button>
-                      </form>
-                      <% }) %>
+                      <% } %>
                     </div>
                   </div>
-                  <% } %>
-                </div>
-                <% if (user) { %>
-                <form
-                  action="/binh-luan/<%= comment.ID_CHINH_BL %>/phan-hoi"
-                  method="POST"
-                  class="mt-3 hidden reply-form"
-                  data-form-id="reply-<%= comment.ID_CHINH_BL %>"
-                >
-                  <input type="hidden" name="id_phan_hoi_cha" value="" />
-                  <textarea
-                    name="noi_dung"
-                    class="w-full p-2.5 border border-gray-300 rounded-xl focus:ring-1.5 focus:ring-black focus:border-transparent transition text-sm text-gray-800"
-                    placeholder="Phản hồi bình luận này..."
-                    required
-                    rows="2"
-                  ></textarea>
-                  <button
-                    type="submit"
-                    class="mt-1.5 px-4 py-2 bg-black text-white rounded-full hover:bg-gray-800 transition duration-300 text-xs font-medium"
-                  >
-                    Gửi phản hồi
-                  </button>
-                </form>
-                <form
-                  action="/binh-luan/<%= comment.ID_CHINH_BL %>?_method=PUT"
-                  method="POST"
-                  class="mt-3 hidden edit-form"
-                  data-form-id="edit-comment-<%= comment.ID_CHINH_BL %>"
-                >
-                  <textarea
-                    name="noi_dung"
-                    class="w-full p-2.5 border border-gray-300 rounded-xl focus:ring-1.5 focus:ring-black focus:border-transparent transition text-sm text-gray-800"
-                    required
-                    rows="2"
-                  ><%= comment.NOI_DUNG_BL %></textarea>
-                  <button
-                    type="submit"
-                    class="mt-1.5 px-4 py-2 bg-yellow-600 text-white rounded-full hover:bg-yellow-700 transition duration-300 text-xs font-medium"
-                  >
-                    Cập nhật
-                  </button>
-                </form>
-                <% } %>
-                <div
-                  class="context-menu hidden absolute bg-white shadow-xl rounded-lg p-1.5 z-20 border border-gray-200"
-                >
-                  <button
-                    class="block w-full text-left px-2.5 py-1.5 text-gray-700 hover:bg-gray-100 rounded-md reply-btn transition text-sm"
-                  >
-                    Trả lời
-                  </button>
-                  <% if (user && (user.ID_CHINH_ND === comment.ID_CHINH_ND ||
-                  user.VAI_TRO === 'admin')) { %>
-                  <button
-                    class="block w-full text-left px-2.5 py-1.5 text-gray-700 hover:bg-gray-100 rounded-md edit-btn transition text-sm"
-                  >
-                    Chỉnh sửa
-                  </button>
- <form
-  action="/binh-luan/<%= comment.ID_CHINH_BL %>"
- 
-  class="inline w-full delete-form"
-  onsubmit="return false;"
->
-  <button
-    type="submit"
-    class="block w-full text-left px-2.5 py-1.5 text-red-600 hover:bg-red-50 rounded-md transition text-sm delete-btn"
-    data-comment-id="<%= comment.ID_CHINH_BL %>"
-    data-comment-type="comment"
-  >
-    Xóa
-  </button>
-</form>
-                  <% } %>
-                </div>
-                <% function renderReplies(replies, level = 1) { %> <%
-                replies.forEach(reply => { %>
-                <div
-                  class="ml-6 sm:ml-8 mt-3 pl-3 border-l-3 border-yellow-200 relative comment"
-                  data-comment-id="<%= reply.ID_CHINH_PHBL %>"
-                  data-type="reply"
-                  data-parent-id="<%= reply.ID_CHINH_PHBL_CHA || '' %>"
-                >
-                  <div class="flex items-start">
-                    <img
-                      src="<%= reply.AVARTAR_URL || '/Uploads/default-avatar.png' %>"
-                      alt="Avatar"
-                      class="w-9 h-9 rounded-full mr-2.5 object-cover border border-yellow-200"
-                    />
-                    <div class="flex-1">
-                      <div class="flex justify-between items-center mb-0.5">
-                        <p class="font-bold text-gray-900 text-sm">
-                          <%= reply.TEN_NGUOI_DUNG %>
-                        </p>
-                        <div class="flex items-center space-x-2">
-                          <p class="text-xs text-gray-500">
-                            <%= new
-                            Date(reply.NGAY_TAO_PH).toLocaleDateString('vi-VN')
-                            %>
-                          </p>
-                          <% if (user) { %>
-                          <button
-                            class="context-menu-btn w-7 h-7 rounded-full flex items-center justify-center hover:bg-gray-200 transition text-gray-600"
-                            title="Tùy chọn"
-                          >
-                            <i class="fas fa-ellipsis-h text-xs"></i>
-                          </button>
-                          <% } %>
+                  <p class="text-gray-700 mt-1.5 comment-content leading-relaxed text-sm">
+                    <%= comment.NOI_DUNG_BL %>
+                  </p>
+                  <div class="flex items-center space-x-3 mt-2.5">
+                    <% const emotionIcons = { like: '👍', love: '❤️', haha: '😂', wow: '😮', sad: '😢', angry: '😡' }; %>
+                    <% const reactionSummary = comment.reactions ? Object.keys(comment.reactions).map(emo => emotionIcons[emo]).join('') : ''; %>
+                    <% const totalReactions = comment.reactions ? Object.values(comment.reactions).reduce((sum, count) => sum + count, 0) : 0; %>
+                    <% if (reactionSummary) { %>
+                      <div class="relative group">
+                        <span
+                          class="text-xs text-gray-600 cursor-pointer flex items-center bg-gray-100 px-2.5 py-1 rounded-full shadow-sm hover:shadow-md transition duration-200"
+                        >
+                          <%= reactionSummary %>
+                          <span class="ml-1 font-medium"><%= totalReactions %></span>
+                        </span>
+                        <div
+                          class="absolute hidden group-hover:block bg-white border border-gray-200 rounded-lg p-2.5 z-10 min-w-[140px] shadow-lg top-full mt-1.5 left-0"
+                        >
+                          <% comment.reaction_users && comment.reaction_users.forEach(user => { %>
+                            <p class="text-xs text-gray-700 py-0.5 border-b border-gray-100 last:border-b-0">
+                              <span class="font-semibold"><%= user.TEN_NGUOI_DUNG %></span>
+                              <%= emotionIcons[user.LOAI_CAM_XUC_BL.toLowerCase()] %>
+                            </p>
+                          <% }) %>
                         </div>
                       </div>
-                      <p
-                        class="text-gray-700 mt-1 comment-content leading-relaxed text-sm"
-                      >
-                        <%= reply.NOI_DUNG_PH %>
-                      </p>
-                      <div class="flex items-center space-x-3 mt-2">
-                        <% const replyReactionSummary = reply.reactions ?
-                        Object.keys(reply.reactions).map(emo =>
-                        emotionIcons[emo]).join('') : ''; const
-                        replyTotalReactions = reply.reactions ?
-                        Object.values(reply.reactions).reduce((sum, count) => sum
-                        + count, 0) : 0; %> <% if (replyReactionSummary) { %>
-                        <div class="relative group">
-                          <span
-                            class="text-xs text-gray-600 cursor-pointer flex items-center bg-gray-100 px-2.5 py-1 rounded-full shadow-sm hover:shadow-md transition duration-200"
-                          >
-                            <%= replyReactionSummary %>
-                            <span class="ml-1 font-medium"
-                              ><%= replyTotalReactions %></span
-                            >
-                          </span>
-                          <div
-                            class="absolute hidden group-hover:block bg-white border border-gray-200 rounded-lg p-2.5 z-10 min-w-[140px] shadow-lg top-full mt-1.5 left-0"
-                          >
-                            <% reply.reaction_users &&
-                            reply.reaction_users.forEach(user => { %>
-                            <p class="text-xs text-gray-700 py-0.5 border-b border-gray-100 last:border-b-0">
-                              <span class="font-semibold"
-                                ><%= user.TEN_NGUOI_DUNG %></span
-                              >
-                              <%= emotionIcons[user.LOAI_CAM_XUC.toLowerCase()]
-                              %>
-                            </p>
-                            <% }) %>
-                          </div>
-                        </div>
-                        <% } %> <% if (user) { %>
-                        <div class="relative group">
-                          <button
-                            class="text-xs text-gray-600 hover:text-yellow-700 flex items-center space-x-0.5 px-2.5 py-1 rounded-full bg-gray-100 hover:bg-yellow-50 transition duration-200"
-                          >
-                            <i class="far fa-smile mr-0.5"></i>
-                            <span>Thả cảm xúc</span>
-                          </button>
-                          <div
-                            class="absolute hidden group-hover:block bg-white shadow-lg rounded-full p-1.5 z-10 whitespace-nowrap -top-10 left-1/2 -translate-x-1/2 flex space-x-1.5 border border-gray-200"
-                          >
-                            <% ['like', 'love', 'haha', 'wow', 'sad',
-                            'angry'].forEach(emotion => { %>
+                    <% } %>
+                    <% if (user) { %>
+                      <div class="relative group">
+                        <button
+                          class="text-xs text-gray-600 hover:text-yellow-700 flex items-center space-x-0.5 px-2.5 py-1 rounded-full bg-gray-100 hover:bg-yellow-50 transition duration-200"
+                        >
+                          <i class="far fa-smile mr-0.5"></i>
+                          <span>Thả cảm xúc</span>
+                        </button>
+                        <div
+                          class="absolute hidden group-hover:block bg-white shadow-lg rounded-full p-1.5 z-10 whitespace-nowrap -top-10 left-1/2 -translate-x-1/2 flex space-x-1.5 border border-gray-200"
+                        >
+                          <% ['like', 'love', 'haha', 'wow', 'sad', 'angry'].forEach(emotion => { %>
                             <form
-                              action="/phan-hoi/<%= reply.ID_CHINH_PHBL %>/cam-xuc"
+                              action="/binh-luan/<%= comment.ID_CHINH_BL %>/cam-xuc"
                               method="POST"
                               class="inline"
                             >
@@ -440,139 +268,320 @@
                                 <%= emotionIcons[emotion] %>
                               </button>
                             </form>
-                            <% }) %>
-                          </div>
+                          <% }) %>
                         </div>
-                        <% } %>
                       </div>
-                      <% if (user) { %>
-                      <form
-                        action="/binh-luan/<%= comment.ID_CHINH_BL %>/phan-hoi"
-                        method="POST"
-                        class="mt-3 hidden reply-form"
-                        data-form-id="reply-<%= reply.ID_CHINH_PHBL %>"
+                    <% } %>
+                  </div>
+                  <% if (user) { %>
+                    <form
+                      action="/binh-luan/<%= comment.ID_CHINH_BL %>/phan-hoi"
+                      method="POST"
+                      class="mt-3 hidden reply-form"
+                      data-form-id="reply-<%= comment.ID_CHINH_BL %>"
+                    >
+                      <input type="hidden" name="id_phan_hoi_cha" value="" />
+                      <textarea
+                        name="noi_dung"
+                        class="w-full p-2.5 border border-gray-300 rounded-xl focus:ring-3 focus:ring-yellow-200 focus:border-yellow-400 transition text-sm text-gray-800"
+                        placeholder="Phản hồi bình luận này..."
+                        required
+                        rows="2"
+                      ></textarea>
+                      <button
+                        type="submit"
+                        class="mt-1.5 px-4 py-2 bg-yellow-600 text-white rounded-full hover:bg-yellow-700 transition duration-300 text-xs font-medium"
                       >
-                        <input
-                          type="hidden"
-                          name="id_phan_hoi_cha"
-                          value="<%= reply.ID_CHINH_PHBL %>"
-                        />
-                        <textarea
-                          name="noi_dung"
-                          class="w-full p-2.5 border border-gray-300 rounded-xl focus:ring-1.5 focus:ring-black focus:border-transparent transition text-sm text-gray-800"
-                          placeholder="Phản hồi..."
-                          required
-                          rows="2"
-                        ></textarea>
-                        <button
-                          type="submit"
-                          class="mt-1.5 px-4 py-2 bg-black text-white rounded-full hover:bg-gray-800 transition duration-300 text-xs font-medium"
-                        >
-                          Gửi phản hồi
-                        </button>
-                      </form>
-                      <form
-                        action="/phan-hoi/<%= reply.ID_CHINH_PHBL %>?_method=PUT"
-                        method="POST"
-                        class="mt-3 hidden edit-form"
-                        data-form-id="edit-reply-<%= reply.ID_CHINH_PHBL %>"
+                        Gửi phản hồi
+                      </button>
+                    </form>
+                    <form
+                      action="/binh-luan/<%= comment.ID_CHINH_BL %>?_method=PUT"
+                      method="POST"
+                      class="mt-3 hidden edit-form"
+                      data-form-id="edit-comment-<%= comment.ID_CHINH_BL %>"
+                    >
+                      <textarea
+                        name="noi_dung"
+                        class="w-full p-2.5 border border-gray-300 rounded-xl focus:ring-3 focus:ring-yellow-200 focus:border-yellow-400 transition text-sm text-gray-800"
+                        required
+                        rows="2"
+                      ><%= comment.NOI_DUNG_BL %></textarea>
+                      <button
+                        type="submit"
+                        class="mt-1.5 px-4 py-2 bg-yellow-600 text-white rounded-full hover:bg-yellow-700 transition duration-300 text-xs font-medium"
                       >
-                        <textarea
-                          name="noi_dung"
-                          class="w-full p-2.5 border border-gray-300 rounded-xl focus:ring-1.5 focus:ring-black focus:border-transparent transition text-sm text-gray-800"
-                          required
-                          rows="2"
-                        ><%= reply.NOI_DUNG_PH %></textarea>
-                        <button
-                          type="submit"
-                          class="mt-1.5 px-4 py-2 bg-yellow-600 text-white rounded-full hover:bg-yellow-700 transition duration-300 text-xs font-medium"
-                        >
-                          Cập nhật
-                        </button>
-                      </form>
-                      <% } %>
-                      <div
-                        class="context-menu hidden absolute bg-white shadow-xl rounded-lg p-1.5 z-20 border border-gray-200"
+                        Cập nhật
+                      </button>
+                    </form>
+                    <div
+                     class="context-menu hidden absolute bg-white shadow-xl rounded-xl p-3 z-20 border border-gray-200 min-w-40"
+                    >
+                      <button
+                        class="block w-full text-left px-2.5 py-1.5 text-gray-700 hover:bg-gray-100 rounded-md reply-btn transition text-sm"
                       >
-                        <button
-                          class="block w-full text-left px-2.5 py-1.5 text-gray-700 hover:bg-gray-100 rounded-md reply-btn transition text-sm"
-                        >
-                          Trả lời
-                        </button>
-                        <% if (user && (user.ID_CHINH_ND === reply.ID_CHINH_ND
-                        || user.VAI_TRO === 'admin')) { %>
+                        Trả lời
+                      </button>
+                      <% if (user && (user.ID_CHINH_ND === comment.ID_CHINH_ND || user.VAI_TRO === 'admin')) { %>
                         <button
                           class="block w-full text-left px-2.5 py-1.5 text-gray-700 hover:bg-gray-100 rounded-md edit-btn transition text-sm"
                         >
                           Chỉnh sửa
                         </button>
-                     <form
-  action="/phan-hoi/<%= reply.ID_CHINH_PHBL %>"
-  method="POST"
-  class="inline w-full delete-form"
-  onsubmit="return false;"
->
-  <button
-    type="submit"
-    class="block w-full text-left px-2.5 py-1.5 text-red-600 hover:bg-red-50 rounded-md transition text-sm delete-btn"
-    data-comment-id="<%= reply.ID_CHINH_PHBL %>"
-    data-comment-type="reply"
-  >
-    Xóa
-  </button>
-</form>
+                        <form
+                          action="/binh-luan/<%= comment.ID_CHINH_BL %>?_method=DELETE"
+                          method="POST"
+                          class="inline w-full delete-form"
+                        >
+                          <button
+                            type="submit"
+                            class="block w-full text-left px-2.5 py-1.5 text-red-600 hover:bg-red-50 rounded-md transition text-sm delete-btn"
+                            data-comment-id="<%= comment.ID_CHINH_BL %>"
+                            data-comment-type="comment"
+                          >
+                            Xóa
+                          </button>
+                        </form>
+                      <% } %>
+                    </div>
+                  <% } %>
+                  <% function renderReplies(replies, level = 1) { %>
+                    <% replies.forEach(reply => { %>
+                      <div
+                        class="ml-6 sm:ml-8 mt-3 pl-3 border-l-3 border-yellow-200 relative comment"
+                        data-comment-id="<%= reply.ID_CHINH_PHBL %>"
+                        data-type="reply"
+                        data-parent-id="<%= reply.ID_CHINH_PHBL_CHA || '' %>"
+                      >
+                        <div class="flex items-start">
+                          <img
+                            src="<%= reply.AVARTAR_URL || '/Uploads/default-avatar.png' %>"
+                            alt="Avatar"
+                            class="w-9 h-9 rounded-full mr-2.5 object-cover border border-yellow-200"
+                          />
+                          <div class="flex-1">
+                            <div class="flex justify-between items-center mb-0.5">
+                              <p class="font-bold text-gray-900 text-sm">
+                                <%= reply.TEN_NGUOI_DUNG %>
+                              </p>
+                              <div class="flex items-center space-x-2">
+                                <p class="text-xs text-gray-500">
+                                  <%= new Date(reply.NGAY_TAO_PH).toLocaleDateString('vi-VN') %>
+                                </p>
+                                <% if (user) { %>
+                                  <button
+                                    class="context-menu-btn w-7 h-7 rounded-full flex items-center justify-center hover:bg-gray-200 transition text-gray-600"
+                                    title="Tùy chọn"
+                                  >
+                                    <i class="fas fa-ellipsis-h text-xs"></i>
+                                  </button>
+                                <% } %>
+                              </div>
+                            </div>
+                            <p
+                              class="text-gray-700 mt-1 comment-content leading-relaxed text-sm"
+                            >
+                              <%= reply.NOI_DUNG_PH %>
+                            </p>
+                            <div class="flex items-center space-x-3 mt-2">
+                              <% const replyReactionSummary = reply.reactions ? Object.keys(reply.reactions).map(emo => emotionIcons[emo]).join('') : ''; %>
+                              <% const replyTotalReactions = reply.reactions ? Object.values(reply.reactions).reduce((sum, count) => sum + count, 0) : 0; %>
+                              <% if (replyReactionSummary) { %>
+                                <div class="relative group">
+                                  <span
+                                    class="text-xs text-gray-600 cursor-pointer flex items-center bg-gray-100 px-2.5 py-1 rounded-full shadow-sm hover:shadow-md transition duration-200"
+                                  >
+                                    <%= replyReactionSummary %>
+                                    <span class="ml-1 font-medium"><%= replyTotalReactions %></span>
+                                  </span>
+                                  <div
+                                    class="absolute hidden group-hover:block bg-white border border-gray-200 rounded-lg p-2.5 z-10 min-w-[140px] shadow-lg top-full mt-1.5 left-0"
+                                  >
+                                    <% reply.reaction_users && reply.reaction_users.forEach(user => { %>
+                                      <p class="text-xs text-gray-700 py-0.5 border-b border-gray-100 last:border-b-0">
+                                        <span class="font-semibold"><%= user.TEN_NGUOI_DUNG %></span>
+                                        <%= emotionIcons[user.LOAI_CAM_XUC.toLowerCase()] %>
+                                      </p>
+                                    <% }) %>
+                                  </div>
+                                </div>
+                              <% } %>
+                              <% if (user) { %>
+                                <div class="relative group">
+                                  <button
+                                    class="text-xs text-gray-600 hover:text-yellow-700 flex items-center space-x-0.5 px-2.5 py-1 rounded-full bg-gray-100 hover:bg-yellow-50 transition duration-200"
+                                  >
+                                    <i class="far fa-smile mr-0.5"></i>
+                                    <span>Thả cảm xúc</span>
+                                  </button>
+                                  <div
+                                    class="absolute hidden group-hover:block bg-white shadow-lg rounded-full p-1.5 z-10 whitespace-nowrap -top-10 left-1/2 -translate-x-1/2 flex space-x-1.5 border border-gray-200"
+                                  >
+                                    <% ['like', 'love', 'haha', 'wow', 'sad', 'angry'].forEach(emotion => { %>
+                                      <form
+                                        action="/phan-hoi/<%= reply.ID_CHINH_PHBL %>/cam-xuc"
+                                        method="POST"
+                                        class="inline"
+                                      >
+                                        <input
+                                          type="hidden"
+                                          name="loai_cam_xuc"
+                                          value="<%= emotion %>"
+                                        />
+                                        <button
+                                          type="submit"
+                                          class="text-xl p-1 rounded-full hover:bg-gray-100 transform hover:scale-110 transition-transform"
+                                        >
+                                          <%= emotionIcons[emotion] %>
+                                        </button>
+                                      </form>
+                                    <% }) %>
+                                  </div>
+                                </div>
+                              <% } %>
+                            </div>
+                            <% if (user) { %>
+                              <form
+                                action="/binh-luan/<%= comment.ID_CHINH_BL %>/phan-hoi"
+                                method="POST"
+                                class="mt-3 hidden reply-form"
+                                data-form-id="reply-<%= reply.ID_CHINH_PHBL %>"
+                              >
+                                <input
+                                  type="hidden"
+                                  name="id_phan_hoi_cha"
+                                  value="<%= reply.ID_CHINH_PHBL %>"
+                                />
+                                <textarea
+                                  name="noi_dung"
+                                  class="w-full p-2.5 border border-gray-300 rounded-xl focus:ring-3 focus:ring-yellow-200 focus:border-yellow-400 transition text-sm text-gray-800"
+                                  placeholder="Phản hồi..."
+                                  required
+                                  rows="2"
+                                ></textarea>
+                                <button
+                                  type="submit"
+                                  class="mt-1.5 px-4 py-2 bg-yellow-600 text-white rounded-full hover:bg-yellow-700 transition duration-300 text-xs font-medium"
+                                >
+                                  Gửi phản hồi
+                                </button>
+                              </form>
+                              <form
+                                action="/phan-hoi/<%= reply.ID_CHINH_PHBL %>?_method=PUT"
+                                method="POST"
+                                class="mt-3 hidden edit-form"
+                                data-form-id="edit-reply-<%= reply.ID_CHINH_PHBL %>"
+                              >
+                                <textarea
+                                  name="noi_dung"
+                                  class="w-full p-2.5 border border-gray-300 rounded-xl focus:ring-3 focus:ring-yellow-200 focus:border-yellow-400 transition text-sm text-gray-800"
+                                  required
+                                  rows="2"
+                                ><%= reply.NOI_DUNG_PH %></textarea>
+                                <button
+                                  type="submit"
+                                  class="mt-1.5 px-4 py-2 bg-yellow-600 text-white rounded-full hover:bg-yellow-700 transition duration-300 text-xs font-medium"
+                                >
+                                  Cập nhật
+                                </button>
+                              </form>
+                              <div
+                                class="context-menu hidden absolute bg-white shadow-xl rounded-lg p-1.5 z-20 border border-gray-200"
+                              >
+                                <button
+                                  class="block w-full text-left px-2.5 py-1.5 text-gray-700 hover:bg-gray-100 rounded-md reply-btn transition text-sm"
+                                >
+                                  Trả lời
+                                </button>
+                                <% if (user && (user.ID_CHINH_ND === reply.ID_CHINH_ND || user.VAI_TRO === 'admin')) { %>
+                                  <button
+                                    class="block w-full text-left px-2.5 py-1.5 text-gray-700 hover:bg-gray-100 rounded-md edit-btn transition text-sm"
+                                  >
+                                    Chỉnh sửa
+                                  </button>
+                                  <form
+                                    action="/phan-hoi/<%= reply.ID_CHINH_PHBL %>?_method=DELETE"
+                                    method="POST"
+                                    class="inline w-full delete-form"
+                                  >
+                                    <button
+                                      type="submit"
+                                      class="block w-full text-left px-2.5 py-1.5 text-red-600 hover:bg-red-50 rounded-md transition text-sm delete-btn"
+                                      data-comment-id="<%= reply.ID_CHINH_PHBL %>"
+                                      data-comment-type="reply"
+                                    >
+                                      Xóa
+                                    </button>
+                                  </form>
+                                <% } %>
+                              </div>
+                            <% } %>
+                          </div>
+                        </div>
+                        <% if (reply.child_replies && reply.child_replies.length > 0) { %>
+                          <button
+                            class="text-xs text-yellow-700 hover:underline mt-1.5 inline-flex items-center toggle-replies-btn font-medium ml-[60px]"
+                            data-target="replies-<%= reply.ID_CHINH_PHBL %>"
+                          >
+                            <i class="fas fa-reply mr-1.5"></i>
+                            <%= reply.child_replies.length %> phản hồi
+                          </button>
+                          <div
+                            id="replies-<%= reply.ID_CHINH_PHBL %>"
+                            class="hidden nested-replies"
+                          >
+                            <% renderReplies(reply.child_replies, level + 1); %>
+                          </div>
                         <% } %>
                       </div>
+                    <% }); %>
+                  <% } %>
+                  <% if (comment.replies && comment.replies.length > 0) { %>
+                    <button
+                      class="text-xs text-yellow-700 hover:underline mt-2 inline-flex items-center toggle-replies-btn font-medium ml-[60px]"
+                      data-target="replies-<%= comment.ID_CHINH_BL %>"
+                    >
+                      <i class="fas fa-reply mr-1.5"></i>
+                      <%= comment.replies.length %> phản hồi
+                    </button>
+                    <div
+                      id="replies-<%= comment.ID_CHINH_BL %>"
+                      class="hidden nested-replies"
+                    >
+                      <% renderReplies(comment.replies); %>
                     </div>
-                  </div>
-                  <% if (reply.child_replies && reply.child_replies.length > 0)
-                  { %>
-                  <button
-                    class="text-xs text-yellow-700 hover:underline mt-1.5 inline-flex items-center toggle-replies-btn font-medium ml-[60px]"
-                    data-target="replies-<%= reply.ID_CHINH_PHBL %>"
-                  >
-                    <i class="fas fa-reply mr-1.5"></i>
-                    <%= reply.child_replies.length %> phản hồi
-                  </button>
-                  <div
-                    id="replies-<%= reply.ID_CHINH_PHBL %>"
-                    class="hidden nested-replies"
-                  >
-                    <% renderReplies(reply.child_replies, level + 1); %>
-                  </div>
                   <% } %>
                 </div>
-                <% }) %> <% } %> <% if (comment.replies && comment.replies.length
-                > 0) { %>
-                <button
-                  class="text-xs text-yellow-700 hover:underline mt-2 inline-flex items-center toggle-replies-btn font-medium ml-[60px]"
-                  data-target="replies-<%= comment.ID_CHINH_BL %>"
-                >
-                  <i class="fas fa-reply mr-1.5"></i>
-                  <%= comment.replies.length %> phản hồi
-                </button>
-                <div
-                  id="replies-<%= comment.ID_CHINH_BL %>"
-                  class="hidden nested-replies"
-                >
-                  <% renderReplies(comment.replies); %>
-                </div>
-                <% } %>
               </div>
             </div>
-          </div>
-          <% }) %>
+          <% }); %>
         </div>
       </div>
+
+      <!-- Similar Recipes -->
+      <% if (similarRecipes && similarRecipes.length > 0) { %>
+        <div class="bg-white rounded-3xl shadow-xl p-5 sm:p-7 mb-6">
+          <h3
+            class="text-2xl font-bold text-gray-700  mb-5 flex items-center border-b pb-3 border-yellow-200"
+          >
+            <i class="fas fa-utensils mr-2.5 text-yellow-500 text-xl"></i> Công thức tương tự
+          </h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <% similarRecipes.forEach(similarRecipe => { %>
+             <%- include('../partials/card-congthuc-goiy.ejs', { recipe: similarRecipe }) %>
+            <% }); %>
+          </div>
+        </div>
+      <% } %>
     </div>
 
+    <!-- Sidebar -->
     <div class="lg:col-span-1">
       <div class="bg-white rounded-3xl shadow-xl p-5 sm:p-7 sticky top-8">
         <h3
-          class="text-xl font-bold text-yellow-500 mb-5 flex items-center border-b pb-3 border-yellow-200"
+          class="text-xl font-bold text-gray-700 mb-5 flex items-center border-b pb-3 border-yellow-200"
         >
-          <i class="fas fa-info-circle mr-2.5 text-yellow-500 text-lg"></i> Thông
-          tin công thức
+          <i class="fas fa-info-circle mr-2.5 text-yellow-500 text-lg"></i> Thông tin công thức
         </h3>
         <div class="space-y-3 text-gray-700 text-base">
           <p class="flex items-center">
@@ -587,79 +596,80 @@
         </div>
 
         <% if (user) { %>
-        <div class="mt-7">
-          <h3
-            class="text-xl font-bold text-yellow-500 mb-5 flex items-center border-b pb-3 border-yellow-200"
-          >
-            <i class="fas fa-star mr-2.5 text-yellow-500 text-lg"></i> Đánh giá
-          </h3>
-          <form
-            action="/cong-thuc/<%= recipe.ID_CHINH_CT %>/danh-gia"
-            method="POST"
-            class="space-y-3"
-          >
-            <div class="rating-stars flex justify-center space-x-1 mb-3">
-              <input type="radio" id="star5" name="danh_gia" value="5" hidden />
-              <label for="star5" title="5 sao" class="star-label text-gray-300 text-3xl cursor-pointer hover:text-yellow-400 transition-colors duration-200">
-                <i class="fas fa-star"></i>
-              </label>
-              <input type="radio" id="star4" name="danh_gia" value="4" hidden />
-              <label for="star4" title="4 sao" class="star-label text-gray-300 text-3xl cursor-pointer hover:text-yellow-400 transition-colors duration-200">
-                <i class="fas fa-star"></i>
-              </label>
-              <input type="radio" id="star3" name="danh_gia" value="3" hidden />
-              <label for="star3" title="3 sao" class="star-label text-gray-300 text-3xl cursor-pointer hover:text-yellow-400 transition-colors duration-200">
-                <i class="fas fa-star"></i>
-              </label>
-              <input type="radio" id="star2" name="danh_gia" value="2" hidden />
-              <label for="star2" title="2 sao" class="star-label text-gray-300 text-3xl cursor-pointer hover:text-yellow-400 transition-colors duration-200">
-                <i class="fas fa-star"></i>
-              </label>
-              <input type="radio" id="star1" name="danh_gia" value="1" hidden />
-              <label for="star1" title="1 sao" class="star-label text-gray-300 text-3xl cursor-pointer hover:text-yellow-400 transition-colors duration-200">
-                <i class="fas fa-star"></i>
-              </label>
-            </div>
-            <textarea
-              name="noi_dung"
-              class="w-full p-2.5 border border-gray-300 rounded-xl focus:ring-1.5 focus:ring-black focus:border-transparent transition text-sm text-gray-800"
-              placeholder="Nội dung đánh giá (tùy chọn)"
-              rows="3"
-            ></textarea>
-            <button
-              type="submit"
-              class="w-full px-5 py-2.5 bg-yellow-500 text-white font-semibold rounded-full hover:bg-yellow-700 transition duration-300 ease-in-out shadow-md hover:shadow-lg flex items-center justify-center text-sm"
+          <div class="mt-7">
+            <h3
+              class="text-xl font-bold text-yellow-600 mb-5 flex items-center border-b pb-3 border-yellow-200"
             >
-              <i class="fas fa-paper-plane mr-2"></i> Gửi đánh giá
-            </button>
-          </form>
-          <form
-            action="/cong-thuc/<%= recipe.ID_CHINH_CT %>/yeu-thich"
-            method="POST"
-            class="mt-3"
-          >
-            <button
-              type="submit"
-              class="w-full flex items-center justify-center px-5 py-2.5 border-2 <%= recipe.isFavorite ? 'border-gray-400 text-gray-600 bg-gray-100 hover:bg-gray-200' : 'border-red-500 text-red-500 hover:bg-red-500 hover:text-white' %> rounded-full transition duration-300 ease-in-out font-semibold text-sm"
+              <i class="fas fa-star mr-2.5 text-yellow-600 text-lg"></i> Đánh giá
+            </h3>
+            <form
+              action="/cong-thuc/<%= recipe.ID_CHINH_CT %>/danh-gia"
+              method="POST"
+              class="space-y-3"
             >
-              <i class="fas fa-heart mr-2 text-base"></i>
-              <%= recipe.isFavorite ? 'Đã yêu thích' : 'Thêm vào yêu thích' %>
-            </button>
-          </form>
-        </div>
+              <div class="rating-stars flex justify-center space-x-1 mb-3">
+                <input type="radio" id="star5" name="danh_gia" value="5" hidden />
+                <label for="star5" title="5 sao" class="star-label text-gray-300 text-3xl cursor-pointer hover:text-yellow-400 transition-colors duration-200">
+                  <i class="fas fa-star"></i>
+                </label>
+                <input type="radio" id="star4" name="danh_gia" value="4" hidden />
+                <label for="star4" title="4 sao" class="star-label text-gray-300 text-3xl cursor-pointer hover:text-yellow-400 transition-colors duration-200">
+                  <i class="fas fa-star"></i>
+                </label>
+                <input type="radio" id="star3" name="danh_gia" value="3" hidden />
+                <label for="star3" title="3 sao" class="star-label text-gray-300 text-3xl cursor-pointer hover:text-yellow-400 transition-colors duration-200">
+                  <i class="fas fa-star"></i>
+                </label>
+                <input type="radio" id="star2" name="danh_gia" value="2" hidden />
+                <label for="star2" title="2 sao" class="star-label text-gray-300 text-3xl cursor-pointer hover:text-yellow-400 transition-colors duration-200">
+                  <i class="fas fa-star"></i>
+                </label>
+                <input type="radio" id="star1" name="danh_gia" value="1" hidden />
+                <label for="star1" title="1 sao" class="star-label text-gray-300 text-3xl cursor-pointer hover:text-yellow-400 transition-colors duration-200">
+                  <i class="fas fa-star"></i>
+                </label>
+              </div>
+              <textarea
+                name="noi_dung"
+                class="w-full p-2.5 border border-gray-300 rounded-xl focus:ring-3 focus:ring-yellow-200 focus:border-yellow-400 transition text-sm text-gray-800"
+                placeholder="Nội dung đánh giá (tùy chọn)"
+                rows="3"
+              ></textarea>
+              <button
+                type="submit"
+                class="w-full px-5 py-2.5 bg-yellow-500 text-white font-semibold rounded-full hover:bg-yellow-600 transition duration-300 ease-in-out shadow-md hover:shadow-lg flex items-center justify-center text-sm"
+              >
+                <i class="fas fa-paper-plane mr-2"></i> Gửi đánh giá
+              </button>
+            </form>
+            <form
+              action="/cong-thuc/<%= recipe.ID_CHINH_CT %>/yeu-thich"
+              method="POST"
+              class="mt-3"
+            >
+              <button
+                type="submit"
+                class="w-full flex items-center justify-center px-5 py-2.5 border-2 <%= recipe.isFavorite ? 'border-gray-400 text-gray-600 bg-gray-100 hover:bg-gray-200' : 'border-red-500 text-red-500 hover:bg-red-500 hover:text-white' %> rounded-full transition duration-300 ease-in-out font-semibold text-sm"
+              >
+                <i class="fas fa-heart mr-2 text-base"></i>
+                <%= recipe.isFavorite ? 'Đã yêu thích' : 'Thêm vào yêu thích' %>
+              </button>
+            </form>
+          </div>
         <% } else { %>
-        <p class="text-gray-600 text-base mt-5 p-3 bg-yellow-50 rounded-xl">
-          Vui lòng
-          <a href="/login" class="text-yellow-700 font-semibold hover:underline"
-            >đăng nhập</a
-          >
-          để đánh giá hoặc yêu thích.
-        </p>
+          <p class="text-gray-600 text-base mt-5 p-3 bg-yellow-50 rounded-xl">
+            Vui lòng
+            <a href="/login" class="text-yellow-600 font-semibold hover:underline"
+              >đăng nhập</a
+            >
+            để đánh giá hoặc yêu thích.
+          </p>
         <% } %>
       </div>
     </div>
   </div>
 
+  <!-- Scroll to Top Button -->
   <button
     id="scrollTopBtn"
     class="fixed bottom-6 right-6 bg-yellow-600 text-white p-3 rounded-full shadow-lg hover:bg-yellow-700 transition-all duration-300 opacity-0 invisible z-50 transform hover:scale-110"
@@ -667,6 +677,7 @@
     <i class="fas fa-arrow-up text-lg"></i>
   </button>
 </div>
+
 <style>
   .font-roboto {
     font-family: 'Roboto', sans-serif;
@@ -675,12 +686,10 @@
   .info-badge {
     display: inline-flex;
     align-items: center;
-    font-weight: 500; /* Medium weight */
-    white-space: nowrap; /* Prevent wrapping */
-    /* transition: all 0.2s ease-in-out; */ /* Uncomment if you want hover effects on badges */
+    font-weight: 500;
+    white-space: nowrap;
   }
 
-  /* Rating Stars */
   .rating-stars label {
     transition: all 0.2s ease-in-out;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
@@ -688,10 +697,20 @@
 
   .rating-stars label:hover,
   .rating-stars label:hover ~ label {
-    color: #fcd34d; /* yellow-400 */
+    color: #fcd34d;
   }
 
   .rating-stars input:checked ~ label {
-    color: #fcd34d; /* yellow-400 */
+    color: #fcd34d;
+  }
+
+  /* Animation for flash message */
+  @keyframes slideIn {
+    0% { transform: translateY(-20px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+  }
+
+  .animate-slide-in {
+    animation: slideIn 0.5s ease-out;
   }
 </style>
