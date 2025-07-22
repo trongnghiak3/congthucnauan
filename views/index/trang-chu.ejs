@@ -1,102 +1,235 @@
-<div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
+<main class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
 
-  <section class="relative w-full h-[450px] md:h-[550px] bg-cover bg-center flex items-center justify-center text-center rounded-3xl overflow-hidden shadow-2xl mb-12"
-    style="background-image: url('https://images.pexels.com/photos/4551832/pexels-photo-4551832.jpeg');">
-    <div class="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center">
-      <div class="p-6 md:p-10 max-w-2xl text-white">
-        <h1 class="text-4xl md:text-6xl font-extrabold leading-tight mb-4 animate__animated animate__fadeInDown">
-          Khám phá Thế Giới Ẩm Thực Tuyệt Vời
-        </h1>
-        <p class="text-lg md:text-xl text-gray-200 mb-6 animate__animated animate__fadeInUp animate__delay-0-5s">
-          Hàng ngàn công thức nấu ăn ngon miệng, dễ làm, đang chờ bạn khám phá và chinh phục.
+  
+    <section class="relative w-full h-[450px] md:h-[550px] bg-cover bg-center flex items-center justify-center text-center rounded-3xl overflow-hidden shadow-2xl mb-12"
+        style="background-image: url('https://images.pexels.com/photos/4551832/pexels-photo-4551832.jpeg');">
+        <div class="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4">
+            <div class="p-6 md:p-10 max-w-2xl text-white">
+                <h1 class="text-4xl md:text-6xl font-extrabold leading-tight mb-4 drop-shadow-lg animate__animated animate__fadeInDown">
+                    Khám phá Thế Giới Ẩm Thực Tuyệt Vời
+                </h1>
+                <p class="text-lg md:text-xl text-gray-200 mb-8 drop-shadow animate__animated animate__fadeInUp animate__delay-1s">
+                    Hàng ngàn công thức nấu ăn ngon miệng, dễ làm, đang chờ bạn khám phá và chinh phục.
+                </p>
+                <a href="/cong-thuc"
+                    class="inline-block bg-yellow-500 text-white px-8 py-4 rounded-full text-lg font-bold shadow-xl hover:bg-yellow-600 transition-all duration-300 transform hover:scale-105 animate__animated animate__zoomIn animate__delay-1s">
+                    Bắt đầu nấu ngay <i class="fas fa-arrow-right ml-2"></i>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <%# Search Form %>
+    <form action="/cong-thuc" method="GET" class="mb-16 -mt-20 relative z-10 max-w-3xl mx-auto">
+        <div class="flex rounded-full border-4 border-white shadow-2xl overflow-hidden bg-white">
+            <input name="timKiem" type="text" placeholder="Tìm công thức theo tên món ăn, nguyên liệu, hoặc loại hình..."
+                class="w-full px-6 py-3 md:py-4 text-lg text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-stone-200 focus:border-stone-500 rounded-l-full" />
+            <button type="submit"
+                class="bg-yellow-500 text-white px-6 md:px-8 hover:bg-stone-700 transition-colors duration-300 flex items-center justify-center rounded-r-full">
+                <i class="fas fa-search text-xl"></i>
+            </button>
+        </div>
+    </form>
+
+   
+    <section class="mb-16">
+        <div class="flex justify-between items-center mb-8">
+            <h2 class="text-3xl md:text-4xl font-bold text-stone-800">Hôm nay ăn gì?</h2>
+            <button id="refresh-today-recipe" class="text-lg text-stone-600 hover:text-stone-700 transition-colors duration-200 flex items-center group">
+                Làm mới <i class="fas fa-sync-alt ml-2 text-sm"></i>
+            </button>
+        </div>
+        <div id="today-recipe-container">
+            <% if (todayRecipe) { %>
+                <%
+                    const totalMinutes = parseInt(todayRecipe.THOI_GIAN_NAU) || parseInt(todayRecipe.THOI_GIAN) || 0;
+                    let timeDisplay = "";
+                    if (totalMinutes >= 60) {
+                        const hours = Math.floor(totalMinutes / 60);
+                        const mins = totalMinutes % 60;
+                        timeDisplay = `${hours} giờ${mins > 0 ? ' ' + mins + ' phút' : ''}`;
+                    } else {
+                        timeDisplay = `${totalMinutes} phút`;
+                    }
+                %>
+                <div class="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-stone-100">
+                    <div class="md:flex">
+                        <div class="md:w-1/2 h-64 md:h-96 overflow-hidden relative">
+                            <img src="<%= todayRecipe.HINH_ANH_CT || 'https://via.placeholder.com/600x400/F0F0F0/B0B0B0?text=No+Image' %>" 
+                                 alt="<%= todayRecipe.TEN_CT %>" 
+                                 class="w-full h-full object-cover transition-transform duration-500 hover:scale-110" />
+                            <span class="absolute top-3 left-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white text-xs sm:text-sm font-semibold px-3 py-1.5 rounded-full shadow-md">
+                                <%= todayRecipe.TEN_MON_AN || 'Ẩm thực' %>
+                            </span>
+                            <% if (todayRecipe.DANH_GIA && todayRecipe.DANH_GIA !== 'Chưa có') { %>
+                                <div class="absolute bottom-3 right-3 bg-stone-800 bg-opacity-80 text-white text-xs sm:text-sm font-semibold px-3 py-1.5 rounded-full flex items-center shadow-md">
+                                    <i class="fas fa-star text-yellow-400 mr-1.5"></i>
+                                    <%= todayRecipe.DANH_GIA %>
+                                </div>
+                            <% } %>
+                        </div>
+                        <div class="md:w-1/2 p-6 md:p-8 flex flex-col justify-center bg-stone-50">
+                            <h3 class="text-2xl md:text-3xl font-bold text-stone-800 mb-4 hover:text-amber-600 transition-colors duration-300">
+                                <%= todayRecipe.TEN_CT %>
+                            </h3>
+                            <p class="text-gray-600 mb-6 line-clamp-3">
+                                <%= todayRecipe.MO_TA || 'Thưởng thức món ăn tuyệt vời này với công thức đơn giản và dễ thực hiện!' %>
+                            </p>
+                            <div class="flex flex-wrap items-center gap-4 text-sm text-stone-600 font-medium">
+                                <span class="flex items-center gap-1.5">
+                                    <i class="fas fa-clock text-amber-500"></i> <%= timeDisplay %>
+                                </span>
+                                <span class="flex items-center gap-1.5">
+                                    <i class="fas fa-fire text-red-500"></i> <%= todayRecipe.DO_KHO || 'Dễ' %>
+                                </span>
+                                <span class="flex items-center gap-1.5">
+                                    <i class="fas fa-utensils text-green-500"></i> <%= todayRecipe.SO_PHAN_AN || todayRecipe.KHOI_LUONG || '4' %> người
+                                </span>
+                            </div>
+                            <a href="/cong-thuc/<%= todayRecipe.SLUG_CT || todayRecipe.ID_CHINH_CT %>" 
+                               class="mt-6 inline-block bg-yellow-500 text-white px-6 py-3 rounded-full text-lg font-bold shadow-xl hover:bg-yellow-600 transition-all duration-300 transform hover:scale-105">
+                                Xem công thức <i class="fas fa-arrow-right ml-2"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            <% } else { %>
+                <p class="text-center text-gray-600 p-8 bg-stone-50 rounded-lg shadow-inner border border-stone-200">
+                    Chưa có gợi ý món ăn cho hôm nay. Hãy thử tìm kiếm một công thức yêu thích!
+                </p>
+            <% } %>
+        </div>
+    </section>
+
+    
+    <section class="mb-16">
+        <div class="flex justify-between items-center mb-8">
+            <h2 class="text-3xl md:text-4xl font-bold text-stone-800">Khám phá Danh mục</h2>
+            <a href="/danh-muc" class="text-lg text-stone-600 hover:text-stone-700 transition-colors duration-200 flex items-center group">
+                Xem tất cả <i class="fas fa-chevron-right ml-2 text-sm transition-transform duration-200 group-hover:translate-x-1"></i>
+            </a>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+            <% if (categories && categories.length > 0) { %>
+                <% categories.slice(0, 6).forEach(cat => { %>
+                    <a href="/danh-muc/<%= cat.SLUG_LM %>"
+                        class="group block bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 relative border border-stone-100">
+                        <div class="h-36 md:h-40 overflow-hidden">
+                            <img src="<%= cat.HINH_ANH_LM_URL || 'https://via.placeholder.com/400x300/F0F0F0/B0B0B0?text=No+Image' %>" 
+                                 alt="<%= cat.TEN_LM %>" 
+                                 class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                        </div>
+                        <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-stone-900 via-stone-900/70 to-transparent p-3 text-center">
+                            <h3 class="font-bold text-lg text-white group-hover:text-stone-300 transition-colors duration-200">
+                                <%= cat.TEN_LM %>
+                            </h3>
+                        </div>
+                    </a>
+                <% }) %>
+            <% } else { %>
+                <p class="col-span-full text-center text-gray-600 p-8 bg-stone-50 rounded-lg shadow-inner border border-stone-200">Chưa có danh mục nào để hiển thị.</p>
+            <% } %>
+        </div>
+    </section>
+
+    
+<!-- các công thức mới nhất -->
+    <section class="mb-16">
+        <div class="flex justify-between items-center mb-8">
+            <h2 class="text-3xl md:text-4xl font-bold text-stone-800">Công thức mới nhất</h2>
+            <a href="/cong-thuc?sapXep=moi-nhat" class="text-lg text-stone-600 hover:text-stone-700 transition-colors duration-200 flex items-center group">
+                Xem tất cả <i class="fas fa-chevron-right ml-2 text-sm transition-transform duration-200 group-hover:translate-x-1"></i>
+            </a>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            <% if (recipesNewest && recipesNewest.length > 0) { %>
+                <% recipesNewest.forEach(recipe => { %>
+                    <%- include("../partials/recipeCard", { recipe: recipe, user: user }) %>
+                <% }) %>
+            <% } else { %>
+                <p class="col-span-full text-center text-gray-600 p-8 bg-stone-50 rounded-lg shadow-inner border border-stone-200">Chưa có công thức mới nào.</p>
+            <% } %>
+        </div>
+    </section>
+
+<!-- các công thức nôi bật -->
+    <section class="mb-16">
+        <div class="flex justify-between items-center mb-8">
+            <h2 class="text-3xl md:text-4xl font-bold text-stone-800">Công thức nổi bật</h2>
+            <a href="/cong-thuc?sapXep=danh-gia-cao" class="text-lg text-stone-600 hover:text-stone-700 transition-colors duration-200 flex items-center group">
+                Khám phá thêm <i class="fas fa-chevron-right ml-2 text-sm transition-transform duration-200 group-hover:translate-x-1"></i>
+            </a>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <% if (recipesHot && recipesHot.length > 0) { %>
+                <% recipesHot.forEach(recipe => { %>
+                    <%- include("../partials/recipeCard", { recipe: recipe, user: user }) %>
+                <% }) %>
+            <% } else { %>
+                <p class="col-span-full text-center text-gray-600 p-8 bg-yellow-50 rounded-lg shadow-inner border border-stone-200">Chưa có công thức nổi bật nào.</p>
+            <% } %>
+        </div>
+    </section>
+
+    <!-- Yêu thích gợi ý loại món -->
+    <section class="mb-16">
+        <h2 class="text-3xl md:text-4xl font-bold text-stone-800 mb-10 text-center">Gợi ý từ các loại món</h2>
+        <% if (featuredCategoriesData && featuredCategoriesData.length > 0) { %>
+            <% featuredCategoriesData.forEach(catData => { %>
+                <div class="mb-12 bg-white p-6 rounded-2xl shadow-lg border border-stone-100">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-2xl font-semibold text-stone-700">
+                            <%= catData.category.TEN_LM %>
+                        </h3>
+                        <a href="/danh-muc/<%= catData.category.SLUG_LM %>" class="text-md text-stone-600 hover:text-stone-700 flex items-center group">
+                            Xem tất cả <i class="fas fa-chevron-right ml-2 text-sm transition-transform duration-200 group-hover:translate-x-1"></i>
+                        </a>
+                    </div>
+                    <% if (catData.recipes && catData.recipes.length > 0) { %>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                            <% catData.recipes.forEach(recipe => { %>
+                                <%- include("../partials/recipeCard", { recipe: recipe, user: user }) %>
+                            <% }) %>
+                        </div>
+                    <% } else { %>
+                        <p class="text-gray-600 p-4 bg-gray-50 rounded-lg border border-stone-200">Chưa có công thức nào trong danh mục này.</p>
+                    <% } %>
+                </div>
+            <% }) %>
+        <% } else { %>
+            <p class="col-span-full text-center text-gray-600 p-8 bg-yellow-500 rounded-lg shadow-inner border border-stone-200">Chưa có danh mục nổi bật nào để gợi ý.</p>
+        <% } %>
+    </section>
+
+    <!-- Yêu thích nhiều nhất -->
+    <section class="mb-16">
+        <div class="flex justify-between items-center mb-8">
+            <h2 class="text-3xl md:text-4xl font-bold text-stone-800">Được yêu thích gần đây</h2>
+            <a href="/profile" class="text-lg text-stone-600 hover:text-stone-700 transition-colors duration-200 flex items-center group">
+                Xem thêm <i class="fas fa-chevron-right ml-2 text-sm transition-transform duration-200 group-hover:translate-x-1"></i>
+            </a>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            <% if (recipesLikedRecently && recipesLikedRecently.length > 0) { %>
+                <% recipesLikedRecently.forEach(recipe => { %>
+                    <%- include("../partials/recipeCard", { recipe: recipe, user: user }) %>
+                <% }) %>
+            <% } else { %>
+                <p class="col-span-full text-center text-gray-600 p-8 bg-yellow-500 rounded-lg shadow-inner border border-stone-200">Chưa có công thức nào được yêu thích gần đây.</p>
+            <% } %>
+        </div>
+    </section>
+
+    <section class="bg-stone-50 border-t-4 border-stone-300 p-8 rounded-xl shadow-lg text-center mb-12">
+        <h3 class="text-3xl font-bold text-stone-800 mb-4">Bạn có một công thức tuyệt vời muốn chia sẻ?</h3>
+        <p class="text-lg text-gray-700 mb-6 max-w-2xl mx-auto">
+            Hãy tham gia cộng đồng của chúng tôi! Đăng tải công thức của bạn và truyền cảm hứng cho hàng ngàn người yêu bếp khác.
         </p>
-        <a href="/cong-thuc"
-          class="inline-block bg-amber-500 text-white px-8 py-4 rounded-full text-lg font-bold shadow-lg hover:bg-amber-600 transition-all duration-300 transform hover:scale-105 animate__animated animate__zoomIn animate__delay-1s">
-          Bắt đầu nấu ngay <i class="fas fa-arrow-right ml-2"></i>
+        <a href="/dang-cong-thuc"
+            class="inline-block bg-yellow-500 text-white px-8 py-4 rounded-full hover:bg-yellow-600 transition-all duration-300 font-bold text-xl shadow-xl transform hover:scale-105">
+            <i class="fa-solid fa-plus mr-3"></i>Đăng công thức ngay
         </a>
-      </div>
-    </div>
-  </section>
+    </section>
 
-  <form action="/cong-thuc" method="GET" class="mb-12 -mt-20 relative z-10 max-w-3xl mx-auto">
-    <div class="flex rounded-full border-4 border-white shadow-xl overflow-hidden bg-white">
-      <input name="search" type="text" placeholder="Tìm công thức theo tên món ăn, nguyên liệu, hoặc loại hình..."
-        class="w-full px-6 py-3 md:py-4 text-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent rounded-l-full" />
-      <button type="submit"
-        class="bg-amber-500 text-white px-6 md:px-8 hover:bg-amber-600 transition-colors duration-300 flex items-center justify-center rounded-r-full">
-        <i class="fas fa-search text-xl"></i>
-      </button>
-    </div>
-  </form>
 
-  <section class="mb-16">
-    <div class="flex justify-between items-center mb-6">
-      <h2 class="text-3xl font-bold text-gray-800">Khám phá Danh mục</h2>
-      <a href="/danh-muc" class="text-lg text-amber-600 hover:text-amber-700 transition-colors duration-200 flex items-center">
-        Xem tất cả <i class="fas fa-chevron-right ml-2 text-sm"></i>
-      </a>
-    </div>
-    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
-      <% categories.slice(0, 6).forEach(cat => { %>
-        <a href="/danh-muc/<%= cat.SLUG_LM %>"
-          class="group block bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 relative">
-          <% if (cat.HINH_ANH_LM_URL) { %>
-            <div class="h-36 md:h-40 overflow-hidden">
-              <img src="<%= cat.HINH_ANH_LM_URL %>" alt="<%= cat.TEN_LM %>"
-                class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-            </div>
-          <% } else { %>
-            <div class="w-full h-36 md:h-40 bg-gray-100 flex items-center justify-center text-gray-400 text-base">
-              <i class="fas fa-utensils text-3xl"></i>
-            </div>
-          <% } %>
-          <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/70 to-transparent p-3 text-center">
-            <h3 class="font-bold text-lg text-white group-hover:text-amber-400 transition-colors duration-200">
-              <%= cat.TEN_LM %>
-            </h3>
-          </div>
-        </a>
-      <% }) %>
-    </div>
-  </section>
-
-  <section class="mb-16">
-    <div class="flex justify-between items-center mb-6">
-      <h2 class="text-3xl font-bold text-gray-800">Công thức mới nhất</h2>
-      <a href="/mon-an" class="text-lg text-amber-600 hover:text-amber-700 transition-colors duration-200 flex items-center">
-        Xem tất cả <i class="fas fa-chevron-right ml-2 text-sm"></i>
-      </a>
-    </div>
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-      <% monAnMoi.forEach(mon => { %>
-        <%- include("../partials/mon-an-card", { mon: mon }) %>
-      <% }) %>
-    </div>
-  </section>
-
-  <section class="mb-16">
-    <div class="flex justify-between items-center mb-6">
-      <h2 class="text-3xl font-bold text-gray-800">Công thức nổi bật</h2>
-      <a href="/cong-thuc" class="text-lg text-amber-600 hover:text-amber-700 transition-colors duration-200 flex items-center">
-        Khám phá thêm <i class="fas fa-chevron-right ml-2 text-sm"></i>
-      </a>
-    </div>
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-      <% recipesHot.forEach(recipe => { %>
-        <%- include("../partials/recipeCard", { recipe: recipe }) %>
-      <% }) %>
-    </div>
-  </section>
-
-  <section class="bg-amber-50 border-t-4 border-amber-300 p-8 rounded-xl shadow-lg text-center mb-12">
-    <h3 class="text-3xl font-bold text-gray-800 mb-4">Bạn có một công thức tuyệt vời muốn chia sẻ?</h3>
-    <p class="text-lg text-gray-600 mb-6 max-w-2xl mx-auto">
-      Hãy tham gia cộng đồng của chúng tôi! Đăng tải công thức của bạn và truyền cảm hứng cho hàng ngàn người yêu bếp khác.
-    </p>
-    <a href="/dang-cong-thuc"
-      class="inline-block bg-amber-500 text-white px-8 py-4 rounded-full hover:bg-amber-600 transition-all duration-300 font-bold text-xl shadow-lg transform hover:scale-105">
-      <i class="fa-solid fa-plus mr-3"></i>Đăng công thức ngay
-    </a>
-  </section>
-
-</div>
+</main>

@@ -47,20 +47,28 @@
       if (tooltip) tooltip.classList.add("hidden");
     }
 
-    // Xem trước ảnh khi chọn
+     // Xem trước ảnh khi chọn
     avatarInput?.addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (file && file.type.startsWith('image/')) {
         const reader = new FileReader();
         reader.onload = (e) => {
-          const img = document.querySelector('img[alt="Avatar"]') || document.createElement('img');
-          img.src = e.target.result;
-          img.className = "w-60 h-60 rounded-xl shadow-md object-cover mb-4 transition-transform duration-300 hover:scale-105 hover:shadow-lg";
-          img.alt = "Avatar";
           const avatarContainer = document.querySelector('.w-full.lg\\:w-2\\/5');
-          const placeholder = avatarContainer.querySelector('.w-60.h-60.rounded-xl.bg-gray-100');
-          if (placeholder) placeholder.remove();
-          avatarContainer.insertBefore(img, avatarContainer.children[1]);
+          const currentVisual = avatarContainer.querySelector('img[alt="Avatar"], .w-60.h-60.rounded-xl.bg-gray-100'); // Tìm cả ảnh hoặc placeholder
+
+          // Nếu có bất kỳ phần tử hiển thị ảnh/placeholder hiện tại, hãy xóa nó
+          if (currentVisual) {
+            currentVisual.remove();
+          }
+
+          // Tạo một thẻ img mới để hiển thị ảnh preview
+          const newImg = document.createElement('img');
+          newImg.src = e.target.result;
+          newImg.className = "w-60 h-60 rounded-xl shadow-md object-cover mb-4 transition-transform duration-300 hover:scale-105 hover:shadow-lg";
+          newImg.alt = "Avatar";
+
+          // Chèn ảnh mới vào vị trí thích hợp (sau h2)
+          avatarContainer.insertBefore(newImg, avatarContainer.children[1]);
         };
         reader.readAsDataURL(file);
       } else {
@@ -178,7 +186,20 @@
       console.warn("Không tìm thấy một trong các nút: Chỉnh sửa, Lưu, hoặc Thoát");
     }
   }
+   function togglePasswordVisibility(inputId, iconElement) {
+            const input = document.getElementById(inputId);
+            const icon = iconElement.querySelector('i');
 
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
   // Gọi khi DOM đã load xong
   document.addEventListener("DOMContentLoaded", () => {
     bindTrangCaNhanEventListeners();

@@ -9,7 +9,15 @@
 <body class="p-4 font-sans bg-gray-50">
   <div class="max-w-6xl mx-auto h-full">
     <div class="flex justify-between items-center mb-4">
-      <h1 class="text-2xl font-bold text-gray-800"></h1>
+       <div class="mb-4">
+      <input
+        type="text"
+        id="searchCategory"
+        onkeyup="searchCategories()"
+        placeholder="Tìm kiếm loại món..."
+        class="w-full  border border-gray-300 rounded-lg px-3 py-1 text-sm focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition"
+      />
+    </div>
       <button
         onclick="openAddCategoryModal()"
         class="px-3 py-1.5 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition duration-200 text-sm"
@@ -17,6 +25,8 @@
         ➕ Thêm Loại Món
       </button>
     </div>
+
+  
 
     <table class="min-w-full border border-gray-300 rounded-lg overflow-hidden shadow-sm bg-white">
       <thead class="bg-gray-100 text-gray-700 uppercase text-xs font-semibold">
@@ -28,10 +38,10 @@
           <th class="px-4 py-2 text-left">Hành động</th>
         </tr>
       </thead>
-      <tbody class="text-gray-800 text-sm">
+      <tbody class="text-gray-800 text-sm" id="categoryTableBody">
         <% if (categories && categories.length > 0) { %>
           <% categories.forEach(category => { %>
-            <tr class="hover:bg-yellow-50 transition duration-200">
+            <tr class="hover:bg-yellow-50 transition duration-200 category-row">
               <td class="px-4 py-2 border-t border-gray-200"><%= category.ID_CHINH_LM %></td>
               <td class="px-4 py-2 border-t border-gray-200"><%= category.TEN_LM %></td>
               <td class="px-4 py-2 border-t border-gray-200"><%= category.SLUG_LM || 'Không có' %></td>
@@ -66,106 +76,258 @@
           <% }) %>
         <% } else { %>
           <tr>
-            <td colspan="5" class="text-center py-4 text-gray-400 italic text-sm">Không có loại món nào!</td>
+            <td colspan="5" class="text-center py-4 text-gray-400 italic text-sm no-category-found">Không có loại món nào!</td>
           </tr>
         <% } %>
       </tbody>
     </table>
 
-        <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
-          <div class="mt-4 flex justify-center space-x-2">
-            <% if (currentPage > 1) { %>
-              <a
-                href="#"
-                onclick="loadPage('/admin/loai-mon?page=<%= currentPage - 1 %>', document.querySelector('#content')); return false;"
-                class="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 transition text-sm"
-              >
-                ‹ Trước
-              </a>
-            <% } %>
-            <% for (let i = 1; i <= totalPages; i++) { %>
-              <a
-                href="#"
-                onclick="loadPage('/admin/loai-mon?page=<%= i %>', document.querySelector('#content')); return false;"
-                class="px-3 py-1 rounded-lg border text-sm <%= i === currentPage ? 'bg-yellow-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100' %>"
-              >
-                <%= i %>
-              </a>
-            <% } %>
-            <% if (currentPage < totalPages) { %>
-              <a
-                href="#"
-                onclick="loadPage('/admin/loai-mon?page=<%= currentPage + 1 %>', document.querySelector('#content')); return false;"
-                class="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 transition text-sm"
-              >
-                Sau ›
-              </a>
-            <% } %>
-          </div>
+    <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
+      <div class="mt-4 flex justify-center space-x-2">
+        <% if (currentPage > 1) { %>
+          <a
+            href="#"
+            onclick="loadPage('/admin/loai-mon?page=<%= currentPage - 1 %>', document.querySelector('#content')); return false;"
+            class="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 transition text-sm"
+          >
+            ‹ Trước
+          </a>
+        <% } %>
+        <% for (let i = 1; i <= totalPages; i++) { %>
+          <a
+            href="#"
+            onclick="loadPage('/admin/loai-mon?page=<%= i %>', document.querySelector('#content')); return false;"
+            class="px-3 py-1 rounded-lg border text-sm <%= i === currentPage ? 'bg-yellow-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100' %>"
+          >
+            <%= i %>
+          </a>
+        <% } %>
+        <% if (currentPage < totalPages) { %>
+          <a
+            href="#"
+            onclick="loadPage('/admin/loai-mon?page=<%= currentPage + 1 %>', document.querySelector('#content')); return false;"
+            class="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 transition text-sm"
+          >
+            Sau ›
+          </a>
         <% } %>
       </div>
+    <% } %>
+  </div>
 
-      <div id="categoryModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
-        <div class="bg-white p-4 rounded-lg shadow-lg w-full max-w-sm">
-          <h2 id="modalTitle" class="text-lg font-semibold mb-3 text-gray-800">Thêm Loại Món</h2>
+  <div id="categoryModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+    <div class="bg-white p-4 rounded-lg shadow-lg w-full max-w-sm">
+      <h2 id="modalTitle" class="text-lg font-semibold mb-3 text-gray-800">Thêm Loại Món</h2>
       <form id="categoryForm" enctype="multipart/form-data" data-category-id="">
         <input type="hidden" id="categoryId" name="ID_CHINH_LM" />
-            <div class="mb-3">
-              <label for="tenLoai" class="block text-sm font-medium text-gray-700">Tên Loại Món</label>
-              <input
-                type="text"
-                id="tenLoai"
-                name="TEN_LM"
-                class="mt-1 p-1.5 w-full border rounded-lg focus:ring-yellow-500 focus:border-yellow-500 text-sm"
-                required
-              />
-            </div>
-            <div class="mb-3">
-              <label for="slug" class="block text-sm font-medium text-gray-700">Slug</label>
-              <input
-                type="text"
-                id="slug"
-                name="SLUG_LM"
-                class="mt-1 p-1.5 w-full border rounded-lg focus:ring-yellow-500 focus:border-yellow-500 text-sm"
-              />
-            </div>
-            <div class="mb-3">
-              <label class="block text-sm font-medium text-gray-700 mb-1">Hình Ảnh</label>
-              <img
-                id="imagePreview"
-                src="/default.jpg"
-                class="mt-1 w-28 h-28 object-cover rounded-lg border cursor-pointer"
-                onclick="document.getElementById('hinhAnh').click()"
-              />
-              <input
-                type="file"
-                id="hinhAnh"
-                name="hinh_anh"
-                accept="image/*"
-                class="hidden"
-                onchange="previewImage(this, 'imagePreview')"
-              />
-            </div>
-            <div class="flex justify-end space-x-2">
-              <button
-                type="button"
-                onclick="closeCategoryModal()"
-                class="px-3 py-1 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition text-sm"
-              >
-                Hủy
-              </button>
-              <button
-                type="submit"
-                id="submitButton"
-                class="px-3 py-1 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition text-sm"
-              >
-                Thêm
-              </button>
-            </div>
-          </form>
+        <div class="mb-3">
+          <label for="tenLoai" class="block text-sm font-medium text-gray-700">Tên Loại Món</label>
+          <input
+            type="text"
+            id="tenLoai"
+            name="TEN_LM"
+            class="mt-1 p-1.5 w-full border rounded-lg focus:ring-yellow-500 focus:border-yellow-500 text-sm"
+            required
+          />
         </div>
-      </div>
+        <div class="mb-3">
+          <label for="slug" class="block text-sm font-medium text-gray-700">Slug</label>
+          <input
+            type="text"
+            id="slug"
+            name="SLUG_LM"
+            class="mt-1 p-1.5 w-full border rounded-lg focus:ring-yellow-500 focus:border-yellow-500 text-sm"
+          />
+        </div>
+        <div class="mb-3">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Hình Ảnh</label>
+          <img
+            id="imagePreview"
+            src="/default.jpg"
+            class="mt-1 w-28 h-28 object-cover rounded-lg border cursor-pointer"
+            onclick="document.getElementById('hinhAnh').click()"
+          />
+          <input
+            type="file"
+            id="hinhAnh"
+            name="hinh_anh"
+            accept="image/*"
+            class="hidden"
+            onchange="previewImage(this, 'imagePreview')"
+          />
+        </div>
+        <div class="flex justify-end space-x-2">
+          <button
+            type="button"
+            onclick="closeCategoryModal()"
+            class="px-3 py-1 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition text-sm"
+          >
+            Hủy
+          </button>
+          <button
+            type="submit"
+            id="submitButton"
+            class="px-3 py-1 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition text-sm"
+          >
+            Thêm
+          </button>
+        </div>
+      </form>
     </div>
+  </div>
 
-  </body>
-  </html>
+  <!-- <script>
+    // Function to handle image preview
+    function previewImage(input, previewId) {
+      const preview = document.getElementById(previewId);
+      if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          preview.src = e.target.result;
+        };
+        reader.readAsDataURL(input.files[0]);
+      } else {
+        preview.src = "/default.jpg"; // Set a default image if no file is selected
+      }
+    }
+
+    // Function to open the Add Category modal
+    function openAddCategoryModal() {
+      document.getElementById('modalTitle').textContent = 'Thêm Loại Món';
+      document.getElementById('categoryForm').reset();
+      document.getElementById('categoryId').value = '';
+      document.getElementById('imagePreview').src = "/default.jpg";
+      document.getElementById('submitButton').textContent = 'Thêm';
+      document.getElementById('categoryModal').classList.remove('hidden');
+      document.getElementById('categoryForm').setAttribute('data-category-id', ''); // Clear any existing ID
+    }
+
+    // Function to close the modal
+    function closeCategoryModal() {
+      document.getElementById('categoryModal').classList.add('hidden');
+    }
+
+    // Function to open the Edit Category modal (requires fetching data for the ID)
+    async function openEditCategoryModal(categoryId) {
+      document.getElementById('modalTitle').textContent = 'Sửa Loại Món';
+      document.getElementById('submitButton').textContent = 'Cập nhật';
+      document.getElementById('categoryModal').classList.remove('hidden');
+      document.getElementById('categoryId').value = categoryId;
+      document.getElementById('categoryForm').setAttribute('data-category-id', categoryId);
+
+      try {
+        const response = await fetch(`/api/loai-mon/${categoryId}`); // Adjust API endpoint as needed
+        if (!response.ok) {
+          throw new Error('Failed to fetch category data');
+        }
+        const category = await response.json();
+
+        document.getElementById('tenLoai').value = category.TEN_LM;
+        document.getElementById('slug').value = category.SLUG_LM || '';
+        document.getElementById('imagePreview').src = category.HINH_ANH_LM_URL || "/default.jpg";
+      } catch (error) {
+        console.error('Error fetching category for edit:', error);
+        alert('Có lỗi xảy ra khi tải dữ liệu loại món.');
+        closeCategoryModal();
+      }
+    }
+
+    // Function to handle form submission for Add/Edit
+    document.getElementById('categoryForm').addEventListener('submit', async function(event) {
+      event.preventDefault();
+
+      const form = event.target;
+      const formData = new FormData(form);
+      const categoryId = form.getAttribute('data-category-id');
+
+      let url = '/api/loai-mon'; // Default for adding
+      let method = 'POST';
+
+      if (categoryId) {
+        url = `/api/loai-mon/${categoryId}`; // For editing
+        method = 'PUT';
+      }
+
+      try {
+        const response = await fetch(url, {
+          method: method,
+          body: formData, // FormData handles multipart/form-data for files
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Something went wrong');
+        }
+
+        alert('Thao tác thành công!');
+        closeCategoryModal();
+        // Reload the current page to see updated data
+        loadPage('/admin/loai-mon?page=<%= currentPage %>', document.querySelector('#content'));
+      } catch (error) {
+        console.error('Error submitting form:', error);
+        alert('Lỗi: ' + error.message);
+      }
+    });
+
+    // Function to confirm and handle category deletion
+    async function confirmDeleteCategory(categoryId) {
+      if (confirm('Bạn có chắc chắn muốn xóa loại món này không?')) {
+        try {
+          const response = await fetch(`/api/loai-mon/${categoryId}`, {
+            method: 'DELETE',
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to delete category');
+          }
+
+          alert('Xóa loại món thành công!');
+          // Reload the current page to see updated data
+          loadPage('/admin/loai-mon?page=<%= currentPage %>', document.querySelector('#content'));
+        } catch (error) {
+          console.error('Error deleting category:', error);
+          alert('Lỗi: ' + error.message);
+        }
+      }
+    }
+
+    // --- New searchCategories function ---
+    function searchCategories() {
+      const input = document.getElementById('searchCategory').value.toLowerCase().trim();
+      const rows = document.querySelectorAll('#categoryTableBody .category-row');
+      const noCategoryFoundRow = document.querySelector('.no-category-found');
+      let found = false;
+
+      rows.forEach(row => {
+        const categoryName = row.children[1].textContent.toLowerCase(); // Tên Loại Món is the second column (index 1)
+        if (categoryName.includes(input)) {
+          row.style.display = ''; // Show row
+          found = true;
+        } else {
+          row.style.display = 'none'; // Hide row
+        }
+      });
+
+      // Show/hide "No category found" message
+      if (noCategoryFoundRow) {
+        if (found) {
+          noCategoryFoundRow.style.display = 'none';
+        } else {
+          noCategoryFoundRow.style.display = '';
+        }
+      }
+    }
+
+    // Placeholder for loadPage function if it's defined elsewhere
+    // This is crucial for pagination and general content loading to work.
+    // Make sure this function is globally accessible or imported.
+    function loadPage(url, targetElement) {
+        console.log(`Loading content from: ${url} into ${targetElement ? targetElement.id : 'unknown element'}`);
+        // In a real application, this would typically fetch the HTML and insert it.
+        // For this example, we'll just simulate a redirect for simplicity.
+        window.location.href = url;
+    }
+  </script> -->
+</body>
+</html>

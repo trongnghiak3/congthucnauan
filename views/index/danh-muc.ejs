@@ -58,24 +58,64 @@
   </div>
 
   <!-- Phân trang -->
-  <% if (totalPages > 1) { %>
-    <div class="mt-12 flex justify-center space-x-2">
-      <% if (currentPage > 1) { %>
-        <a href="?page=<%= currentPage - 1 %>&search=<%= search %>" class="px-3 py-1 border rounded hover:bg-gray-100">&laquo;</a>
-      <% } %>
+<% if (totalPages > 1) { %>
+    <div class="flex justify-center mt-12 space-x-2">
+        <!-- Nút trang trước -->
+        <% if (currentPage > 1) { %>
+            <a href="?page=<%= currentPage - 1 %>&search=<%= search || '' %>"
+               class="px-4 py-2 bg-yellow-500 rounded-full text-white font-semibold hover:bg-yellow-600 text-base shadow-md transition-all duration-200 flex items-center justify-center">
+                <i class="fas fa-chevron-left"></i>
+            </a>
+        <% } %>
 
-      <% for (let i = 1; i <= totalPages; i++) { %>
-        <a href="?page=<%= i %>&search=<%= search %>"
-           class="px-3 py-1 border rounded <%= i === currentPage ? 'bg-amber-500 text-white' : 'hover:bg-gray-100' %>">
-          <%= i %>
-        </a>
-      <% } %>
+        <!-- Hiển thị số trang -->
+        <%
+            const maxPageButtons = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxPageButtons / 2));
+            let endPage = Math.min(totalPages, startPage + maxPageButtons - 1);
 
-      <% if (currentPage < totalPages) { %>
-        <a href="?page=<%= currentPage + 1 %>&search=<%= search %>" class="px-3 py-1 border rounded hover:bg-gray-100">&raquo;</a>
-      <% } %>
+            if (endPage - startPage < maxPageButtons - 1) {
+                startPage = Math.max(1, totalPages - maxPageButtons + 1);
+            }
+
+            if (startPage > 1) { %>
+                <a href="?page=1&search=<%= search || '' %>"
+                   class="px-4 py-2 rounded-full text-base font-semibold transition-all duration-200 bg-white border border-yellow-500 text-gray-700 hover:bg-yellow-100 hover:border-yellow-600">
+                    1
+                </a>
+                <% if (startPage > 2) { %>
+                    <span class="px-2 py-1.5 text-gray-500 text-lg">...</span>
+                <% } %>
+        <% } %>
+
+        <!-- Các nút trang -->
+        <% for (let i = startPage; i <= endPage; i++) { %>
+            <a href="?page=<%= i %>&search=<%= search || '' %>"
+               class="px-4 py-2 rounded-full text-base font-semibold transition-all duration-200 <%= i === currentPage ? 'bg-yellow-500 text-white shadow-md' : 'bg-white border border-yellow-500 text-gray-700 hover:bg-yellow-100 hover:border-yellow-600' %>">
+                <%= i %>
+            </a>
+        <% } %>
+
+        <!-- Hiển thị trang cuối và dấu chấm lửng -->
+        <% if (endPage < totalPages) { %>
+            <% if (endPage < totalPages - 1) { %>
+                <span class="px-2 py-1.5 text-gray-500 text-lg">...</span>
+            <% } %>
+            <a href="?page=<%= totalPages %>&search=<%= search || '' %>"
+               class="px-4 py-2 rounded-full text-base font-semibold transition-all duration-200 bg-white border border-yellow-500 text-gray-700 hover:bg-yellow-100 hover:border-yellow-600">
+                <%= totalPages %>
+            </a>
+        <% } %>
+
+        <!-- Nút trang sau -->
+        <% if (currentPage < totalPages) { %>
+            <a href="?page=<%= currentPage + 1 %>&search=<%= search || '' %>"
+               class="px-4 py-2 bg-yellow-500 rounded-full text-white font-semibold hover:bg-yellow-600 text-base shadow-md transition-all duration-200 flex items-center justify-center">
+                <i class="fas fa-chevron-right"></i>
+            </a>
+        <% } %>
     </div>
-  <% } %>
+<% } %>
 </div>
 
 <style>

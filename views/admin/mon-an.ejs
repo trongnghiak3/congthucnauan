@@ -27,111 +27,138 @@
       </ul>
     </div>
 
-    <div id="dishes" class="tab-content" role="tabpanel" aria-labelledby="tab-dishes">
-      <div class="flex justify-between items-center mb-3">
-        <h1 class="text-2xl font-bold text-gray-800"></h1>
-        <button
-          onclick="openAddDishModal()"
-          class="px-3 py-1.5 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition duration-200 text-sm"
-        >
-          ➕ Thêm Món Ăn
-        </button>
-      </div>
-
-      <table class="min-w-full border border-gray-300 rounded-lg overflow-hidden shadow-sm bg-white">
-        <thead class="bg-gray-100 text-gray-700 uppercase text-xs font-semibold">
-          <tr>
-            <th class="px-4 py-2 text-left border-r border-gray-300">ID</th>
-            <th class="px-4 py-2 text-left border-r border-gray-300">Tên Món Ăn</th>
-            <th class="px-4 py-2 text-left border-r border-gray-300">Loại Món</th>
-            <th class="px-4 py-2 text-left border-r border-gray-300">Mô Tả</th>
-            <th class="px-4 py-2 text-left border-r border-gray-300">Hình Ảnh</th>
-            <th class="px-4 py-2 text-left">Hành Động</th>
-          </tr>
-        </thead>
-        <tbody class="text-gray-800 text-sm">
-          <% if (monAnList && monAnList.length > 0) { %>
-            <% monAnList.forEach((dish) => { %>
-              <tr class="hover:bg-yellow-50 transition duration-200">
-                <td class="px-4 py-2 border-t border-gray-200"><%= dish.ID_CHINH_MA %></td>
-                <td class="px-4 py-2 border-t border-gray-200"><%= dish.TEN_MON_AN %></td>
-                <td class="px-4 py-2 border-t border-gray-200">
-                  <% if (groupedLoaiMon[dish.ID_CHINH_MA] && groupedLoaiMon[dish.ID_CHINH_MA].loai_mon.length > 0) { %>
-                    <%= groupedLoaiMon[dish.ID_CHINH_MA].loai_mon.map(lm => lm.TEN_LM).join(', ') %>
-                  <% } else { %>
-                    Không rõ
-                  <% } %>
-                </td>
-                <td class="px-4 py-2 border-t border-gray-200 line-clamp-2"><%= dish.MO_TA_MA || 'Không có' %></td>
-                <td class="px-4 py-2 border-t border-gray-200">
-                  <% if (dish.HINH_ANH_MA) { %>
-                    <a href="<%= dish.HINH_ANH_MA %>" target="_blank">
-                      <img
-                        src="<%= dish.HINH_ANH_MA %>"
-                        alt="Ảnh món ăn"
-                        class="w-12 h-12 object-cover rounded shadow-sm hover:scale-105 transition transform"
-                      />
-                    </a>
-                  <% } else { %>
-                    <span class="text-gray-400 italic">Không có</span>
-                  <% } %>
-                </td>
-                <td class="px-4 py-2 border-t border-gray-200 space-x-1.5">
-                  <button
-                    onclick="openEditDishModal('<%= dish.ID_CHINH_MA %>')"
-                    class="bg-yellow-400 hover:bg-yellow-500 text-white px-2.5 py-1.5 rounded-md transition text-xs"
-                  >
-                    ✏ Sửa
-                  </button>
-                  <button
-                    onclick="confirmDeleteDish('<%= dish.ID_CHINH_MA %>')"
-                    class="bg-red-600 hover:bg-red-700 text-white px-2.5 py-1.5 rounded-md transition text-xs"
-                  >
-                    🗑 Xóa
-                  </button>
-                </td>
-              </tr>
-            <% }) %>
-          <% } else { %>
-            <tr>
-              <td colspan="6" class="text-center py-4 text-gray-400 italic text-sm">Không có món ăn nào để hiển thị.</td>
-            </tr>
-          <% } %>
-        </tbody>
-      </table>
-
-   <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
-  <div class="mt-4 flex justify-center space-x-2">
-    <% if (currentPage > 1) { %>
-      <a
-        href="#"
-        onclick="loadPage('/admin/mon-an?page=<%= currentPage - 1 %>&pageCategories=<%= currentPageCategories %>', document.querySelector('#content')); return false;"
-        class="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 text-sm transition">
-        ‹ Trước
-      </a>
-    <% } %>
-
-    <% for (let i = 1; i <= totalPages; i++) { %>
-      <a
-        href="#"
-        onclick="loadPage('/admin/mon-an?page=<%= i %>&pageCategories=<%= currentPageCategories %>', document.querySelector('#content')); return false;"
-        class="px-3 py-1 rounded-lg border text-sm <%= i === currentPage ? 'bg-yellow-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100' %> transition">
-        <%= i %>
-      </a>
-    <% } %>
-
-    <% if (currentPage < totalPages) { %>
-      <a
-        href="#"
-        onclick="loadPage('/admin/mon-an?page=<%= currentPage + 1 %>&pageCategories=<%= currentPageCategories %>', document.querySelector('#content')); return false;"
-        class="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 text-sm transition">
-        Sau ›
-      </a>
-    <% } %>
-  </div>
-<% } %>
-
+<div id="dishes" class="tab-content" role="tabpanel" aria-labelledby="tab-dishes">
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0 mb-4">
+    <div class="w-full sm:w-1/3 md:w-1/4 lg:w-1/5 flex-shrink-0">
+        <label for="dishSearchInput" class="sr-only">Tìm kiếm món ăn</label>
+        <input type="text" id="dishSearchInput"
+            placeholder="Tìm kiếm..."
+            value="<%= typeof searchTerm !== 'undefined' ? searchTerm : '' %>"
+            class="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition" />
     </div>
+
+    <div class="w-full sm:w-1/4 md:w-1/5 lg:w-1/6 flex-shrink-0 sm:ml-4">
+        <label for="dishTypeFilter" class="sr-only">Lọc theo Loại Món</label>
+        <select id="dishTypeFilter"
+            class="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition">
+            <option value="">Loại Món</option>
+            <% if (typeof categories !== 'undefined' && categories.length > 0) { %>
+                <% categories.forEach(type => { %>
+                    <option value="<%= type.ID_CHINH_LM %>"
+                        <%= typeof selectedTypeId !== 'undefined' && selectedTypeId == type.ID_CHINH_LM ? 'selected' : '' %>>
+                        <%= type.TEN_LM %>
+                    </option>
+                <% }) %>
+            <% } %>
+        </select>
+    </div>
+
+    <div class="flex space-x-2 w-full sm:w-auto justify-end sm:ml-4">
+        <button onclick="applyDishFilters()"
+            class="px-3 py-1.5 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition duration-200 text-sm flex-shrink-0">
+            Lọc
+        </button>
+        <button onclick="resetDishFilters()"
+            class="px-3 py-1.5 bg-gray-400 text-white rounded-lg hover:bg-gray-500 transition duration-200 text-sm flex-shrink-0">
+            Đặt Lại
+        </button>
+        <button onclick="openAddDishModal()"
+            class="px-3 py-1.5 bg-yellow-500 text-white rounded-lg hover:bg-green-600 transition duration-200 text-sm flex-shrink-0">
+            ➕ Thêm
+        </button>
+    </div>
+</div>
+    <table class="min-w-full border border-gray-300 rounded-lg overflow-hidden shadow-sm bg-white">
+        <thead class="bg-gray-100 text-gray-700 uppercase text-xs font-semibold">
+            <tr>
+                <th class="px-4 py-2 text-left border-r border-gray-300">ID</th>
+                <th class="px-4 py-2 text-left border-r border-gray-300">Tên Món Ăn</th>
+                <th class="px-4 py-2 text-left border-r border-gray-300">Loại Món</th>
+                <th class="px-4 py-2 text-left border-r border-gray-300">Mô Tả</th>
+                <th class="px-4 py-2 text-left border-r border-gray-300">Hình Ảnh</th>
+                <th class="px-4 py-2 text-left">Hành Động</th>
+            </tr>
+        </thead>
+        <tbody class="text-gray-800 text-sm" id="dishTableBody">
+            <% if (monAnList && monAnList.length > 0) { %>
+                <% monAnList.forEach((dish) => { %>
+                    <tr class="hover:bg-yellow-50 transition duration-200 dish-row">
+                        <td class="px-4 py-2 border-t border-gray-200 dish-id"><%= dish.ID_CHINH_MA %></td>
+                        <td class="px-4 py-2 border-t border-gray-200 dish-name"><%= dish.TEN_MON_AN %></td>
+                        <td class="px-4 py-2 border-t border-gray-200 dish-type">
+                            <%
+                                let dishTypes = '';
+                                if (groupedLoaiMon[dish.ID_CHINH_MA] && groupedLoaiMon[dish.ID_CHINH_MA].loai_mon.length > 0) {
+                                    dishTypes = groupedLoaiMon[dish.ID_CHINH_MA].loai_mon.map(lm => lm.TEN_LM).join(', ');
+                                } else {
+                                    dishTypes = 'Không rõ';
+                                }
+                            %>
+                            <span class="dish-type-text"><%= dishTypes %></span>
+                        </td>
+                        <td class="px-4 py-2 border-t border-gray-200 line-clamp-2 dish-description">
+                            <%= dish.MO_TA_MA || 'Không có' %>
+                        </td>
+                        <td class="px-4 py-2 border-t border-gray-200">
+                            <% if (dish.HINH_ANH_MA) { %>
+                                <a href="<%= dish.HINH_ANH_MA %>" target="_blank">
+                                    <img src="<%= dish.HINH_ANH_MA %>" alt="Ảnh món ăn"
+                                        class="w-12 h-12 object-cover rounded shadow-sm hover:scale-105 transition transform" />
+                                </a>
+                            <% } else { %>
+                                <span class="text-gray-400 italic">Không có</span>
+                            <% } %>
+                        </td>
+                        <td class="px-4 py-2 border-t border-gray-200 space-x-1.5">
+                            <button onclick="openEditDishModal('<%= dish.ID_CHINH_MA %>')"
+                                class="bg-yellow-400 hover:bg-yellow-500 text-white px-2.5 py-1.5 rounded-md transition text-xs">
+                                ✏ Sửa
+                            </button>
+                            <button onclick="confirmDeleteDish('<%= dish.ID_CHINH_MA %>')"
+                                class="bg-red-600 hover:bg-red-700 text-white px-2.5 py-1.5 rounded-md transition text-xs">
+                                🗑 Xóa
+                            </button>
+                        </td>
+                    </tr>
+                <% }) %>
+            <% } else { %>
+                <tr class="no-dish-found-message">
+                    <td colspan="6" class="text-center py-4 text-gray-400 italic text-sm">Không có món ăn nào để hiển
+                        thị.</td>
+                </tr>
+            <% } %>
+        </tbody>
+    </table>
+
+    <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
+        <div class="mt-4 flex justify-center space-x-2">
+            <% if (currentPage > 1) { %>
+                <a href="#"
+                    onclick="loadPage('/admin/mon-an?page=<%= currentPage - 1 %>&pageCategories=<%= currentPageCategories %>', document.querySelector('#content')); return false;"
+                    class="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 text-sm transition">
+                    ‹ Trước
+                </a>
+            <% } %>
+
+            <% for (let i = 1; i <= totalPages; i++) { %>
+                <a href="#"
+                    onclick="loadPage('/admin/mon-an?page=<%= i %>&pageCategories=<%= currentPageCategories %>', document.querySelector('#content')); return false;"
+                    class="px-3 py-1 rounded-lg border text-sm <%= i === currentPage ? 'bg-yellow-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100' %> transition">
+                    <%= i %>
+                </a>
+            <% } %>
+
+            <% if (currentPage < totalPages) { %>
+                <a href="#"
+                    onclick="loadPage('/admin/mon-an?page=<%= currentPage + 1 %>&pageCategories=<%= currentPageCategories %>', document.querySelector('#content')); return false;"
+                    class="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 text-sm transition">
+                    Sau ›
+                </a>
+            <% } %>
+        </div>
+    <% } %>
+
+</div>
 
     <div id="dishes-by-category" class="tab-content hidden" role="tabpanel" aria-labelledby="tab-dishes-by-category">
   <div class="flex flex-col md:flex-row justify-between items-center px-4 py-2 bg-white border-b border-gray-200">

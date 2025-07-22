@@ -231,7 +231,74 @@ nutChuyenMenu?.addEventListener("click", () => { // Thêm ?. ở đây để đ�
   } else {
     console.error('Phần tử btnPrevStep không tìm thấy!');
   }
-
+document.getElementById("refresh-today-recipe")?.addEventListener("click", async () => {
+        try {
+            const response = await fetch("/api/random-recipe");
+            const todayRecipe = await response.json();
+            const container = document.getElementById("today-recipe-container");
+            if (todayRecipe) {
+                const totalMinutes = parseInt(todayRecipe.THOI_GIAN_NAU) || parseInt(todayRecipe.THOI_GIAN) || 0;
+                let timeDisplay = "";
+                if (totalMinutes >= 60) {
+                    const hours = Math.floor(totalMinutes / 60);
+                    const mins = totalMinutes % 60;
+                    timeDisplay = `${hours} giờ${mins > 0 ? ' ' + mins + ' phút' : ''}`;
+                } else {
+                    timeDisplay = `${totalMinutes} phút`;
+                }
+                container.innerHTML = `
+                    <div class="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-stone-100">
+                        <div class="md:flex">
+                            <div class="md:w-1/2 h-64 md:h-96 overflow-hidden relative">
+                                <img src="${todayRecipe.HINH_ANH_CT || 'https://via.placeholder.com/600x400/F0F0F0/B0B0B0?text=No+Image'}" 
+                                     alt="${todayRecipe.TEN_CT}" 
+                                     class="w-full h-full object-cover transition-transform duration-500 hover:scale-110" />
+                                <span class="absolute top-3 left-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white text-xs sm:text-sm font-semibold px-3 py-1.5 rounded-full shadow-md">
+                                    ${todayRecipe.TEN_MON_AN || 'Ẩm thực'}
+                                </span>
+                                ${todayRecipe.DANH_GIA && todayRecipe.DANH_GIA !== 'Chưa có' ? `
+                                    <div class="absolute bottom-3 right-3 bg-stone-800 bg-opacity-80 text-white text-xs sm:text-sm font-semibold px-3 py-1.5 rounded-full flex items-center shadow-md">
+                                        <i class="fas fa-star text-yellow-400 mr-1.5"></i>
+                                        ${todayRecipe.DANH_GIA}
+                                    </div>` : ''}
+                            </div>
+                            <div class="md:w-1/2 p-6 md:p-8 flex flex-col justify-center bg-stone-50">
+                                <h3 class="text-2xl md:text-3xl font-bold text-stone-800 mb-4 hover:text-amber-600 transition-colors duration-300">
+                                    ${todayRecipe.TEN_CT}
+                                </h3>
+                                <p class="text-gray-600 mb-6 line-clamp-3">
+                                    ${todayRecipe.MO_TA || 'Thưởng thức món ăn tuyệt vời này với công thức đơn giản và dễ thực hiện!'}
+                                </p>
+                                <div class="flex flex-wrap items-center gap-4 text-sm text-stone-600 font-medium">
+                                    <span class="flex items-center gap-1.5">
+                                        <i class="fas fa-clock text-amber-500"></i> ${timeDisplay}
+                                    </span>
+                                    <span class="flex items-center gap-1.5">
+                                        <i class="fas fa-fire text-red-500"></i> ${todayRecipe.DO_KHO || 'Dễ'}
+                                    </span>
+                                    <span class="flex items-center gap-1.5">
+                                        <i class="fas fa-utensils text-green-500"></i> ${todayRecipe.SO_PHAN_AN || todayRecipe.KHOI_LUONG || '4'} người
+                                    </span>
+                                </div>
+                                <a href="/cong-thuc/${todayRecipe.SLUG_CT || todayRecipe.ID_CHINH_CT}" 
+                                   class="mt-6 inline-block bg-stone-600 text-white px-6 py-3 rounded-full text-lg font-bold shadow-xl hover:bg-stone-700 transition-all duration-300 transform hover:scale-105">
+                                    Xem công thức <i class="fas fa-arrow-right ml-2"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = `
+                    <p class="text-center text-gray-600 p-8 bg-stone-50 rounded-lg shadow-inner border border-stone-200">
+                        Chưa có gợi ý món ăn cho hôm nay. Hãy thử tìm kiếm một công thức yêu thích!
+                    </p>
+                `;
+            }
+        } catch (err) {
+            console.error("Lỗi làm mới công thức:", err);
+        }
+    });
 
 
 

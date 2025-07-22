@@ -499,3 +499,65 @@ function bindDishEventListeners() {
     console.log('Sự kiện submit đã được gắn trước đó cho #dishForm');
   }
 }
+ function handleDishFilterChange() {
+        const searchTerm = document.getElementById('dishSearchInput').value;
+        const typeId = document.getElementById('dishTypeFilter').value;
+        let url = `/admin/mon-an?page=1`; // Reset về trang 1 khi tìm kiếm/lọc mới
+
+        if (searchTerm) {
+            url += `&search=${encodeURIComponent(searchTerm)}`;
+        }
+        if (typeId) {
+            url += `&typeId=${typeId}`;
+        }
+        // Giữ nguyên trang của categories nếu có
+        url += `&pageCategories=<%= currentPageCategories %>`;
+
+        // Gọi hàm loadPage để tải lại nội dung
+        loadPage(url, document.querySelector('#content'));
+    }
+
+    function loadDishPage(pageNumber) {
+        const searchTerm = document.getElementById('dishSearchInput').value;
+        const typeId = document.getElementById('dishTypeFilter').value;
+        let url = `/admin/mon-an?page=${pageNumber}`;
+
+        if (searchTerm) {
+            url += `&search=${encodeURIComponent(searchTerm)}`;
+        }
+        if (typeId) {
+            url += `&typeId=${typeId}`;
+        }
+        url += `&pageCategories=<%= currentPageCategories %>`;
+
+        loadPage(url, document.querySelector('#content'));
+    }
+  // Hàm mới để áp dụng bộ lọc (gọi khi nhấn nút "Lọc")
+    function applyDishFilters() {
+        const searchTerm = document.getElementById('dishSearchInput').value;
+        const typeId = document.getElementById('dishTypeFilter').value;
+        let url = `/admin/mon-an?page=1`; // Luôn đặt lại về trang 1 khi áp dụng bộ lọc mới
+
+        if (searchTerm) {
+            url += `&search=${encodeURIComponent(searchTerm)}`;
+        }
+        if (typeId) {
+            url += `&typeId=${typeId}`;
+        }
+        url += `&pageCategories=<%= currentPageCategories %>`; // Giữ lại cho tab categories
+
+        loadPage(url, document.querySelector('#content'));
+    }
+
+    // Hàm mới để đặt lại bộ lọc (gọi khi nhấn nút "Đặt Lại")
+    function resetDishFilters() {
+        // Xóa giá trị trong ô tìm kiếm
+        document.getElementById('dishSearchInput').value = '';
+        // Đặt lại dropdown lọc về tùy chọn mặc định (value="")
+        document.getElementById('dishTypeFilter').value = '';
+
+        // Tải lại trang với các tham số rỗng (về trạng thái ban đầu)
+        let url = `/admin/mon-an?page=1`;
+        url += `&pageCategories=<%= currentPageCategories %>`; // Giữ lại cho tab categories
+        loadPage(url, document.querySelector('#content'));
+    }

@@ -305,5 +305,30 @@ function confirmDeleteCategory(id) {
     });
   }
 }
+   // --- New searchCategories function ---
+    function searchCategories() {
+      const input = document.getElementById('searchCategory').value.toLowerCase().trim();
+      const rows = document.querySelectorAll('#categoryTableBody .category-row');
+      const noCategoryFoundRow = document.querySelector('.no-category-found');
+      let found = false;
 
+      rows.forEach(row => {
+        const categoryName = row.children[1].textContent.toLowerCase(); // Tên Loại Món is the second column (index 1)
+        if (categoryName.includes(input)) {
+          row.style.display = ''; // Show row
+          found = true;
+        } else {
+          row.style.display = 'none'; // Hide row
+        }
+      });
+
+      // Show/hide "No category found" message
+      if (noCategoryFoundRow) {
+        if (found) {
+          noCategoryFoundRow.style.display = 'none';
+        } else {
+          noCategoryFoundRow.style.display = '';
+        }
+      }
+    }
 

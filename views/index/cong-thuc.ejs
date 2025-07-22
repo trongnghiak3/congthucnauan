@@ -215,19 +215,18 @@
                         </select>
                     </div>
 
-                    <div id="recipeList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-5 ">
-                        <% if (recipes.length > 0) { %>
-                            <% recipes.forEach(function(recipe) { %>
-                                <%- include('../partials/recipeCard.ejs', { recipe: recipe }) %>
-                            <% }); %>
-                        <% } else { %>
-                            <p id="noResults" class="text-center text-gray-500 text-sm font-medium mt-6 col-span-full">Không tìm thấy công thức
-                                nào phù hợp. Hãy thử từ khóa khác!</p>
-                        <% } %>
-                    </div>
-                    <% if (recipes.length === 0) { %>
-                        <p id="noResults" class="text-center text-gray-500 text-sm font-medium mt-6 <%= recipes.length === 0 ? '' : 'hidden' %>">Không tìm thấy công thức nào phù hợp. Hãy thử từ khóa khác!</p>
-                    <% } %>
+                <div id="recipeList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-5">
+  <% if (recipes.length > 0) { %>
+    <% recipes.forEach(function(recipe) { %>
+      <%- include('../partials/recipeCard.ejs', { recipe: recipe }) %>
+    <% }); %>
+  <% } else { %>
+    <p id="noResults" class="text-center text-gray-500 text-sm font-medium mt-6 col-span-full">
+      Không tìm thấy công thức nào phù hợp. Hãy thử từ khóa khác!
+    </p>
+  <% } %>
+</div>
+
 
                     <div class="flex justify-center mt-8">
                         <button id="showMoreBtn"

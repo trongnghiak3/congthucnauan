@@ -310,3 +310,50 @@ document.addEventListener('DOMContentLoaded', () => {
   console.log('DOMContentLoaded triggered at', new Date().toISOString());
   bindUserEventListeners();
 });
+    function filterUsers() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+            const roleFilter = document.getElementById('roleFilter').value;
+            const statusFilter = document.getElementById('statusFilter').value;
+            const rows = document.querySelectorAll('#userTableBody .user-row');
+            const noUserFoundRow = document.querySelector('.no-user-found-message');
+            let hasVisibleRows = false;
+
+            rows.forEach(row => {
+                const userId = row.querySelector('.user-id').textContent.toLowerCase();
+                const userName = row.querySelector('.user-name').textContent.toLowerCase();
+                const userEmail = row.querySelector('.user-email').textContent.toLowerCase();
+                const userPhone = row.querySelector('.user-phone').textContent.toLowerCase().replace(/[^0-9]/g, ''); // Remove non-numeric chars for phone search
+                const userRole = row.querySelector('.role-span').textContent.toLowerCase().trim();
+                const userStatus = row.querySelector('.status-span').textContent.toLowerCase().trim();
+
+                // Check for search term match across multiple fields
+                const matchesSearch = (searchTerm === '' ||
+                    userName.includes(searchTerm) ||
+                    userEmail.includes(searchTerm) ||
+                    userPhone.includes(searchTerm) ||
+                    userId.includes(searchTerm)
+                );
+
+                // Check for role filter match
+                const matchesRole = (roleFilter === '' || userRole === roleFilter);
+
+                // Check for status filter match
+                const matchesStatus = (statusFilter === '' || userStatus === statusFilter);
+
+                if (matchesSearch && matchesRole && matchesStatus) {
+                    row.style.display = '';
+                    hasVisibleRows = true;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            // Show/hide "No user found" message
+            if (noUserFoundRow) {
+                if (hasVisibleRows) {
+                    noUserFoundRow.style.display = 'none';
+                } else {
+                    noUserFoundRow.style.display = '';
+                }
+            }
+        }

@@ -30,10 +30,15 @@
         </div>
 
         <div id="ingredients" class="tab-content" role="tabpanel" aria-labelledby="tab-ingredients">
-            <button onclick="openAddModal()"
-                class="mb-3 px-3 py-1 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 text-sm shadow-md transition">
-                Thêm Nguyên Liệu
-            </button>
+            <div class="flex justify-between items-center mb-3">
+                <button onclick="openAddModal()"
+                    class="px-3 py-1 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 text-sm shadow-md transition">
+                    Thêm Nguyên Liệu
+                </button>
+                <input type="text" id="searchIngredient" onkeyup="filterIngredients()"
+                    placeholder="Tìm kiếm nguyên liệu..."
+                    class="w-1/3 border border-gray-300 rounded-lg px-3 py-1 text-sm focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition" />
+            </div>
 
             <div class="overflow-x-auto">
                 <table class="min-w-full border border-gray-300 rounded-lg overflow-hidden shadow-sm">
@@ -45,107 +50,104 @@
                             <th class="px-4 py-2 text-left">Hành Động</th>
                         </tr>
                     </thead>
-                    <tbody class="text-gray-800 text-sm">
+                    <tbody class="text-gray-800 text-sm" id="ingredientsTableBody">
                         <% if (ingredients && ingredients.length > 0) { %>
-                            <% ingredients.forEach(ingredient => { %>
-                                <tr class="hover:bg-yellow-50 transition duration-200">
-                                    <td class="px-4 py-2 border-t border-gray-200">
-                                        <%= ingredient.ID_CHINH_NL %>
-                                    </td>
-                                    <td class="px-4 py-2 border-t border-gray-200">
-                                        <%= ingredient.TEN_NL %>
-                                    </td>
-                                    <td class="px-4 py-2 border-t border-gray-200">
-                                        <%= ingredient.DON_VI %>
-                                    </td>
-                                    <td class="px-4 py-2 border-t border-gray-200 space-x-2">
-                                        <button onclick="openEditModal(
-                                        '<%= ingredient.ID_CHINH_NL %>',
-                                        '<%= encodeURIComponent(ingredient.TEN_NL) %>',
-                                        '<%= encodeURIComponent(ingredient.DON_VI) %>'
-                                    )"
-                                            class="bg-yellow-400 hover:bg-yellow-500 text-white px-2 py-1 rounded-lg shadow-sm text-sm transition duration-200">
-                                            ✏ Sửa
-                                        </button>
-                                        <button onclick="confirmDeleteIngredient('<%= ingredient.ID_CHINH_NL %>')"
-                                            class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded-lg shadow-sm text-sm transition duration-200">
-                                            🗑 Xóa
-                                        </button>
-                                    </td>
-                                </tr>
-                                <% }) %>
-                                    <% } else { %>
-                                        <tr>
-                                            <td colspan="4" class="text-center py-3 text-gray-400 italic text-sm">
-                                                Không có nguyên liệu nào!
-                                            </td>
-                                        </tr>
-                                        <% } %>
+                        <% ingredients.forEach(ingredient => { %>
+                        <tr class="hover:bg-yellow-50 transition duration-200">
+                            <td class="px-4 py-2 border-t border-gray-200">
+                                <%= ingredient.ID_CHINH_NL %>
+                            </td>
+                            <td class="px-4 py-2 border-t border-gray-200">
+                                <%= ingredient.TEN_NL %>
+                            </td>
+                            <td class="px-4 py-2 border-t border-gray-200">
+                                <%= ingredient.DON_VI %>
+                            </td>
+                            <td class="px-4 py-2 border-t border-gray-200 space-x-2">
+                                <button onclick="openEditModal(
+                                    '<%= ingredient.ID_CHINH_NL %>',
+                                    '<%= encodeURIComponent(ingredient.TEN_NL) %>',
+                                    '<%= encodeURIComponent(ingredient.DON_VI) %>'
+                                )"
+                                    class="bg-yellow-400 hover:bg-yellow-500 text-white px-2 py-1 rounded-lg shadow-sm text-sm transition duration-200">
+                                    ✏ Sửa
+                                </button>
+                                <button onclick="confirmDeleteIngredient('<%= ingredient.ID_CHINH_NL %>')"
+                                    class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded-lg shadow-sm text-sm transition duration-200">
+                                    🗑 Xóa
+                                </button>
+                            </td>
+                        </tr>
+                        <% }) %>
+                        <% } else { %>
+                        <tr>
+                            <td colspan="4" class="text-center py-3 text-gray-400 italic text-sm">
+                                Không có nguyên liệu nào!
+                            </td>
+                        </tr>
+                        <% } %>
                     </tbody>
                 </table>
             </div>
             <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
-                <div class="mt-4 flex justify-center space-x-2">
-                    <% if (currentPage > 1) { %>
-                        <a href="#" onclick="loadPage('/admin/nguyen-lieu?page=<%= currentPage - 1 %>'); return false;"
-                            class="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 text-sm transition">
-                            ‹ Trước
-                        </a>
-                        <% } %>
-
-                            <%
-                            const maxButtons = 5;
-                            let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
-                            let endPage = Math.min(totalPages, startPage + maxButtons - 1);
-
-                            if (endPage - startPage < maxButtons - 1) {
-                              startPage = Math.max(1, endPage - maxButtons + 1);
-                            }
-
-                            if (startPage > 1) {
-                        %>
-                                <a href="#" onclick="loadPage('/admin/nguyen-lieu?page=1'); return false;"
-                                    class="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 text-sm">1</a>
-                                <% if (startPage > 2) { %>
-                                    <span class="px-2 text-sm">...</span>
-                                    <% } %>
-                                        <% } %>
-
-                                            <% for (let i = startPage; i <= endPage; i++) { %>
-                                                <a href="#"
-                                                    onclick="loadPage('/admin/nguyen-lieu?page=<%= i %>'); return false;"
-                                                    class="px-3 py-1 rounded-lg border text-sm <%= i === currentPage ? 'bg-yellow-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100' %> transition">
-                                                    <%= i %>
-                                                </a>
-                                                <% } %>
-
-                                                    <% if (endPage < totalPages) { %>
-                                                        <% if (endPage < totalPages - 1) { %>
-                                                            <span class="px-2 text-sm">...</span>
-                                                            <% } %>
-                                                                <a href="#"
-                                                                    onclick="loadPage('/admin/nguyen-lieu?page=<%= totalPages %>'); return false;"
-                                                                    class="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 text-sm">
-                                                                    <%= totalPages %>
-                                                                </a>
-                                                                <% } %>
-
-                                                                    <% if (currentPage < totalPages) { %>
-                                                                        <a href="#"
-                                                                            onclick="loadPage('/admin/nguyen-lieu?page=<%= currentPage + 1 %>'); return false;"
-                                                                            class="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 text-sm transition">
-                                                                            Sau ›
-                                                                        </a>
-                                                                        <% } %>
-                </div>
+            <div class="mt-4 flex justify-center space-x-2">
+                <% if (currentPage > 1) { %>
+                <a href="#" onclick="loadPage('/admin/nguyen-lieu?page=<%= currentPage - 1 %>'); return false;"
+                    class="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 text-sm transition">
+                    ‹ Trước
+                </a>
                 <% } %>
+
+                <%
+                const maxButtons = 5;
+                let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
+                let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+
+                if (endPage - startPage < maxButtons - 1) {
+                    startPage = Math.max(1, endPage - maxButtons + 1);
+                }
+
+                if (startPage > 1) {
+                %>
+                <a href="#" onclick="loadPage('/admin/nguyen-lieu?page=1'); return false;"
+                    class="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 text-sm">1</a>
+                <% if (startPage > 2) { %>
+                <span class="px-2 text-sm">...</span>
+                <% } %>
+                <% } %>
+
+                <% for (let i = startPage; i <= endPage; i++) { %>
+                <a href="#" onclick="loadPage('/admin/nguyen-lieu?page=<%= i %>'); return false;"
+                    class="px-3 py-1 rounded-lg border text-sm <%= i === currentPage ? 'bg-yellow-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100' %> transition">
+                    <%= i %>
+                </a>
+                <% } %>
+
+                <% if (endPage < totalPages) { %>
+                <% if (endPage < totalPages - 1) { %>
+                <span class="px-2 text-sm">...</span>
+                <% } %>
+                <a href="#" onclick="loadPage('/admin/nguyen-lieu?page=<%= totalPages %>'); return false;"
+                    class="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 text-sm">
+                    <%= totalPages %>
+                </a>
+                <% } %>
+
+                <% if (currentPage < totalPages) { %>
+                <a href="#" onclick="loadPage('/admin/nguyen-lieu?page=<%= currentPage + 1 %>'); return false;"
+                    class="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 text-sm transition">
+                    Sau ›
+                </a>
+                <% } %>
+            </div>
+            <% } %>
         </div>
 
         <div id="ingredient-recipes" class="tab-content hidden" role="tabpanel" aria-labelledby="tab-ingredient-recipes">
             <div
                 class="flex flex-col md:flex-row justify-between items-center px-4 py-2 bg-white border-b border-gray-200">
                 <div class="w-full md:w-1/2 mb-2 md:mb-0">
-                    <input type="text" id="searchRecipe" onkeyup="filterRecipes()" placeholder="Tìm kiếm công thức..."
+                    <input type="text" id="searchRecipe" onkeyup="timkiemcongthucnguyenlieu()" placeholder="Tìm kiếm công thức..."
                         class="w-full border border-gray-300 rounded-lg px-3 py-1 text-sm focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition" />
                 </div>
                 <div class="text-gray-600 text-xs">
@@ -165,77 +167,77 @@
                             <th class="p-2 text-left">Ghi Chú</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="recipesTableBody">
                         <% if (groupedRecipes && Object.keys(groupedRecipes).length > 0) { %>
-                            <% Object.keys(groupedRecipes).forEach((id, index) => { %>
-                                <tr class="hover:bg-gray-50 transition" onclick="toggleIngredients('<%= id %>')"
-                                    data-group-id="<%= id %>">
-                                    <td colspan="4"
-                                        class="py-2 px-3 text-center font-medium text-gray-900 border-t border-gray-100 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer text-sm transition">
-                                        <%= groupedRecipes[id].ten_ct %>
-                                            <% if (groupedRecipes[id].ngay_cap_nhat_ct) { %>
-                                                (<%= new
-                                                    Date(groupedRecipes[id].ngay_cap_nhat_ct).toLocaleDateString('vi-VN')
-                                                    %>)
-                                                <% } %>
-                                    </td>
-                                </tr>
+                        <% Object.keys(groupedRecipes).forEach((id, index) => { %>
+                        <tr class="recipe-group-row hover:bg-gray-50 transition" onclick="toggleIngredients('<%= id %>')"
+                            data-group-id="<%= id %>">
+                            <td colspan="4"
+                                class="py-2 px-3 text-center font-medium text-gray-900 border-t border-gray-100 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer text-sm transition">
+                                <%= groupedRecipes[id].ten_ct %>
+                                <% if (groupedRecipes[id].ngay_cap_nhat_ct) { %>
+                                (<%= new
+                                    Date(groupedRecipes[id].ngay_cap_nhat_ct).toLocaleDateString('vi-VN')
+                                    %>)
+                                <% } %>
+                            </td>
+                        </tr>
 
-                                <% groupedRecipes[id].nguyen_lieu.forEach((nl, index) => { %>
-                                    <tr class="ingredient-row hidden border-b border-gray-100" data-group="<%= id %>">
-                                        <td class="p-2 text-center text-sm">
-                                            <%= index + 1 %>
-                                        </td>
-                                        <td class="p-2 text-left text-sm">
-                                            <%= nl.ten_nl %>
-                                        </td>
-                                        <td class="p-2 text-center text-sm">
-                                            <%= nl.so_luong %>
-                                                <%= nl.don_vi %>
-                                        </td>
-                                        <td class="p-2 text-left text-sm">
-                                            <%= nl.ghi_chu %>
-                                        </td>
-                                    </tr>
-                                    <% }); %>
-                                        <% }); %>
-                                            <% } else { %>
-                                                <tr>
-                                                    <td colspan="4" class="text-center py-3 text-gray-400 italic text-sm">
-                                                        Không có công thức nguyên liệu nào!
-                                                    </td>
-                                                </tr>
-                                                <% } %>
+                        <% groupedRecipes[id].nguyen_lieu.forEach((nl, index) => { %>
+                        <tr class="ingredient-row hidden border-b border-gray-100" data-group="<%= id %>">
+                            <td class="p-2 text-center text-sm">
+                                <%= index + 1 %>
+                            </td>
+                            <td class="p-2 text-left text-sm">
+                                <%= nl.ten_nl %>
+                            </td>
+                            <td class="p-2 text-center text-sm">
+                                <%= nl.so_luong %>
+                                <%= nl.don_vi %>
+                            </td>
+                            <td class="p-2 text-left text-sm">
+                                <%= nl.ghi_chu %>
+                            </td>
+                        </tr>
+                        <% }); %>
+                        <% }); %>
+                        <% } else { %>
+                        <tr class="no-recipe-found">
+                            <td colspan="4" class="text-center py-3 text-gray-400 italic text-sm">
+                                Không có công thức nguyên liệu nào!
+                            </td>
+                        </tr>
+                        <% } %>
                     </tbody>
                 </table>
             </div>
             <% if (typeof totalPagesRecipes !== 'undefined' && totalPagesRecipes > 1) { %>
-                <div class="mt-4 flex justify-center space-x-2">
-                    <% if (currentPageRecipes > 1) { %>
-                        <a href="#"
-                            onclick="loadPage('/admin/nguyen-lieu?page=<%= currentPage %>&pageRecipes=<%= currentPageRecipes - 1 %>'); return false;"
-                            class="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 text-sm transition">
-                            ‹ Trước
-                        </a>
-                        <% } %>
-
-                            <% for (let i = 1; i <= totalPagesRecipes; i++) { %>
-                                <a href="#"
-                                    onclick="loadPage('/admin/nguyen-lieu?page=<%= currentPage %>&pageRecipes=<%= i %>'); return false;"
-                                    class="px-3 py-1 rounded-lg border text-sm <%= i === currentPageRecipes ? 'bg-yellow-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100' %> transition">
-                                    <%= i %>
-                                </a>
-                                <% } %>
-
-                                    <% if (currentPageRecipes < totalPagesRecipes) { %>
-                                        <a href="#"
-                                            onclick="loadPage('/admin/nguyen-lieu?page=<%= currentPage %>&pageRecipes=<%= currentPageRecipes + 1 %>'); return false;"
-                                            class="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 text-sm transition">
-                                            Sau ›
-                                        </a>
-                                        <% } %>
-                </div>
+            <div class="mt-4 flex justify-center space-x-2">
+                <% if (currentPageRecipes > 1) { %>
+                <a href="#"
+                    onclick="loadPage('/admin/nguyen-lieu?page=<%= currentPage %>&pageRecipes=<%= currentPageRecipes - 1 %>'); return false;"
+                    class="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 text-sm transition">
+                    ‹ Trước
+                </a>
                 <% } %>
+
+                <% for (let i = 1; i <= totalPagesRecipes; i++) { %>
+                <a href="#"
+                    onclick="loadPage('/admin/nguyen-lieu?page=<%= currentPage %>&pageRecipes=<%= i %>'); return false;"
+                    class="px-3 py-1 rounded-lg border text-sm <%= i === currentPageRecipes ? 'bg-yellow-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100' %> transition">
+                    <%= i %>
+                </a>
+                <% } %>
+
+                <% if (currentPageRecipes < totalPagesRecipes) { %>
+                <a href="#"
+                    onclick="loadPage('/admin/nguyen-lieu?page=<%= currentPage %>&pageRecipes=<%= currentPageRecipes + 1 %>'); return false;"
+                    class="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 text-sm transition">
+                    Sau ›
+                </a>
+                <% } %>
+            </div>
+            <% } %>
         </div>
 
         <div id="addModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
@@ -301,6 +303,8 @@
             </div>
         </div>
     </div>
+
+
 </body>
 
 </html>

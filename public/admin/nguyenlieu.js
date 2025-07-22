@@ -200,7 +200,7 @@ function toggleIngredients(groupId) {
     console.log(`Chuyển đổi hiển thị nhóm nguyên liệu ID: ${groupId}`);
 }
 
-function filterRecipes() {
+function timkiemcongthucnguyenlieu() {
     const input = document.getElementById('searchRecipe').value.toLowerCase().trim();
     const totalRecipesEl = document.getElementById('totalRecipes');
     const allGroupRows = document.querySelectorAll('#ingredient-recipes tbody tr[data-group-id]');
@@ -244,3 +244,23 @@ function filterRecipes() {
     totalRecipesEl.textContent = visibleGroupCount;
     console.log('Số công thức hiển thị:', visibleGroupCount);
 }
+function filterIngredients() {
+            const input = document.getElementById('searchIngredient');
+            const filter = input.value.toLowerCase();
+            const tableBody = document.getElementById('ingredientsTableBody');
+            const rows = tableBody.getElementsByTagName('tr');
+
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i];
+                // Assuming the ingredient name is in the second column (index 1)
+                const nameCell = row.getElementsByTagName('td')[1];
+                if (nameCell) {
+                    const textValue = nameCell.textContent || nameCell.innerText;
+                    if (textValue.toLowerCase().indexOf(filter) > -1) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                }
+            }
+        }
