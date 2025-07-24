@@ -639,300 +639,339 @@ router.get("/cong-thuc", async (req, res) => { // Giả sử query đã được
 
 
 
+// Route GET /cong-thuc/:id
 router.get("/cong-thuc/:id", async (req, res) => {
-  const recipeId = req.params.id;
+    const recipeId = req.params.id;
 
-  // 1. Kiểm tra ID công thức hợp lệ
-  if (!recipeId || isNaN(recipeId)) {
-    return res.status(400).send("ID công thức không hợp lệ");
-  }
-
-  try {
-    // 2. Lấy chi tiết công thức
-    const recipeResult = await query(
-      `
-      SELECT cong_thuc.*, 
-             nguoi_dung.TEN_NGUOI_DUNG AS tac_gia, 
-             nguoi_dung.AVARTAR_URL AS avatar_tac_gia,
-             nguoi_dung.ID_CHINH_ND
-      FROM cong_thuc
-      LEFT JOIN nguoi_dung ON cong_thuc.ID_CHINH_ND = nguoi_dung.ID_CHINH_ND
-      WHERE cong_thuc.ID_CHINH_CT = ? AND cong_thuc.TRANG_THAI_DUYET_ = 'Đã duyệt'
-      `,
-      [recipeId]
-    );
-
-    if (!recipeResult.length) {
-      return res.status(404).send("Không tìm thấy công thức");
+    // 1. Kiểm tra ID công thức hợp lệ
+    if (!recipeId || isNaN(recipeId)) {
+        return res.status(400).send("ID công thức không hợp lệ");
     }
 
-    // Xử lý dữ liệu công thức, bao gồm đường dẫn hình ảnh và thông tin mặc định
-    const recipe = {
-      ...recipeResult[0],
-      // Xử lý hình ảnh chính của công thức
-      HINH_ANH_CT: recipeResult[0].HINH_ANH_CT
-        ? `/Uploads/images/congthuc/${recipeId}/${recipeResult[0].HINH_ANH_CT.split("/").pop()}`
-        : null,
-      // Xử lý avatar của tác giả công thức
-      avatar_tac_gia: recipeResult[0].avatar_tac_gia
-  ? `/Uploads/images/nguoidung/${recipeResult[0].ID_CHINH_ND}/${recipeResult[0].avatar_tac_gia.split('/').pop()}`
-  : "/Uploads/default-avatar.png",
-      THOI_GIAN_NAU: recipeResult[0].THOI_GIAN_NAU || 30,
-      SO_PHAN_AN: recipeResult[0].SO_PHAN_AN || "2-4",
-      DO_KHO: recipeResult[0].DO_KHO || "Dễ"
-    };
+    try {
+        // 2. Lấy chi tiết công thức
+        const recipeResult = await query(
+            `
+            SELECT cong_thuc.*,
+                   nguoi_dung.TEN_NGUOI_DUNG AS tac_gia,
+                   nguoi_dung.AVARTAR_URL AS avatar_tac_gia,
+                   nguoi_dung.ID_CHINH_ND
+            FROM cong_thuc
+            LEFT JOIN nguoi_dung ON cong_thuc.ID_CHINH_ND = nguoi_dung.ID_CHINH_ND
+            WHERE cong_thuc.ID_CHINH_CT = ? AND cong_thuc.TRANG_THAI_DUYET_ = 'Đã duyệt'
+            `,
+            [recipeId]
+        );
 
-    // 3. Lấy nguyên liệu
-    const ingredients = await query(
-      `
-      SELECT nguyen_lieu.TEN_NL, cong_thuc_nguyen_lieu.SO_LUONG, nguyen_lieu.DON_VI, cong_thuc_nguyen_lieu.GHI_CHU
-      FROM cong_thuc_nguyen_lieu
-      JOIN nguyen_lieu ON cong_thuc_nguyen_lieu.ID_CHINH_NL = nguyen_lieu.ID_CHINH_NL
-      WHERE cong_thuc_nguyen_lieu.ID_CHINH_CT = ?
-      `,
-      [recipeId]
-    );
+        if (!recipeResult.length) {
+            return res.status(404).send("Không tìm thấy công thức");
+        }
 
-    // 4. Lấy danh mục
-    const categories = await query(
-      `
-      SELECT loai_mon.TEN_LM
-      FROM mon_an
-      JOIN mon_an_loai_mon ON mon_an.ID_CHINH_MA = mon_an_loai_mon.ID_CHINH_MA
-      JOIN loai_mon ON mon_an_loai_mon.ID_CHINH_LM = loai_mon.ID_CHINH_LM
-      WHERE mon_an.ID_CHINH_MA = ?
-      `,
-      [recipe.ID_CHINH_MA]
-    );
-
-    // 5. Lấy bình luận và cảm xúc
-    const comments = await query(
-      `
-      SELECT binh_luan.ID_CHINH_BL, binh_luan.NOI_DUNG_BL, binh_luan.NGAY_TAO_BL, 
-             nguoi_dung.TEN_NGUOI_DUNG, nguoi_dung.AVARTAR_URL, nguoi_dung.ID_CHINH_ND,
-             GROUP_CONCAT(DISTINCT cx.LOAI_CAM_XUC_BL) as reaction_types,
-             COUNT(DISTINCT cx.ID_CHINH_CXBL) as total_reactions,
-             GROUP_CONCAT(DISTINCT CONCAT(nd2.TEN_NGUOI_DUNG, ':', cx.LOAI_CAM_XUC_BL)) as reaction_users
-      FROM binh_luan
-      JOIN nguoi_dung ON binh_luan.ID_CHINH_ND = nguoi_dung.ID_CHINH_ND
-      LEFT JOIN binh_luan_cam_xuc cx ON binh_luan.ID_CHINH_BL = cx.ID_CHINH_BL
-      LEFT JOIN nguoi_dung nd2 ON cx.ID_CHINH_ND = nd2.ID_CHINH_ND
-      WHERE binh_luan.ID_CHINH_CT = ?
-      GROUP BY binh_luan.ID_CHINH_BL
-      ORDER BY binh_luan.NGAY_TAO_BL DESC
-      `,
-      [recipeId]
-    );
-    
-    // 6. Lấy đánh giá của người dùng
-    const userRatings = await query(
-      `
-      SELECT dg.DANH_GIA, dg.NOI_DUNG_DG, dg.NGAY_TAO_DG, 
-             nd.TEN_NGUOI_DUNG, nd.AVARTAR_URL, nd.ID_CHINH_ND
-      FROM danh_gia dg
-      JOIN nguoi_dung nd ON dg.ID_CHINH_ND = nd.ID_CHINH_ND
-      WHERE dg.ID_CHINH_CT = ?
-      ORDER BY dg.NGAY_TAO_DG DESC
-      `,
-      [recipeId]
-    );
-
-    // Xử lý ảnh đại diện cho các đánh giá người dùng
-    const processedUserRatings = userRatings.map(rating => ({
-      ...rating,
-     AVARTAR_URL: rating.AVARTAR_URL
-  ? `/Uploads/images/nguoidung/${rating.ID_CHINH_ND}/${rating.AVARTAR_URL.split('/').pop()}`
-  : "/Uploads/default-avatar.png"
-    }));
-
-    // 7. Lấy phản hồi và cảm xúc cho từng bình luận (trong vòng lặp Promise.all)
-    const commentsWithReplies = await Promise.all(comments.map(async comment => {
-      const replies = await query(
-        `
-        SELECT phan_hoi_binh_luan.ID_CHINH_PHBL, phan_hoi_binh_luan.NOI_DUNG_PH, phan_hoi_binh_luan.NGAY_TAO_PH, 
-               phan_hoi_binh_luan.ID_CHINH_PHBL_CHA, nguoi_dung.TEN_NGUOI_DUNG, nguoi_dung.AVARTAR_URL, nguoi_dung.ID_CHINH_ND,
-               GROUP_CONCAT(DISTINCT cx.LOAI_CAM_XUC) as reaction_types,
-               COUNT(DISTINCT cx.ID_CHINH_PHCX) as total_reactions,
-               GROUP_CONCAT(DISTINCT CONCAT(nd2.TEN_NGUOI_DUNG, ':', cx.LOAI_CAM_XUC)) as reaction_users
-        FROM phan_hoi_binh_luan
-        JOIN nguoi_dung ON phan_hoi_binh_luan.ID_CHINH_ND = nguoi_dung.ID_CHINH_ND
-        LEFT JOIN phan_hoi_cam_xuc cx ON phan_hoi_binh_luan.ID_CHINH_PHBL = cx.ID_CHINH_PHBL
-        LEFT JOIN nguoi_dung nd2 ON cx.ID_CHINH_ND = nd2.ID_CHINH_ND
-        WHERE phan_hoi_binh_luan.ID_CHINH_BL = ?
-        GROUP BY phan_hoi_binh_luan.ID_CHINH_PHBL
-        ORDER BY phan_hoi_binh_luan.NGAY_TAO_PH DESC
-        `,
-        [comment.ID_CHINH_BL]
-      );
-
-      // Xử lý cảm xúc cho bình luận chính
-      const reactions = {};
-      const reactionUsers = [];
-      if (comment.reaction_types) {
-        comment.reaction_types.split(',').forEach(emo => {
-          reactions[emo] = comment.reaction_users ? comment.reaction_users.split(',').filter(u => u.includes(`:${emo}`)).length : 0;
-        });
-      }
-      if (comment.reaction_users) {
-        comment.reaction_users.split(',').forEach(item => {
-          const [name, emo] = item.split(':');
-          if (name && emo) {
-            reactionUsers.push({ TEN_NGUOI_DUNG: name, LOAI_CAM_XUC_BL: emo });
-          }
-        });
-      }
-      
-      // Xử lý phản hồi và cảm xúc của phản hồi
-      const replyMap = {};
-      replies.forEach(reply => {
-        const processedReply = {
-          ...reply,
-          // Xử lý AVARTAR_URL cho phản hồi
-         AVARTAR_URL: reply.AVARTAR_URL
-  ? `/Uploads/images/nguoidung/${reply.ID_CHINH_ND}/${reply.AVARTAR_URL.split('/').pop()}`
-  : "/Uploads/default-avatar.png",
-          reactions: {},
-          reaction_users: [],
-          child_replies: []
+        // Xử lý dữ liệu công thức, bao gồm đường dẫn hình ảnh và thông tin mặc định
+        const recipe = {
+            ...recipeResult[0],
+            // Xử lý hình ảnh chính của công thức
+            HINH_ANH_CT: recipeResult[0].HINH_ANH_CT
+                ? `/Uploads/images/congthuc/${recipeId}/${recipeResult[0].HINH_ANH_CT.split("/").pop()}`
+                : null,
+            // Xử lý avatar của tác giả công thức
+            avatar_tac_gia: recipeResult[0].avatar_tac_gia
+                ? `/Uploads/images/nguoidung/${recipeResult[0].ID_CHINH_ND}/${recipeResult[0].avatar_tac_gia.split('/').pop()}`
+                : "/Uploads/default-avatar.png",
+            THOI_GIAN_NAU: recipeResult[0].THOI_GIAN_NAU || 30,
+            SO_PHAN_AN: recipeResult[0].SO_PHAN_AN || "2-4",
+            DO_KHO: recipeResult[0].DO_KHO || "Dễ"
         };
-        if (reply.reaction_types) {
-          processedReply.reaction_types.split(',').forEach(emo => {
-            processedReply.reactions[emo] = processedReply.reaction_users ? processedReply.reaction_users.split(',').filter(u => u.includes(`:${emo}`)).length : 0;
-          });
-        }
-        if (reply.reaction_users) {
-          processedReply.reaction_users.split(',').forEach(item => {
-            const [name, emo] = item.split(':');
-            if (name && emo) {
-              processedReply.reaction_users.push({ TEN_NGUOI_DUNG: name, LOAI_CAM_XUC: emo });
+
+        // 3. Lấy nguyên liệu
+        const ingredients = await query(
+            `
+            SELECT nguyen_lieu.TEN_NL, cong_thuc_nguyen_lieu.SO_LUONG, nguyen_lieu.DON_VI, cong_thuc_nguyen_lieu.GHI_CHU
+            FROM cong_thuc_nguyen_lieu
+            JOIN nguyen_lieu ON cong_thuc_nguyen_lieu.ID_CHINH_NL = nguyen_lieu.ID_CHINH_NL
+            WHERE cong_thuc_nguyen_lieu.ID_CHINH_CT = ?
+            `,
+            [recipeId]
+        );
+
+        // 4. Lấy danh mục
+        const categories = await query(
+            `
+            SELECT loai_mon.TEN_LM
+            FROM mon_an
+            JOIN mon_an_loai_mon ON mon_an.ID_CHINH_MA = mon_an_loai_mon.ID_CHINH_MA
+            JOIN loai_mon ON mon_an_loai_mon.ID_CHINH_LM = loai_mon.ID_CHINH_LM
+            WHERE mon_an.ID_CHINH_MA = ?
+            `,
+            [recipe.ID_CHINH_MA]
+        );
+
+        // 5. Lấy bình luận và cảm xúc
+        const comments = await query(
+            `
+            SELECT binh_luan.ID_CHINH_BL, binh_luan.NOI_DUNG_BL, binh_luan.NGAY_TAO_BL,
+                   nguoi_dung.TEN_NGUOI_DUNG, nguoi_dung.AVARTAR_URL, nguoi_dung.ID_CHINH_ND,
+                   GROUP_CONCAT(DISTINCT cx.LOAI_CAM_XUC_BL) as reaction_types,
+                   COUNT(DISTINCT cx.ID_CHINH_CXBL) as total_reactions,
+                   GROUP_CONCAT(DISTINCT CONCAT(nd2.TEN_NGUOI_DUNG, ':', cx.LOAI_CAM_XUC_BL)) as reaction_users
+            FROM binh_luan
+            JOIN nguoi_dung ON binh_luan.ID_CHINH_ND = nguoi_dung.ID_CHINH_ND
+            LEFT JOIN binh_luan_cam_xuc cx ON binh_luan.ID_CHINH_BL = cx.ID_CHINH_BL
+            LEFT JOIN nguoi_dung nd2 ON cx.ID_CHINH_ND = nd2.ID_CHINH_ND
+            WHERE binh_luan.ID_CHINH_CT = ?
+            GROUP BY binh_luan.ID_CHINH_BL
+            ORDER BY binh_luan.NGAY_TAO_BL DESC
+            `,
+            [recipeId]
+        );
+
+        // 6. Lấy đánh giá của người dùng
+        const userRatings = await query(
+            `
+            SELECT dg.DANH_GIA, dg.NOI_DUNG_DG, dg.NGAY_TAO_DG,
+                   nd.TEN_NGUOI_DUNG, nd.AVARTAR_URL, nd.ID_CHINH_ND
+            FROM danh_gia dg
+            JOIN nguoi_dung nd ON dg.ID_CHINH_ND = nd.ID_CHINH_ND
+            WHERE dg.ID_CHINH_CT = ?
+            ORDER BY dg.NGAY_TAO_DG DESC
+            `,
+            [recipeId]
+        );
+
+        // Xử lý ảnh đại diện cho các đánh giá người dùng
+        const processedUserRatings = userRatings.map(rating => ({
+            ...rating,
+            AVARTAR_URL: rating.AVARTAR_URL
+                ? `/Uploads/images/nguoidung/${rating.ID_CHINH_ND}/${rating.AVARTAR_URL.split('/').pop()}`
+                : "/Uploads/default-avatar.png"
+        }));
+
+        // 7. Lấy phản hồi và cảm xúc cho từng bình luận (trong vòng lặp Promise.all)
+        const commentsWithReplies = await Promise.all(comments.map(async comment => {
+            const replies = await query(
+                `
+                SELECT phan_hoi_binh_luan.ID_CHINH_PHBL, phan_hoi_binh_luan.NOI_DUNG_PH, phan_hoi_binh_luan.NGAY_TAO_PH,
+                       phan_hoi_binh_luan.ID_CHINH_PHBL_CHA, nguoi_dung.TEN_NGUOI_DUNG, nguoi_dung.AVARTAR_URL, nguoi_dung.ID_CHINH_ND,
+                       GROUP_CONCAT(DISTINCT cx.LOAI_CAM_XUC) as reaction_types,
+                       COUNT(DISTINCT cx.ID_CHINH_PHCX) as total_reactions,
+                       GROUP_CONCAT(DISTINCT CONCAT(nd2.TEN_NGUOI_DUNG, ':', cx.LOAI_CAM_XUC)) as reaction_users
+                FROM phan_hoi_binh_luan
+                JOIN nguoi_dung ON phan_hoi_binh_luan.ID_CHINH_ND = nguoi_dung.ID_CHINH_ND
+                LEFT JOIN phan_hoi_cam_xuc cx ON phan_hoi_binh_luan.ID_CHINH_PHBL = cx.ID_CHINH_PHBL
+                LEFT JOIN nguoi_dung nd2 ON cx.ID_CHINH_ND = nd2.ID_CHINH_ND
+                WHERE phan_hoi_binh_luan.ID_CHINH_BL = ?
+                GROUP BY phan_hoi_binh_luan.ID_CHINH_PHBL
+                ORDER BY phan_hoi_binh_luan.NGAY_TAO_PH DESC
+                `,
+                [comment.ID_CHINH_BL]
+            );
+
+            // Xử lý cảm xúc cho bình luận chính
+            const commentReactionsCount = {}; // Lưu số lượng cảm xúc theo loại
+            const commentReactionUsersList = []; // Lưu danh sách người dùng và loại cảm xúc của họ
+
+            // --- SỬA LỖI TypeError ---
+            // Đảm bảo comment.reaction_types là chuỗi trước khi split
+            if (comment.reaction_types != null) { // Kiểm tra null/undefined
+                const safeReactionTypes = String(comment.reaction_types); // Ép kiểu thành chuỗi
+                if (safeReactionTypes) { // Chỉ xử lý nếu chuỗi không rỗng
+                    safeReactionTypes.split(',').forEach(emo => {
+                        // Đảm bảo comment.reaction_users là chuỗi trước khi split
+                        const safeCommentReactionUsers = comment.reaction_users != null ? String(comment.reaction_users) : '';
+                        const usersForThisReaction = safeCommentReactionUsers
+                            ? safeCommentReactionUsers.split(',').filter(u => u.includes(`:${emo}`)).length
+                            : 0;
+                        commentReactionsCount[emo] = usersForThisReaction;
+                    });
+                }
             }
-          });
+            // Đảm bảo comment.reaction_users là chuỗi trước khi split
+            if (comment.reaction_users != null) { // Kiểm tra null/undefined
+                const safeCommentReactionUsersList = String(comment.reaction_users); // Ép kiểu thành chuỗi
+                if (safeCommentReactionUsersList) { // Chỉ xử lý nếu chuỗi không rỗng
+                    safeCommentReactionUsersList.split(',').forEach(item => {
+                        const [name, emo] = item.split(':');
+                        if (name && emo) {
+                            commentReactionUsersList.push({ TEN_NGUOI_DUNG: name, LOAI_CAM_XUC_BL: emo });
+                        }
+                    });
+                }
+            }
+            // --- KẾT THÚC SỬA LỖI ---
+
+
+            // Xử lý phản hồi và cảm xúc của phản hồi
+            const replyMap = {};
+            replies.forEach(reply => {
+                const processedReply = {
+                    ...reply,
+                    // Xử lý AVARTAR_URL cho phản hồi
+                    AVARTAR_URL: reply.AVARTAR_URL
+                        ? `/Uploads/images/nguoidung/${reply.ID_CHINH_ND}/${reply.AVARTAR_URL.split('/').pop()}`
+                        : "/Uploads/default-avatar.png",
+                    reactions: {}, // Để lưu trữ số lượng cảm xúc theo loại cho phản hồi
+                    reaction_users_list: [], // <-- ĐÃ ĐỔI TÊN BIẾN để lưu trữ danh sách người dùng đã thả cảm xúc cho phản hồi
+                    child_replies: []
+                };
+
+                // --- SỬA LỖI TypeError ---
+                // Đảm bảo reply.reaction_types là chuỗi trước khi split
+                if (reply.reaction_types != null) { // Kiểm tra null/undefined
+                    const safeReplyReactionTypes = String(reply.reaction_types); // Ép kiểu thành chuỗi
+                    if (safeReplyReactionTypes) { // Chỉ xử lý nếu chuỗi không rỗng
+                        safeReplyReactionTypes.split(',').forEach(emo => {
+                            // Đảm bảo reply.reaction_users là chuỗi trước khi split
+                            const safeReplyReactionUsers = reply.reaction_users != null ? String(reply.reaction_users) : '';
+                            const usersForThisReaction = safeReplyReactionUsers
+                                ? safeReplyReactionUsers.split(',').filter(u => u.includes(`:${emo}`)).length
+                                : 0;
+                            processedReply.reactions[emo] = usersForThisReaction;
+                        });
+                    }
+                }
+
+                // Đảm bảo reply.reaction_users là chuỗi trước khi split
+                if (reply.reaction_users != null) { // Kiểm tra null/undefined
+                    const safeReplyReactionUsersList = String(reply.reaction_users); // Ép kiểu thành chuỗi
+                    if (safeReplyReactionUsersList) { // Chỉ xử lý nếu chuỗi không rỗng
+                        const tempReactionUsers = safeReplyReactionUsersList.split(','); // Lưu kết quả split vào biến tạm
+                        tempReactionUsers.forEach(item => {
+                            const [name, emo] = item.split(':');
+                            if (name && emo) {
+                                processedReply.reaction_users_list.push({ TEN_NGUOI_DUNG: name, LOAI_CAM_XUC: emo }); // Push vào biến mới 'reaction_users_list'
+                            }
+                        });
+                    }
+                }
+                // --- KẾT THÚC SỬA LỖI ---
+
+                replyMap[reply.ID_CHINH_PHBL] = processedReply;
+            });
+
+            // Xây dựng cây phản hồi
+            const buildReplyTree = (replies, parentId = null) => {
+                return replies
+                    .filter(r => r.ID_CHINH_PHBL_CHA === parentId)
+                    .map(r => ({
+                        ...replyMap[r.ID_CHINH_PHBL],
+                        child_replies: buildReplyTree(replies, r.ID_CHINH_PHBL)
+                    }));
+            };
+
+            return {
+                ...comment,
+                // Đã xử lý AVARTAR_URL cho bình luận chính
+                AVARTAR_URL: comment.AVARTAR_URL ? `/Uploads/images/nguoidung/${comment.ID_CHINH_ND}/${comment.AVARTAR_URL.split('/').pop()}` : "/Uploads/default-avatar.png",
+                reactions: commentReactionsCount, // Gán biến đã sửa
+                reaction_users: commentReactionUsersList, // Gán biến đã sửa
+                replies: buildReplyTree(replies)
+            };
+        }));
+
+        // 8. Lấy số lượt yêu thích
+        const likes = await query(
+            "SELECT COUNT(*) AS total_likes FROM yeu_thich WHERE ID_CHINH_CT = ?",
+            [recipeId]
+        );
+
+        // 9. Lấy đánh giá trung bình
+        const ratings = await query(
+            "SELECT AVG(DANH_GIA) AS avg_rating, COUNT(*) AS total_ratings FROM danh_gia WHERE ID_CHINH_CT = ?",
+            [recipeId]
+        );
+        let userRating = false;
+        if (req.session.user) {
+            const alreadyRated = await query(
+                "SELECT * FROM danh_gia WHERE ID_CHINH_CT = ? AND ID_CHINH_ND = ?",
+                [recipeId, req.session.user.ID_CHINH_ND]
+            );
+            userRating = alreadyRated.length > 0;
         }
-        replyMap[reply.ID_CHINH_PHBL] = processedReply;
-      });
+        // 10. Kiểm tra yêu thích của người dùng hiện tại
+        let isFavorite = false;
+        if (req.session.user) {
+            const favorite = await query(
+                "SELECT * FROM yeu_thich WHERE ID_CHINH_CT = ? AND ID_CHINH_ND = ?",
+                [recipeId, req.session.user.ID_CHINH_ND]
+            );
+            isFavorite = favorite.length > 0;
+        }
 
-      // Xây dựng cây phản hồi
-      const buildReplyTree = (replies, parentId = null) => {
-        return replies
-          .filter(r => r.ID_CHINH_PHBL_CHA === parentId)
-          .map(r => ({
-            ...replyMap[r.ID_CHINH_PHBL],
-            child_replies: buildReplyTree(replies, r.ID_CHINH_PHBL)
-          }));
-      };
+        // 11. Lấy công thức tương tự
+        const similarRecipes = await query(
+            `
+            SELECT DISTINCT
+            cong_thuc.ID_CHINH_CT,
+            cong_thuc.TEN_CT,
+            cong_thuc.HINH_ANH_CT,
+            cong_thuc.THOI_GIAN_NAU,
+            cong_thuc.DO_KHO,
+            (
+                SELECT AVG(DANH_GIA)
+                FROM danh_gia
+                WHERE danh_gia.ID_CHINH_CT = cong_thuc.ID_CHINH_CT
+            ) AS DANH_GIA,
+            GROUP_CONCAT(DISTINCT loai_mon.TEN_LM) AS categories
+            FROM cong_thuc
+            JOIN mon_an ON cong_thuc.ID_CHINH_MA = mon_an.ID_CHINH_MA
+            JOIN mon_an_loai_mon ON mon_an.ID_CHINH_MA = mon_an_loai_mon.ID_CHINH_MA
+            JOIN loai_mon ON mon_an_loai_mon.ID_CHINH_LM = loai_mon.ID_CHINH_LM
+            WHERE cong_thuc.TRANG_THAI_DUYET_ = 'Đã duyệt'
+            AND cong_thuc.ID_CHINH_CT != ?
+            AND (
+                loai_mon.ID_CHINH_LM IN (
+                    SELECT ID_CHINH_LM
+                    FROM mon_an_loai_mon
+                    WHERE ID_CHINH_MA = ?
+                )
+                OR mon_an.ID_CHINH_MA = ?
+            )
+            GROUP BY cong_thuc.ID_CHINH_CT
+            ORDER BY RAND()
+            LIMIT 4
+            `,
+            [recipeId, recipe.ID_CHINH_MA, recipe.ID_CHINH_MA]
+        );
 
-      return {
-        ...comment,
-        // Đã xử lý AVARTAR_URL cho bình luận chính ở đây (lặp lại để nhấn mạnh)
-      AVARTAR_URL: comment.AVARTAR_URL ? `/Uploads/images/nguoidung/${comment.ID_CHINH_ND}/${comment.AVARTAR_URL.split('/').pop()}` : "/Uploads/default-avatar.png",
-        reactions,
-        reaction_users: reactionUsers,
-        replies: buildReplyTree(replies)
-      };
-    }));
+        // Xử lý hình ảnh cho công thức tương tự
+        const processedSimilarRecipes = similarRecipes.map(similarRecipe => {
+            const fileName = similarRecipe.HINH_ANH_CT ? similarRecipe.HINH_ANH_CT.split("/").pop() : null;
+            return {
+                ...similarRecipe,
+                HINH_ANH_CT: fileName ? `/Uploads/images/congthuc/${similarRecipe.ID_CHINH_CT}/${fileName}` : null,
+                categories: similarRecipe.categories ? similarRecipe.categories.split(',') : []
+            };
+        });
 
-    // 8. Lấy số lượt yêu thích
-    const likes = await query(
-      "SELECT COUNT(*) AS total_likes FROM yeu_thich WHERE ID_CHINH_CT = ?",
-      [recipeId]
-    );
-
-    // 9. Lấy đánh giá trung bình
-    const ratings = await query(
-      "SELECT AVG(DANH_GIA) AS avg_rating, COUNT(*) AS total_ratings FROM danh_gia WHERE ID_CHINH_CT = ?",
-      [recipeId]
-    );
-        let userRating  = false;
-    if (req.session.user) {
-      const alreadyRated = await query(
-        "SELECT * FROM danh_gia WHERE ID_CHINH_CT = ? AND ID_CHINH_ND = ?",
-        [recipeId, req.session.user.ID_CHINH_ND]
-      );
-      userRating  = alreadyRated.length > 0;
+        // 12. Render trang và truyền dữ liệu
+        res.render("index/index_layout", {
+            viewPath: "cong-thuc-chi-tiet",
+            recipe: { ...recipe, isFavorite },
+            ingredients,
+            categories,
+            comments: commentsWithReplies, // Đã xử lý avatar và cảm xúc đầy đủ
+            likes: likes[0].total_likes,
+            ratings: {
+                average: ratings[0].avg_rating ? parseFloat(ratings[0].avg_rating).toFixed(1) : "Chưa có", // Thêm toFixed(1) để làm tròn
+                total: ratings[0].total_ratings
+            },
+            user: req.session.user,
+            similarRecipes: processedSimilarRecipes,
+            processedUserRatings, // Đã xử lý avatar trong mảng này
+            userRatings, // Giữ nguyên userRatings gốc nếu cần, nhưng processedUserRatings nên được dùng để hiển thị
+            userRating,
+            session: req.session // Truyền session để dùng cho flash messages hoặc trạng thái đăng nhập
+        });
+    } catch (err) {
+        console.error("Lỗi truy vấn chi tiết công thức:", err);
+        res.status(500).send("Lỗi server");
     }
-    // 10. Kiểm tra yêu thích của người dùng hiện tại
-    let isFavorite = false;
-    if (req.session.user) {
-      const favorite = await query(
-        "SELECT * FROM yeu_thich WHERE ID_CHINH_CT = ? AND ID_CHINH_ND = ?",
-        [recipeId, req.session.user.ID_CHINH_ND]
-      );
-      isFavorite = favorite.length > 0;
-    }
-
-    // 11. Lấy công thức tương tự
-    const similarRecipes = await query(
-      `
-      SELECT DISTINCT 
-      cong_thuc.ID_CHINH_CT,
-      cong_thuc.TEN_CT,
-      cong_thuc.HINH_ANH_CT,
-      cong_thuc.THOI_GIAN_NAU,
-      cong_thuc.DO_KHO,
-      (
-        SELECT AVG(DANH_GIA)
-        FROM danh_gia
-        WHERE danh_gia.ID_CHINH_CT = cong_thuc.ID_CHINH_CT
-      ) AS DANH_GIA,
-      GROUP_CONCAT(DISTINCT loai_mon.TEN_LM) AS categories
-    FROM cong_thuc
-    JOIN mon_an ON cong_thuc.ID_CHINH_MA = mon_an.ID_CHINH_MA
-    JOIN mon_an_loai_mon ON mon_an.ID_CHINH_MA = mon_an_loai_mon.ID_CHINH_MA
-    JOIN loai_mon ON mon_an_loai_mon.ID_CHINH_LM = loai_mon.ID_CHINH_LM
-    WHERE cong_thuc.TRANG_THAI_DUYET_ = 'Đã duyệt'
-      AND cong_thuc.ID_CHINH_CT != ?
-      AND (
-        loai_mon.ID_CHINH_LM IN (
-          SELECT ID_CHINH_LM 
-          FROM mon_an_loai_mon 
-          WHERE ID_CHINH_MA = ?
-        )
-        OR mon_an.ID_CHINH_MA = ?
-      )
-    GROUP BY cong_thuc.ID_CHINH_CT
-    ORDER BY RAND()
-    LIMIT 4
-      `,
-      [recipeId, recipe.ID_CHINH_MA, recipe.ID_CHINH_MA]
-    );
-
-    // Xử lý hình ảnh cho công thức tương tự
-    const processedSimilarRecipes = similarRecipes.map(similarRecipe => {
-      const fileName = similarRecipe.HINH_ANH_CT ? similarRecipe.HINH_ANH_CT.split("/").pop() : null;
-      return {
-        ...similarRecipe,
-        HINH_ANH_CT: fileName ? `/Uploads/images/congthuc/${similarRecipe.ID_CHINH_CT}/${fileName}` : null,
-        categories: similarRecipe.categories ? similarRecipe.categories.split(',') : []
-      };
-    });
-
-    // 12. Render trang và truyền dữ liệu
-    res.render("index/index_layout", {
-      viewPath: "cong-thuc-chi-tiet",
-      recipe: { ...recipe, isFavorite },
-      ingredients,
-      categories,
-      comments: commentsWithReplies, // Đã xử lý avatar trong mảng này
-      likes: likes[0].total_likes,
-      ratings: {
-        average: ratings[0].avg_rating ? parseFloat(ratings[0].avg_rating) : "Chưa có",
-        total: ratings[0].total_ratings
-      },
-      user: req.session.user,
-      similarRecipes: processedSimilarRecipes,
-      processedUserRatings, // Đã xử lý avatar trong mảng này
-      userRatings, 
-      userRating,// Giữ nguyên userRatings gốc nếu cần, nhưng processedUserRatings nên được dùng để hiển thị
-      session: req.session // Truyền session để dùng cho flash messages hoặc trạng thái đăng nhập
-    });
-  } catch (err) {
-    console.error("Lỗi truy vấn chi tiết công thức:", err);
-    res.status(500).send("Lỗi server");
-  }
 });
 
 
-// Route yêu thích công thức
+
+
+// Route POST /cong-thuc/:id/yeu-thich
 router.post("/cong-thuc/:id/yeu-thich", async (req, res) => {
     if (!req.session.user) {
         return res.status(401).send("Vui lòng đăng nhập để yêu thích");
@@ -951,17 +990,59 @@ router.post("/cong-thuc/:id/yeu-thich", async (req, res) => {
             [recipeId, userId]
         );
 
+        let notificationMessage = ""; // Để lưu nội dung thông báo
+
         if (existing.length) {
+            // Nếu đã yêu thích, bỏ yêu thích
             await query(
                 "DELETE FROM yeu_thich WHERE ID_CHINH_CT = ? AND ID_CHINH_ND = ?",
                 [recipeId, userId]
             );
+            notificationMessage = "đã bỏ yêu thích công thức";
+            // Không gửi thông báo khi bỏ yêu thích nếu không cần thiết
+            // Nếu bạn muốn gửi thông báo khi bỏ yêu thích, hãy bỏ comment phần code dưới đây
+            // và điều chỉnh thông báo cho phù hợp.
         } else {
+            // Nếu chưa yêu thích, thêm yêu thích
             await query(
                 "INSERT INTO yeu_thich (ID_CHINH_CT, ID_CHINH_ND, NGAY_TAO_YT) VALUES (?, ?, CURDATE())",
                 [recipeId, userId]
             );
+            notificationMessage = "đã yêu thích công thức";
+
+            // --- Bắt đầu phần thông báo (chỉ khi thêm yêu thích) ---
+            const [nguoiDung] = await query("SELECT TEN_NGUOI_DUNG FROM nguoi_dung WHERE ID_CHINH_ND = ?", [userId]);
+            const tenNguoiDung = nguoiDung?.TEN_NGUOI_DUNG || "Người dùng";
+
+            const [congThuc] = await query("SELECT TEN_CT, ID_CHINH_ND FROM cong_thuc WHERE ID_CHINH_CT = ?", [recipeId]);
+            const tenCongThuc = congThuc?.TEN_CT || "một công thức";
+            const chuCongThucId = congThuc?.ID_CHINH_ND; // ID của người đăng công thức
+
+            // Lấy tất cả admin
+            const admins = await query(`SELECT ID_CHINH_ND FROM nguoi_dung WHERE VAI_TRO = 'admin'`);
+
+            // Tạo một Set để lưu trữ các ID người nhận duy nhất
+            const recipients = new Set(admins.map(admin => admin.ID_CHINH_ND));
+
+            // Thêm ID của chủ công thức vào danh sách nếu họ không phải là người đang thực hiện hành động
+            if (chuCongThucId && chuCongThucId !== userId) {
+                recipients.add(chuCongThucId);
+            }
+
+            // Chuyển Set thành mảng
+            const uniqueRecipients = Array.from(recipients);
+
+            // Gửi thông báo cho từng người nhận duy nhất
+            for (const recipientId of uniqueRecipients) {
+                await query(
+                    `INSERT INTO THONG_BAO (LOAI_TB, NOI_DUNG_TB, ID_MUC_TIEU, ID_CHINH_ND, DA_DOC, DA_XOA, NGAY_TAO_TB)
+                     VALUES (?, ?, ?, ?, FALSE, FALSE, NOW())`,
+                    ['yeu_thich', `Người dùng ${tenNguoiDung} ${notificationMessage} "${tenCongThuc}".`, recipientId, userId]
+                );
+            }
+            // --- Kết thúc phần thông báo ---
         }
+
         res.redirect(`/cong-thuc/${recipeId}`);
     } catch (err) {
         console.error("Lỗi xử lý yêu thích:", err);
@@ -972,6 +1053,7 @@ router.post("/cong-thuc/:id/yeu-thich", async (req, res) => {
 
 
 // Route thêm bình luận
+// Route POST /cong-thuc/:id/binh-luan
 router.post("/cong-thuc/:id/binh-luan", async (req, res) => {
   if (!req.session.user) {
     return res.status(401).send("Vui lòng đăng nhập để bình luận");
@@ -993,6 +1075,7 @@ router.post("/cong-thuc/:id/binh-luan", async (req, res) => {
 
     const idBinhLuan = result.insertId;
 
+    // --- Bắt đầu phần thông báo cho bình luận mới ---
     const [nguoiDung] = await query("SELECT TEN_NGUOI_DUNG FROM nguoi_dung WHERE ID_CHINH_ND = ?", [userId]);
     const tenNguoiDung = nguoiDung?.TEN_NGUOI_DUNG || "Người dùng";
 
@@ -1019,9 +1102,10 @@ router.post("/cong-thuc/:id/binh-luan", async (req, res) => {
       await query(
         `INSERT INTO THONG_BAO (LOAI_TB, NOI_DUNG_TB, ID_MUC_TIEU, ID_CHINH_ND, DA_DOC, DA_XOA, NGAY_TAO_TB)
          VALUES (?, ?, ?, ?, FALSE, FALSE, NOW())`,
-        ['binh_luan', `Người dùng ${tenNguoiDung} đã bình luận trên công thức ${tenCongThuc}`, recipientId, userId]
+        ['binh_luan', `Người dùng ${tenNguoiDung} đã bình luận trên công thức "${tenCongThuc}".`, recipientId, userId]
       );
     }
+    // --- Kết thúc phần thông báo ---
 
     res.redirect(`/cong-thuc/${recipeId}`);
   } catch (err) {
@@ -1091,7 +1175,7 @@ router.post("/binh-luan/:id/phan-hoi", async (req, res) => {
       await query(
         `INSERT INTO THONG_BAO (LOAI_TB, NOI_DUNG_TB, ID_MUC_TIEU, ID_CHINH_ND, DA_DOC, DA_XOA, NGAY_TAO_TB)
          VALUES (?, ?, ?, ?, FALSE, FALSE, NOW())`,
-        ['phan_hoi_binh_luan', `Người dùng ${tenNguoiDung} đã phản hồi bình luận trên công thức ${tenCongThuc}`, recipientId, userId]
+        ['phan_hoi_binh_luan', `Người dùng ${tenNguoiDung} đã phản hồi bình luận trên công thức ${tenCongThuc} của bạn`, recipientId, userId]
       );
     }
 
@@ -1101,123 +1185,146 @@ router.post("/binh-luan/:id/phan-hoi", async (req, res) => {
     res.status(500).send("Lỗi server");
   }
 });
+
+// Route thả/xóa cảm xúc cho bình luận
 // Route thả/xóa cảm xúc cho bình luận
 router.post("/binh-luan/:id/cam-xuc", async (req, res) => {
-  if (!req.session.user) {
-    return res.status(401).send("Vui lòng đăng nhập để thả cảm xúc");
-  }
-
-  const commentId = req.params.id;
-  const { loai_cam_xuc } = req.body;
-  const userId = req.session.user.ID_CHINH_ND;
-
-  if (!commentId || isNaN(commentId) || !['like', 'love', 'haha', 'wow', 'sad', 'angry'].includes(loai_cam_xuc)) {
-    return res.status(400).send("Dữ liệu không hợp lệ");
-  }
-
-  try {
-    const [comment] = await query("SELECT ID_CHINH_CT FROM binh_luan WHERE ID_CHINH_BL = ?", [commentId]);
-    if (!comment) {
-      return res.status(404).send("Bình luận không tồn tại");
+    if (!req.session.user) {
+        return res.status(401).send("Vui lòng đăng nhập để thả cảm xúc");
     }
 
-    const [existingReaction] = await query(
-      "SELECT ID_CHINH_CXBL FROM binh_luan_cam_xuc WHERE ID_CHINH_BL = ? AND ID_CHINH_ND = ? AND LOAI_CAM_XUC_BL = ?",
-      [commentId, userId, loai_cam_xuc]
-    );
+    const commentId = req.params.id;
+    const { loai_cam_xuc } = req.body;
+    const userId = req.session.user.ID_CHINH_ND;
 
-    if (existingReaction) {
-      await query("DELETE FROM binh_luan_cam_xuc WHERE ID_CHINH_CXBL = ?", [existingReaction.ID_CHINH_CXBL]);
-    } else {
-      await query(
-        "INSERT INTO binh_luan_cam_xuc (ID_CHINH_BL, ID_CHINH_ND, LOAI_CAM_XUC_BL, NGAY_TAO_CX_BL) VALUES (?, ?, ?, CURDATE())",
-        [commentId, userId, loai_cam_xuc]
-      );
+    if (!commentId || isNaN(commentId) || !['like', 'love', 'haha', 'wow', 'sad', 'angry'].includes(loai_cam_xuc)) {
+        return res.status(400).send("Dữ liệu không hợp lệ");
+    }
 
-      const [commentOwner] = await query("SELECT ID_CHINH_ND FROM binh_luan WHERE ID_CHINH_BL = ?", [commentId]);
-      if (commentOwner.ID_CHINH_ND !== userId) {
-        const [nguoiDung] = await query("SELECT TEN_NGUOI_DUNG FROM nguoi_dung WHERE ID_CHINH_ND = ?", [userId]);
-        const tenNguoiDung = nguoiDung?.TEN_NGUOI_DUNG || "Người dùng";
-        const [congThuc] = await query("SELECT TEN_CT FROM cong_thuc WHERE ID_CHINH_CT = ?", [comment.ID_CHINH_CT]);
-        const tenCongThuc = congThuc?.TEN_CT || "một công thức";
+    try {
+        const [comment] = await query("SELECT ID_CHINH_CT, ID_CHINH_ND FROM binh_luan WHERE ID_CHINH_BL = ?", [commentId]);
+        if (!comment) {
+            return res.status(404).send("Bình luận không tồn tại");
+        }
 
-        await query(
-          `INSERT INTO THONG_BAO (LOAI_TB, NOI_DUNG_TB, ID_MUC_TIEU, ID_CHINH_ND, DA_DOC, DA_XOA, NGAY_TAO_TB)
-           VALUES (?, ?, ?, ?, FALSE, FALSE, NOW())`,
-          ['cam_xuc', `Người dùng ${tenNguoiDung} đã thả ${loai_cam_xuc} trên bình luận của bạn trong công thức ${tenCongThuc}`, commentOwner.ID_CHINH_ND, userId]
+        const [existingReaction] = await query(
+            "SELECT ID_CHINH_CXBL FROM binh_luan_cam_xuc WHERE ID_CHINH_BL = ? AND ID_CHINH_ND = ? AND LOAI_CAM_XUC_BL = ?",
+            [commentId, userId, loai_cam_xuc]
         );
-      }
-    }
 
-    res.redirect(`/cong-thuc/${comment.ID_CHINH_CT}`);
-  } catch (err) {
-    console.error("Lỗi thả cảm xúc:", err);
-    res.status(500).send("Lỗi server");
-  }
+        // Nếu existingReaction, nghĩa là người dùng đang xóa cảm xúc của họ
+        if (existingReaction) {
+            await query("DELETE FROM binh_luan_cam_xuc WHERE ID_CHINH_CXBL = ?", [existingReaction.ID_CHINH_CXBL]);
+            // Không gửi thông báo khi xóa cảm xúc
+        } else {
+            // Nếu không có existingReaction, nghĩa là người dùng đang thêm cảm xúc mới
+            await query(
+                "INSERT INTO binh_luan_cam_xuc (ID_CHINH_BL, ID_CHINH_ND, LOAI_CAM_XUC_BL, NGAY_TAO_CX_BL) VALUES (?, ?, ?, CURDATE())",
+                [commentId, userId, loai_cam_xuc]
+            );
+
+            // --- Bắt đầu phần thông báo (chỉ khi thêm cảm xúc) ---
+            const commentOwnerId = comment.ID_CHINH_ND; // Chủ sở hữu của bình luận
+
+            // Chỉ gửi thông báo nếu người thả cảm xúc không phải là chủ sở hữu bình luận
+            if (commentOwnerId && commentOwnerId !== userId) {
+                const [nguoiDung] = await query("SELECT TEN_NGUOI_DUNG FROM nguoi_dung WHERE ID_CHINH_ND = ?", [userId]);
+                const tenNguoiDung = nguoiDung?.TEN_NGUOI_DUNG || "Người dùng";
+
+                const [congThuc] = await query("SELECT TEN_CT FROM cong_thuc WHERE ID_CHINH_CT = ?", [comment.ID_CHINH_CT]);
+                const tenCongThuc = congThuc?.TEN_CT || "một công thức";
+
+                await query(
+                    `INSERT INTO THONG_BAO (LOAI_TB, NOI_DUNG_TB, ID_MUC_TIEU, ID_CHINH_ND, DA_DOC, DA_XOA, NGAY_TAO_TB)
+                     VALUES (?, ?, ?, ?, FALSE, FALSE, NOW())`,
+                    ['binh_luan_cam_xuc', `Người dùng ${tenNguoiDung} đã thả ${loai_cam_xuc} trên bình luận của bạn trong công thức "${tenCongThuc}".`, commentOwnerId, userId]
+                );
+            }
+            // --- Kết thúc phần thông báo ---
+        }
+
+        res.redirect(`/cong-thuc/${comment.ID_CHINH_CT}`);
+    } catch (err) {
+        console.error("Lỗi thả cảm xúc:", err);
+        res.status(500).send("Lỗi server");
+    }
 });
+
+
 
 // Route thả/xóa cảm xúc cho phản hồi
+
+// Route POST /phan-hoi/:id/cam-xuc
 router.post("/phan-hoi/:id/cam-xuc", async (req, res) => {
-  if (!req.session.user) {
-    return res.status(401).send("Vui lòng đăng nhập để thả cảm xúc");
-  }
-
-  const replyId = req.params.id;
-  const { loai_cam_xuc } = req.body;
-  const userId = req.session.user.ID_CHINH_ND;
-
-  if (!replyId || isNaN(replyId) || !['like', 'love', 'haha', 'wow', 'sad', 'angry'].includes(loai_cam_xuc)) {
-    return res.status(400).send("Dữ liệu không hợp lệ");
-  }
-
-  try {
-    const [reply] = await query(
-      "SELECT ID_CHINH_BL FROM phan_hoi_binh_luan WHERE ID_CHINH_PHBL = ?",
-      [replyId]
-    );
-    if (!reply) {
-      return res.status(404).send("Phản hồi không tồn tại");
+    if (!req.session.user) {
+        return res.status(401).send("Vui lòng đăng nhập để thả cảm xúc");
     }
 
-    const [comment] = await query("SELECT ID_CHINH_CT FROM binh_luan WHERE ID_CHINH_BL = ?", [reply.ID_CHINH_BL]);
-    if (!comment) {
-      return res.status(404).send("Bình luận không tồn tại");
+    const replyId = req.params.id;
+    const { loai_cam_xuc } = req.body;
+    const userId = req.session.user.ID_CHINH_ND;
+
+    if (!replyId || isNaN(replyId) || !['like', 'love', 'haha', 'wow', 'sad', 'angry'].includes(loai_cam_xuc)) {
+        return res.status(400).send("Dữ liệu không hợp lệ");
     }
 
-    const [existingReaction] = await query(
-      "SELECT ID_CHINH_PHCX FROM phan_hoi_cam_xuc WHERE ID_CHINH_PHBL = ? AND ID_CHINH_ND = ? AND LOAI_CAM_XUC = ?",
-      [replyId, userId, loai_cam_xuc]
-    );
-
-    if (existingReaction) {
-      await query("DELETE FROM phan_hoi_cam_xuc WHERE ID_CHINH_PHCX = ?", [existingReaction.ID_CHINH_PHCX]);
-    } else {
-      await query(
-        "INSERT INTO phan_hoi_cam_xuc (ID_CHINH_PHBL, ID_CHINH_ND, LOAI_CAM_XUC, NGAY_TAO_CX_PH) VALUES (?, ?, ?, CURDATE())",
-        [replyId, userId, loai_cam_xuc]
-      );
-
-      const [replyOwner] = await query("SELECT ID_CHINH_ND FROM phan_hoi_binh_luan WHERE ID_CHINH_PHBL = ?", [replyId]);
-      if (replyOwner.ID_CHINH_ND !== userId) {
-        const [nguoiDung] = await query("SELECT TEN_NGUOI_DUNG FROM nguoi_dung WHERE ID_CHINH_ND = ?", [userId]);
-        const tenNguoiDung = nguoiDung?.TEN_NGUOI_DUNG || "Người dùng";
-        const [congThuc] = await query("SELECT TEN_CT FROM cong_thuc WHERE ID_CHINH_CT = ?", [comment.ID_CHINH_CT]);
-        const tenCongThuc = congThuc?.TEN_CT || "một công thức";
-
-        await query(
-          `INSERT INTO THONG_BAO (LOAI_TB, NOI_DUNG_TB, ID_MUC_TIEU, ID_CHINH_ND, DA_DOC, DA_XOA, NGAY_TAO_TB)
-           VALUES (?, ?, ?, ?, FALSE, FALSE, NOW())`,
-          ['cam_xuc', `Người dùng ${tenNguoiDung} đã thả ${loai_cam_xuc} trên phản hồi của bạn trong công thức ${tenCongThuc}`, replyOwner.ID_CHINH_ND, userId]
+    try {
+        const [reply] = await query(
+            "SELECT ID_CHINH_BL, ID_CHINH_ND FROM phan_hoi_binh_luan WHERE ID_CHINH_PHBL = ?", // Lấy ID_CHINH_ND của chủ phản hồi
+            [replyId]
         );
-      }
-    }
+        if (!reply) {
+            return res.status(404).send("Phản hồi không tồn tại");
+        }
 
-    res.redirect(`/cong-thuc/${comment.ID_CHINH_CT}`);
-  } catch (err) {
-    console.error("Lỗi thả cảm xúc:", err);
-    res.status(500).send("Lỗi server");
-  }
+        const [comment] = await query("SELECT ID_CHINH_CT FROM binh_luan WHERE ID_CHINH_BL = ?", [reply.ID_CHINH_BL]);
+        if (!comment) {
+            return res.status(404).send("Bình luận không tồn tại");
+        }
+
+        const [existingReaction] = await query(
+            "SELECT ID_CHINH_PHCX FROM phan_hoi_cam_xuc WHERE ID_CHINH_PHBL = ? AND ID_CHINH_ND = ? AND LOAI_CAM_XUC = ?",
+            [replyId, userId, loai_cam_xuc]
+        );
+
+        // Nếu existingReaction, nghĩa là người dùng đang xóa cảm xúc của họ
+        if (existingReaction) {
+            await query("DELETE FROM phan_hoi_cam_xuc WHERE ID_CHINH_PHCX = ?", [existingReaction.ID_CHINH_PHCX]);
+            // Không gửi thông báo khi xóa cảm xúc
+        } else {
+            // Nếu không có existingReaction, nghĩa là người dùng đang thêm cảm xúc mới
+            await query(
+                "INSERT INTO phan_hoi_cam_xuc (ID_CHINH_PHBL, ID_CHINH_ND, LOAI_CAM_XUC, NGAY_TAO_CX_PH) VALUES (?, ?, ?, CURDATE())",
+                [replyId, userId, loai_cam_xuc]
+            );
+
+            // --- Bắt đầu phần thông báo (chỉ khi thêm cảm xúc) ---
+            const replyOwnerId = reply.ID_CHINH_ND; // Chủ sở hữu của phản hồi
+
+            // Chỉ gửi thông báo nếu người thả cảm xúc không phải là chủ sở hữu phản hồi
+            if (replyOwnerId && replyOwnerId !== userId) {
+                const [nguoiDung] = await query("SELECT TEN_NGUOI_DUNG FROM nguoi_dung WHERE ID_CHINH_ND = ?", [userId]);
+                const tenNguoiDung = nguoiDung?.TEN_NGUOI_DUNG || "Người dùng";
+
+                const [congThuc] = await query("SELECT TEN_CT FROM cong_thuc WHERE ID_CHINH_CT = ?", [comment.ID_CHINH_CT]);
+                const tenCongThuc = congThuc?.TEN_CT || "một công thức";
+
+                await query(
+                    `INSERT INTO THONG_BAO (LOAI_TB, NOI_DUNG_TB, ID_MUC_TIEU, ID_CHINH_ND, DA_DOC, DA_XOA, NGAY_TAO_TB)
+                     VALUES (?, ?, ?, ?, FALSE, FALSE, NOW())`,
+                    ['phan_hoi_cam_xuc', `Người dùng ${tenNguoiDung} đã thả ${loai_cam_xuc} trên phản hồi của bạn trong công thức "${tenCongThuc}".`, replyOwnerId, userId]
+                );
+            }
+            // --- Kết thúc phần thông báo ---
+        }
+
+        res.redirect(`/cong-thuc/${comment.ID_CHINH_CT}`);
+    } catch (err) {
+        console.error("Lỗi thả cảm xúc:", err);
+        res.status(500).send("Lỗi server");
+    }
 });
+
 
 // Route chỉnh sửa bình luận
 router.put("/binh-luan/:id", async (req, res) => {
@@ -1401,10 +1508,42 @@ router.post("/cong-thuc/:id/danh-gia", async (req, res) => {
     }
 
     // Chưa có -> thêm mới
-    await query(
-      "INSERT INTO danh_gia (ID_CHINH_CT, ID_CHINH_ND, DANH_GIA, NOI_DUNG_DG, NGAY_TAO_DG) VALUES (?, ?, ?, ?, CURDATE())",
-      [recipeId, userId, danh_gia, noi_dung || null]
-    );
+   await query(
+  "INSERT INTO danh_gia (ID_CHINH_CT, ID_CHINH_ND, DANH_GIA, NOI_DUNG_DG, NGAY_TAO_DG) VALUES (?, ?, ?, ?, CURDATE())",
+  [recipeId, userId, danh_gia, noi_dung || null] // Đã thêm 'danh_gia' vào đây
+);
+
+    // --- Bắt đầu phần thông báo cho đánh giá mới ---
+    const [nguoiDung] = await query("SELECT TEN_NGUOI_DUNG FROM nguoi_dung WHERE ID_CHINH_ND = ?", [userId]);
+    const tenNguoiDung = nguoiDung?.TEN_NGUOI_DUNG || "Người dùng";
+
+    const [congThuc] = await query("SELECT TEN_CT, ID_CHINH_ND FROM cong_thuc WHERE ID_CHINH_CT = ?", [recipeId]);
+    const tenCongThuc = congThuc?.TEN_CT || "một công thức";
+    const chuCongThucId = congThuc?.ID_CHINH_ND; // ID của người đăng công thức
+
+    // Lấy tất cả admin
+    const admins = await query(`SELECT ID_CHINH_ND FROM nguoi_dung WHERE VAI_TRO = 'admin'`);
+
+    // Tạo một Set để lưu trữ các ID người nhận duy nhất
+    const recipients = new Set(admins.map(admin => admin.ID_CHINH_ND));
+
+    // Thêm ID của chủ công thức vào danh sách nếu họ không phải là người đang đánh giá
+    if (chuCongThucId && chuCongThucId !== userId) {
+      recipients.add(chuCongThucId);
+    }
+
+    // Chuyển Set thành mảng
+    const uniqueRecipients = Array.from(recipients);
+
+    // Gửi thông báo cho từng người nhận duy nhất
+    for (const recipientId of uniqueRecipients) {
+      await query(
+        `INSERT INTO THONG_BAO (LOAI_TB, NOI_DUNG_TB, ID_MUC_TIEU, ID_CHINH_ND, DA_DOC, DA_XOA, NGAY_TAO_TB)
+         VALUES (?, ?, ?, ?, FALSE, FALSE, NOW())`,
+        ['danh_gia', `Người dùng ${tenNguoiDung} đã đánh giá công thức "${tenCongThuc}" với ${danh_gia} sao.`, recipientId, userId]
+      );
+    }
+    // --- Kết thúc phần thông báo ---
 
     res.redirect(`/cong-thuc/${recipeId}`);
   } catch (err) {
@@ -1468,17 +1607,26 @@ router.get("/dang-cong-thuc/:id", ensureLoggedIn, async (req, res) => {
   const userId = req.session.user.ID_CHINH_ND;
   const recipeId = req.params.id;
   try {
-    // Lấy thông tin công thức của người dùng dựa trên ID
+    console.log("recipeId:", recipeId);
+    console.log("userId:", userId);
+    console.log("Session user:", req.session.user);
+
     const [recipe] = await query(
-      "SELECT * FROM cong_thuc WHERE ID_CHINH_CT = ? AND ID_CHINH_ND = ? AND TRANG_THAI_DUYET_ = ?",
-      [recipeId, userId, 'Đang chờ duyệt']
+      "SELECT * FROM cong_thuc WHERE ID_CHINH_CT = ? AND ID_CHINH_ND = ? AND TRANG_THAI_DUYET_ IN (?, ?)",
+      [recipeId, userId, 'Đang chờ duyệt', 'Từ chối']
     );
 
     if (!recipe) {
+      console.log("Không tìm thấy recipe. Kiểm tra DB:");
+      const [dbCheck] = await query(
+        "SELECT TRANG_THAI_DUYET_ FROM cong_thuc WHERE ID_CHINH_CT = ? AND ID_CHINH_ND = ?",
+        [recipeId, userId]
+      );
+      console.log("Giá trị TRANG_THAI_DUYET_ từ DB:", dbCheck ? dbCheck.TRANG_THAI_DUYET_ : "Không có bản ghi");
       return res.status(404).send("Công thức không tồn tại hoặc không thể chỉnh sửa!");
     }
 
-    // Lấy danh sách nguyên liệu của công thức
+    // Tiếp tục các bước lấy dữ liệu
     const recipeIngredients = await query(
       `
       SELECT ctnl.*, nl.TEN_NL, nl.DON_VI 
@@ -1489,21 +1637,16 @@ router.get("/dang-cong-thuc/:id", ensureLoggedIn, async (req, res) => {
       [recipeId]
     );
 
-    // Lấy danh sách loại món
     const categories = await query("SELECT ID_CHINH_LM AS ID_CHINH_MA, TEN_LM AS TEN_MON_AN FROM loai_mon");
-
-    // Lấy danh sách nguyên liệu
     const nguyen_lieu = await query("SELECT ID_CHINH_NL, TEN_NL, DON_VI FROM nguyen_lieu");
     const mon_an = await query("SELECT * FROM mon_an");
 
-    // Lấy thông tin chi tiết người dùng
     const [userInfo] = await query("SELECT * FROM nguoi_dung WHERE ID_CHINH_ND = ?", [userId]);
 
     if (!userInfo) {
       return res.status(404).send("Không tìm thấy thông tin người dùng");
     }
 
-    // Cập nhật session với thông tin mới từ userInfo
     req.session.user = {
       ...req.session.user,
       TEN_NGUOI_DUNG: userInfo.TEN_NGUOI_DUNG,
@@ -1583,27 +1726,30 @@ router.post(
         .join('\n\n');
 
       // Thêm công thức
-      const result = await query(
-        `
-        INSERT INTO cong_thuc (
-          ID_CHINH_ND, ID_CHINH_MA, TEN_CT, MOTA, HUONG_DAN, 
-          THOI_GIAN_NAU, DO_KHO, SO_PHAN_AN, HINH_ANH_CT, VIDEO, TRANG_THAI_DUYET_
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `,
-        [
-          userId,
-          ID_CHINH_MA,
-          TEN_CT.trim(),
-          MOTA.trim(),
-          huongDan,
-          THOI_GIAN_NAU || null,
-          DO_KHO || null,
-          SO_PHAN_AN || null,
-          null, // HINH_ANH_CT
-          null, // VIDEO
-          'Đang chờ duyệt'
-        ]
-      );
+const result = await query(
+  `
+  INSERT INTO cong_thuc (
+    ID_CHINH_ND, ID_CHINH_MA, TEN_CT, MOTA, HUONG_DAN, 
+    THOI_GIAN_NAU, DO_KHO, SO_PHAN_AN, HINH_ANH_CT, VIDEO, 
+    TRANG_THAI_DUYET_, NGAY_TAO_CT
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURDATE())
+  `,
+  [
+    userId,
+    ID_CHINH_MA,
+    TEN_CT.trim(),
+    MOTA.trim(),
+    huongDan,
+    THOI_GIAN_NAU || null,
+    DO_KHO || null,
+    SO_PHAN_AN || null,
+    null,
+    null,
+    'Đang chờ duyệt'
+  ]
+);
+
+
 
       recipeId = result.insertId; // Gán giá trị cho biến recipeId đã khai báo ở trên
 
@@ -1863,29 +2009,41 @@ router.put(
       }
 
       // Cập nhật công thức
-      await query(
-        `
-        UPDATE cong_thuc 
-        SET ID_CHINH_MA = ?, TEN_CT = ?, MOTA = ?, HUONG_DAN = ?, 
-            THOI_GIAN_NAU = ?, DO_KHO = ?, SO_PHAN_AN = ?, 
-            HINH_ANH_CT = ?, VIDEO = ?
-        WHERE ID_CHINH_CT = ? AND ID_CHINH_ND = ? AND TRANG_THAI_DUYET_ = ?
-      `,
-        [
-          ID_CHINH_MA,
-          TEN_CT.trim(),
-          MOTA.trim(),
-          huongDan,
-          THOI_GIAN_NAU || null,
-          DO_KHO || null,
-          SO_PHAN_AN || null,
-          finalImagePath,
-          finalVideoPath,
-          recipeId,
-          userId,
-          'Đang chờ duyệt'
-        ]
-      );
+     await query(
+  `
+  UPDATE cong_thuc 
+  SET 
+    ID_CHINH_MA = ?, 
+    TEN_CT = ?, 
+    MOTA = ?, 
+    HUONG_DAN = ?, 
+    THOI_GIAN_NAU = ?, 
+    DO_KHO = ?, 
+    SO_PHAN_AN = ?, 
+    HINH_ANH_CT = ?, 
+    VIDEO = ?, 
+    NGAY_CAP_NHAT_CT = CURDATE()
+  WHERE 
+    ID_CHINH_CT = ? AND 
+    ID_CHINH_ND = ? AND 
+    TRANG_THAI_DUYET_ = ?
+  `,
+  [
+    ID_CHINH_MA,
+    TEN_CT.trim(),
+    MOTA.trim(),
+    huongDan,
+    THOI_GIAN_NAU || null,
+    DO_KHO || null,
+    SO_PHAN_AN || null,
+    finalImagePath,
+    finalVideoPath,
+    recipeId,
+    userId,
+    'Đang chờ duyệt'
+  ]
+);
+
 
       // Xóa nguyên liệu cũ
       await query('DELETE FROM cong_thuc_nguyen_lieu WHERE ID_CHINH_CT = ?', [recipeId]);
@@ -2031,6 +2189,8 @@ router.get("/cong-thuc-cua-toi", ensureLoggedIn, async (req, res) => {
     console.error("Lỗi truy vấn công thức của tôi:", err);
     res.status(500).send("Lỗi server khi lấy danh sách công thức");
   }
+
+  
 });
 
 
@@ -2129,43 +2289,102 @@ router.get("/thong-bao", ensureLoggedIn, async (req, res) => {
         res.status(500).send("Lỗi server khi tải thông báo.");
     }
 });
-
-// Route đánh dấu đã đọc
-router.post('/thong-bao/mark-read', ensureLoggedIn, async (req, res) => {
-    const { notificationId } = req.body;
-    const userId = req.session.user.ID_CHINH_ND;
-
-    if (!notificationId) {
-        return res.status(400).json({ message: 'ID thông báo không hợp lệ.' });
-    }
-
+// API lấy danh sách thông báo
+router.get('/api/thong-bao', ensureLoggedIn, async (req, res) => {
     try {
-        // Đảm bảo chỉ người dùng sở hữu thông báo mới có thể đánh dấu đã đọc
-        await query('UPDATE THONG_BAO SET DA_DOC = TRUE WHERE ID_CHINH_TB = ? AND ID_MUC_TIEU = ?', [notificationId, userId]);
-        res.status(200).json({ message: 'Đã đánh dấu là đã đọc.' });
-    } catch (error) {
-        console.error("Lỗi khi đánh dấu đã đọc:", error);
-        res.status(500).json({ message: 'Lỗi server.' });
+        const limit = parseInt(req.query.limit) || 5;
+        const userId = req.session.user.ID_CHINH_ND;
+        // Lấy trạng thái từ query parameter, mặc định là 'all'
+        const status = req.query.status; // 'unread' hoặc 'all'
+
+        let sqlQuery = `
+            SELECT tb.ID_CHINH_TB, tb.LOAI_TB, tb.NOI_DUNG_TB, tb.NGAY_TAO_TB, tb.DA_DOC,
+                   nd.TEN_NGUOI_DUNG
+            FROM THONG_BAO tb
+            JOIN nguoi_dung nd ON tb.ID_CHINH_ND = nd.ID_CHINH_ND
+            WHERE tb.DA_XOA = FALSE AND tb.ID_MUC_TIEU = ?
+        `;
+        const queryParams = [userId];
+
+        // Thêm điều kiện lọc theo trạng thái nếu có
+        if (status === 'unread') {
+            sqlQuery += ` AND tb.DA_DOC = FALSE`;
+        }
+
+        sqlQuery += `
+            ORDER BY tb.NGAY_TAO_TB DESC
+            LIMIT ?
+        `;
+        queryParams.push(limit);
+
+        const thongBao = await query(sqlQuery, queryParams);
+
+        res.json({ thong_bao: thongBao });
+    } catch (err) {
+        console.error('Lỗi khi lấy thông báo:', err);
+        res.status(500).json({ error: 'Không thể tải thông báo' });
     }
 });
 
-// Route xóa thông báo
-router.post('/thong-bao/delete', ensureLoggedIn, async (req, res) => {
-    const { notificationId } = req.body;
+/// API lấy số lượng thông báo chưa đọc
+router.get('/api/thong-bao/unread-count', ensureLoggedIn, async (req, res) => {
+    // ensureLoggedIn sẽ kiểm tra đăng nhập, nếu không có user thì middleware sẽ xử lý
     const userId = req.session.user.ID_CHINH_ND;
 
-    if (!notificationId) {
-        return res.status(400).json({ message: 'ID thông báo không hợp lệ.' });
-    }
-
     try {
-        // Đảm bảo chỉ người dùng sở hữu thông báo mới có thể xóa
-        // Thay vì xóa hẳn, bạn nên đánh dấu DA_XOA = TRUE
-        await query('UPDATE THONG_BAO SET DA_XOA = TRUE WHERE ID_CHINH_TB = ? AND ID_MUC_TIEU = ?', [notificationId, userId]);
-        res.status(200).json({ message: 'Đã xóa thông báo.' });
+        const result = await query(
+            `SELECT COUNT(*) AS unreadCount
+             FROM THONG_BAO
+             WHERE ID_MUC_TIEU = ? AND DA_DOC = FALSE AND DA_XOA = FALSE`,
+            [userId]
+        );
+
+        // Lấy unreadCount, nếu không có kết quả thì mặc định là 0
+        const unreadCount = result[0]?.unreadCount || 0;
+
+        res.status(200).json({ count: unreadCount });
+
     } catch (error) {
-        console.error("Lỗi khi xóa thông báo:", error);
-        res.status(500).json({ message: 'Lỗi server.' });
+        console.error('Lỗi khi lấy số thông báo chưa đọc từ DB:', error);
+        res.status(500).json({ error: 'Lỗi server khi lấy số thông báo chưa đọc.' });
     }
+});
+
+// API đánh dấu đã đọc
+router.post('/api/thong-bao/:id/mark-read', ensureLoggedIn, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.session.user.ID_CHINH_ND;
+
+    await query(`
+      UPDATE THONG_BAO 
+      SET DA_DOC = TRUE 
+      WHERE ID_CHINH_TB = ? AND ID_MUC_TIEU = ?
+    `, [id, userId]);
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Lỗi khi đánh dấu đã đọc:', err);
+    res.status(500).json({ error: 'Không thể đánh dấu đã đọc' });
+  }
+});
+
+// API xóa thông báo
+router.post('/api/thong-bao/:id/delete', ensureLoggedIn, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.session.user.ID_CHINH_ND;
+
+    await query(`
+      UPDATE THONG_BAO 
+      SET DA_XOA = TRUE 
+      WHERE ID_CHINH_TB = ? AND ID_MUC_TIEU = ?
+    `, [id, userId]);
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Lỗi khi xóa thông báo:', err);
+    res.status(500).json({ error: 'Không thể xóa thông báo' });
+  }
 });
 module.exports = router;

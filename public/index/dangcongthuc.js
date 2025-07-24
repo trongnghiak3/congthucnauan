@@ -148,7 +148,26 @@ function removeBuocNau(btn) {
         showError("Phải có ít nhất một bước nấu!");
     }
 }
-
+async function deleteRecipe(recipeId) {
+  if (confirm('Bạn có chắc muốn xóa công thức này?')) {
+    try {
+      const res = await fetch(`/dang-cong-thuc/${recipeId}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || 'Lỗi khi xóa công thức');
+      }
+      showAdminNotification('Xóa công thức thành công!', 'success');
+      setTimeout(() => {
+        window.location.href = '/cong-thuc-cua-toi';
+      }, 3500);
+    } catch (err) {
+      console.error('Lỗi xóa công thức:', err);
+      showError('Đã xảy ra lỗi: ' + err.message);
+    }
+  }
+}
 function initializeAddRecipe() {
     console.log("Khởi tạo biểu mẫu đăng công thức");
     const form = document.getElementById('add-recipe-form');

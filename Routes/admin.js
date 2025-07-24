@@ -106,10 +106,10 @@ router.get("/admin/cong-thuc", ensureAdmin, async (req, res) => {
 
     const search = req.query.search?.trim() || "";
     const date = req.query.date || "";
-    // const user = req.query.user?.trim() || "";
     const food = req.query.food?.trim() || "";
     const creator = req.query.creator || "";
-   const status = req.query.status || "";
+    const status = req.query.status || "";
+
     let queryStr = `
       SELECT 
         ct.ID_CHINH_CT,
@@ -125,6 +125,8 @@ router.get("/admin/cong-thuc", ensureAdmin, async (req, res) => {
         ct.NGAY_TAO_CT,
         ct.NGAY_CAP_NHAT_CT,
         ct.TRANG_THAI_DUYET_,
+        ct.NGAY_DUYET,
+        ct.LY_DO_TU_CHOI,
         nd.TEN_NGUOI_DUNG AS user,
         nd.VAI_TRO AS role,
         ma.TEN_MON_AN
@@ -146,29 +148,24 @@ router.get("/admin/cong-thuc", ensureAdmin, async (req, res) => {
       queryParams.push(date);
     }
 
-    // if (user) {
-    //   queryStr += ` AND nd.TEN_NGUOI_DUNG LIKE ?`;
-    //   queryParams.push(`%${user}%`);
-    // }
-
     if (food) {
       queryStr += ` AND ma.TEN_MON_AN LIKE ?`;
       queryParams.push(`%${food}%`);
     }
 
-    // ✅ Lọc theo người tạo
     if (creator === "me") {
       queryStr += ` AND nd.ID_CHINH_ND = ?`;
       queryParams.push(req.session.user.ID_CHINH_ND);
     } else if (creator === "admin") {
       queryStr += ` AND nd.VAI_TRO = 'admin' AND nd.ID_CHINH_ND != ?`;
       queryParams.push(req.session.user.ID_CHINH_ND);
-    }else if (creator === "nguoidung") {
-  queryStr += ` AND nd.VAI_TRO = 'nguoidung'`;
-}
+    } else if (creator === "nguoidung") {
+      queryStr += ` AND nd.VAI_TRO = 'nguoidung'`;
+    }
+
     if (status) {
-  queryStr += ` AND ct.TRANG_THAI_DUYET_ = ?`;
-  queryParams.push(status);
+      queryStr += ` AND ct.TRANG_THAI_DUYET_ = ?`;
+      queryParams.push(status);
     }
 
     queryStr += ` ORDER BY ct.NGAY_TAO_CT DESC LIMIT ? OFFSET ?`;
@@ -194,30 +191,25 @@ router.get("/admin/cong-thuc", ensureAdmin, async (req, res) => {
       countParams.push(date);
     }
 
-    // if (user) {
-    //   countQuery += ` AND nd.TEN_NGUOI_DUNG LIKE ?`;
-    //   countParams.push(`%${user}%`);
-    // }
-
     if (food) {
       countQuery += ` AND ma.TEN_MON_AN LIKE ?`;
       countParams.push(`%${food}%`);
     }
 
-    // ✅ Count query - theo người tạo
     if (creator === "me") {
       countQuery += ` AND nd.ID_CHINH_ND = ?`;
       countParams.push(req.session.user.ID_CHINH_ND);
     } else if (creator === "admin") {
       countQuery += ` AND nd.VAI_TRO = 'admin' AND nd.ID_CHINH_ND != ?`;
       countParams.push(req.session.user.ID_CHINH_ND);
-    }else if (creator === "nguoidung") {
-  countQuery += ` AND nd.VAI_TRO = 'nguoidung'`;
-}
-      if (status) {
-        countQuery += ` AND ct.TRANG_THAI_DUYET_ = ?`;
-    countParams.push(status);
-  }
+    } else if (creator === "nguoidung") {
+      countQuery += ` AND nd.VAI_TRO = 'nguoidung'`;
+    }
+
+    if (status) {
+      countQuery += ` AND ct.TRANG_THAI_DUYET_ = ?`;
+      countParams.push(status);
+    }
 
     const countResult = await query(countQuery, countParams);
     const total = countResult[0]?.total || 0;
@@ -249,6 +241,7 @@ router.get("/admin/cong-thuc", ensureAdmin, async (req, res) => {
     });
   }
 });
+
 
 
 
@@ -833,10 +826,11 @@ router.put('/admin/cong-thuc/reject/:id', ensureAdmin, async (req, res) => {
         const tenCongThuc = recipe.TEN_CT;
         const nguoiDangCongThucId = recipe.ID_CHINH_ND;
 
-        await query(
-            `UPDATE cong_thuc SET TRANG_THAI_DUYET_ = 'Đã từ chối', LY_DO_TU_CHOI = ?, NGAY_DUYET = CURDATE() WHERE ID_CHINH_CT = ?`,
-            [ly_do_tu_choi || null, recipeId]
-        );
+      await query(
+  `UPDATE cong_thuc SET TRANG_THAI_DUYET_ = 'Từ chối', LY_DO_TU_CHOI = ?, NGAY_DUYET = CURDATE() WHERE ID_CHINH_CT = ?`,
+  [ly_do_tu_choi?.trim() !== "" ? ly_do_tu_choi : null, recipeId]
+);
+
 
         if (nguoiDangCongThucId) {
             const notificationContent = `Công thức "${tenCongThuc}" của bạn đã bị từ chối. Lý do: ${ly_do_tu_choi || 'Không có lý do cụ thể.'}`;
@@ -873,7 +867,7 @@ router.get("/admin/nguyen-lieu", ensureAdmin, async (req, res) => {
     `, [limit, offset]);
 
     const pageRecipes = parseInt(req.query.pageRecipes) || 1;
-    const limitRecipes = 8;
+    const limitRecipes = 10;
     const offsetRecipes = (pageRecipes - 1) * limitRecipes;
 
     const recipes = await query(`
@@ -925,8 +919,10 @@ router.get("/admin/nguyen-lieu", ensureAdmin, async (req, res) => {
     });
 
     // ✅ Tính tổng công thức có nguyên liệu
-    const totalRecipes = Object.keys(groupedRecipes).length;
-    const totalPagesRecipes = Math.ceil(totalRecipes / limitRecipes);
+   const totalRecipesResult = await query(`SELECT COUNT(*) AS total FROM cong_thuc`);
+const totalRecipes = totalRecipesResult[0]?.total || 0;
+const totalPagesRecipes = Math.ceil(totalRecipes / limitRecipes);
+
 
     res.render("admin/admin", {
       title: "Danh Sách Nguyên Liệu & Công Thức",
@@ -1367,41 +1363,56 @@ router.get("/admin/loai-mon/edit/:id", ensureAdmin, async (req, res) => {
 // Cập nhật loại món
 
 
-router.delete('/admin/loai-mon/:id', ensureAdmin, async (req, res) => {
+
+// Endpoint xóa loại món
+router.delete("/admin/loai-mon/:id", ensureAdmin, async (req, res) => {
   try {
     const { id } = req.params;
-    const sql = 'DELETE FROM loai_mon WHERE ID_CHINH_LM = ?';
-    const result = await query(sql, [id]);
 
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ message: 'Không tìm thấy loại món' });
+    // Kiểm tra sự tồn tại của loại món
+    const [existingCategory] = await query(
+      "SELECT ID_CHINH_LM, HINH_ANH_LM_URL FROM loai_mon WHERE ID_CHINH_LM = ?",
+      [id]
+    );
+    if (!existingCategory) {
+      return res.status(404).json({ message: "Không tìm thấy loại món" });
     }
 
-    res.json({ message: 'Xóa loại món thành công' });
+    // Xóa thư mục chứa hình ảnh (sử dụng đúng đường dẫn public/Uploads)
+    const dirPath = path.join(__dirname, "..", "public", "Uploads", "images", "loaimon", String(id));
+    console.log(`Đang cố gắng xóa thư mục: ${dirPath}`);
+    await deleteDirectory(dirPath);
+
+    // Xóa bản ghi trong bảng loai_mon
+    await query("DELETE FROM loai_mon WHERE ID_CHINH_LM = ?", [id]);
+
+    // Phản hồi thành công
+    res.json({ message: "Xóa loại món và thư mục hình ảnh thành công" });
   } catch (err) {
-    console.error('Lỗi khi xóa loại món:', err);
-    res.status(500).json({ message: 'Lỗi server: ' + err.message });
+    console.error("Lỗi khi xóa loại món:", err);
+    res.status(500).json({ message: "Lỗi server: " + err.message });
   }
 });
 router.get('/admin/mon-an', ensureAdmin, async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
-        const pageCategories = parseInt(req.query.pageCategories) || 1; // Giữ lại cho tab Loại Món nếu có
+        const pageCategories = parseInt(req.query.pageCategories) || 1;
         const limit = 7; // Số món ăn trên mỗi trang
-        const limitCategories = 8; // Số loại món trên mỗi trang (nếu có tab riêng)
+        const limitCategories = 10; // Số danh mục trên mỗi trang
+      
         const offset = (page - 1) * limit;
+        const offsetCategories = (pageCategories - 1) * limitCategories;
 
-        // Lấy tham số tìm kiếm và lọc từ query string
         const searchTerm = req.query.search ? req.query.search.trim() : '';
-        const typeId = req.query.typeId ? parseInt(req.query.typeId) : ''; // ID của loại món được chọn
+        const typeId = req.query.typeId ? parseInt(req.query.typeId) : '';
 
-        let countQuery = `SELECT COUNT(DISTINCT ma.ID_CHINH_MA) AS total FROM mon_an ma`;
-        let listQuery = `SELECT ma.ID_CHINH_MA, ma.TEN_MON_AN, ma.HINH_ANH_MA, ma.MO_TA_MA FROM mon_an ma`;
-        let queryParams = [];
+        // Lấy toàn bộ món ăn để tính danh mục (không giới hạn bởi limit)
+        let allCountQuery = `SELECT COUNT(DISTINCT ma.ID_CHINH_MA) AS total FROM mon_an ma`;
+        let allListQuery = `SELECT DISTINCT ma.ID_CHINH_MA, ma.TEN_MON_AN, ma.HINH_ANH_MA, ma.MO_TA_MA FROM mon_an ma`;
         let joinClause = '';
-        let whereClause = ' WHERE 1=1'; // Bắt đầu với điều kiện luôn đúng để dễ dàng thêm các điều kiện AND
+        let whereClause = ' WHERE 1=1';
+        let queryParams = [];
 
-        // Nếu có typeId được chọn, thêm JOIN và điều kiện WHERE để lọc theo loại món
         if (typeId) {
             joinClause += `
                 INNER JOIN mon_an_loai_mon malm ON ma.ID_CHINH_MA = malm.ID_CHINH_MA
@@ -1411,96 +1422,156 @@ router.get('/admin/mon-an', ensureAdmin, async (req, res) => {
             queryParams.push(typeId);
         }
 
-        // Nếu có searchTerm, thêm điều kiện WHERE để tìm kiếm theo tên hoặc mô tả
         if (searchTerm) {
-            whereClause += `
-                AND (
-                    ma.TEN_MON_AN LIKE ?
-                    OR ma.MO_TA_MA LIKE ?
-                )
-            `;
-            // Thêm tham số cho LIKE. Dấu % là ký tự đại diện trong SQL.
+            whereClause += ` AND (
+                ma.TEN_MON_AN LIKE ?
+                OR ma.MO_TA_MA LIKE ?
+            )`;
             queryParams.push(`%${searchTerm}%`, `%${searchTerm}%`);
         }
 
-        // Kết hợp các mệnh đề cho truy vấn đếm tổng số món ăn (sau khi lọc/tìm kiếm)
-        countQuery += joinClause + whereClause;
+        allCountQuery += joinClause + whereClause;
+        const allCountResult = await query(allCountQuery, queryParams);
+        const allTotal = allCountResult[0]?.total || 0;
 
-        // Thực thi truy vấn đếm
-        const countResult = await query(countQuery, queryParams);
-        const total = countResult[0]?.total || 0;
-        const totalPages = Math.ceil(total / limit);
-
-        // Kết hợp các mệnh đề cho truy vấn lấy danh sách món ăn chính (sau khi lọc/tìm kiếm và phân trang)
-        listQuery += joinClause + whereClause;
+        // Lấy danh sách món ăn với phân trang
+        let listQuery = `SELECT DISTINCT ma.ID_CHINH_MA, ma.TEN_MON_AN, ma.HINH_ANH_MA, ma.MO_TA_MA FROM mon_an ma` + joinClause + whereClause;
         listQuery += ` ORDER BY ma.ID_CHINH_MA DESC LIMIT ? OFFSET ?`;
-
-        // Thêm tham số LIMIT và OFFSET vào cuối mảng queryParams
         const paginatedQueryParams = [...queryParams, limit, offset];
-
         const monAnList = await query(listQuery, paginatedQueryParams);
 
-        // Lấy tất cả các loại món để populate dropdown lọc (luôn cần)
         const categories = await query(`
             SELECT ID_CHINH_LM, TEN_LM
             FROM loai_mon
             ORDER BY TEN_LM ASC
         `);
 
-        // Logic cũ cho phần Loại Món (giữ nguyên nếu bạn có một tab riêng cho Loại Món)
-        const countCategoriesResult = await query(`
-            SELECT COUNT(*) AS total
-            FROM loai_mon
+        // Tính tổng số danh mục có ít nhất 1 món ăn
+        const loaiMonCoMonResult = await query(`
+            SELECT DISTINCT lm.ID_CHINH_LM, lm.TEN_LM
+            FROM loai_mon lm
+            JOIN mon_an_loai_mon malm ON lm.ID_CHINH_LM = malm.ID_CHINH_LM
+            JOIN mon_an ma ON malm.ID_CHINH_MA = ma.ID_CHINH_MA
         `);
-        const totalCategories = countCategoriesResult[0]?.total || 0;
-        const totalPagesCategories = Math.ceil(totalCategories / limitCategories);
-        const offsetCategories = (pageCategories - 1) * limitCategories;
+        const totalCategories = loaiMonCoMonResult.length; // 13
+        const totalPagesCategories = Math.ceil(totalCategories / limitCategories); // 2
 
+        const paginatedLoaiMon = await query(`
+            SELECT ID_CHINH_LM, TEN_LM
+            FROM loai_mon
+            WHERE ID_CHINH_LM IN (?)
+            ORDER BY TEN_LM ASC
+            LIMIT ? OFFSET ?
+        `, [loaiMonCoMonResult.map(row => row.ID_CHINH_LM), limitCategories, offsetCategories]);
 
-        // Lấy danh sách ID của món ăn đã được phân trang (và lọc/tìm kiếm)
-        const monAnIds = monAnList.map(item => item.ID_CHINH_MA);
-
+        const monAnIds = monAnList.map(ma => ma.ID_CHINH_MA);
         let loaiMonData = [];
-        if (monAnIds.length > 0) {
+        if (monAnIds.length > 0 || !typeId) {
             loaiMonData = await query(`
-                SELECT
-                    malm.ID_CHINH_MA,
-                    lm.ID_CHINH_LM,
-                    lm.TEN_LM
-                FROM mon_an_loai_mon malm
-                JOIN loai_mon lm ON malm.ID_CHINH_LM = lm.ID_CHINH_LM
-                WHERE malm.ID_CHINH_MA IN (?)
-                ORDER BY malm.ID_CHINH_MA DESC
-            `, [monAnIds]);
+               SELECT DISTINCT 
+    malm.ID_CHINH_MA,
+    lm.ID_CHINH_LM,
+    lm.TEN_LM,
+    ma.TEN_MON_AN,
+    ma.MO_TA_MA
+FROM mon_an_loai_mon malm
+JOIN loai_mon lm ON malm.ID_CHINH_LM = lm.ID_CHINH_LM
+JOIN mon_an ma ON malm.ID_CHINH_MA = ma.ID_CHINH_MA
+${typeId ? 'WHERE malm.ID_CHINH_LM = ?' : ''}
+ORDER BY malm.ID_CHINH_MA DESC
+            `, typeId ? [typeId] : []);
+            console.log('Dữ liệu loaiMonData:', loaiMonData);
         }
 
         const groupedLoaiMon = {};
-        loaiMonData.forEach((lm) => {
-            if (!groupedLoaiMon[lm.ID_CHINH_MA]) {
-                groupedLoaiMon[lm.ID_CHINH_MA] = {
-                    loai_mon: [],
-                };
-            }
-            groupedLoaiMon[lm.ID_CHINH_MA].loai_mon.push({
-                ID_CHINH_LM: lm.ID_CHINH_LM,
-                TEN_LM: lm.TEN_LM,
-            });
-        });
+        const groupedMonAnTheoLoai = {};
+        
+        // Lọc loaiMonData dựa trên paginatedLoaiMon
+        const validCategoryIds = paginatedLoaiMon.map(row => row.ID_CHINH_LM);
+    
+        // Tạo groupedMonAnTheoLoai - KHÔNG lọc theo phân trang
+        for (const item of loaiMonData) {
+            const dishId = item.ID_CHINH_MA;
 
-        // Render trang admin với dữ liệu đã được lọc/tìm kiếm
+            if (!groupedMonAnTheoLoai[dishId]) {
+                groupedMonAnTheoLoai[dishId] = {
+                    loai_mon: []
+                };
+            }
+
+            const existed = groupedMonAnTheoLoai[dishId].loai_mon.some(
+                (lm) => lm.ID_CHINH_LM === item.ID_CHINH_LM
+            );
+
+            if (!existed) {
+                groupedMonAnTheoLoai[dishId].loai_mon.push({
+                    ID_CHINH_LM: item.ID_CHINH_LM,
+                    TEN_LM: item.TEN_LM
+                });
+            }
+        }
+     
+// Tạo groupedLoaiMon - CHỈ LỌC những loại nằm trong validCategoryIds
+        for (const item of loaiMonData) {
+            if (validCategoryIds.includes(item.ID_CHINH_LM)) {
+                if (!groupedLoaiMon[item.ID_CHINH_LM]) {
+                    groupedLoaiMon[item.ID_CHINH_LM] = {
+                        TEN_LM: item.TEN_LM,
+                        mon_an: []
+                    };
+                }
+                groupedLoaiMon[item.ID_CHINH_LM].mon_an.push({
+                    ID_CHINH_MA: item.ID_CHINH_MA,
+                    TEN_MON_AN: item.TEN_MON_AN || 'Chưa có tên',
+                    HINH_ANH_MA: item.HINH_ANH_MA || null,
+                    MO_TA_MA: item.MO_TA_MA || 'Chưa có mô tả'
+                });
+
+                if (!groupedMonAnTheoLoai[item.ID_CHINH_MA]) {
+                    groupedMonAnTheoLoai[item.ID_CHINH_MA] = {
+                        loai_mon: []
+                    };
+                }
+                groupedMonAnTheoLoai[item.ID_CHINH_MA].loai_mon.push({
+                    ID_CHINH_LM: item.ID_CHINH_LM,
+                    TEN_LM: item.TEN_LM
+                });
+            }
+        }
+
+        // Lọc chỉ các danh mục có món ăn (đã được giới hạn bởi validCategoryIds)
+        const filteredGroupedLoaiMon = {};
+        for (const [id, data] of Object.entries(groupedLoaiMon)) {
+            if (data.mon_an.length > 0) {
+                filteredGroupedLoaiMon[id] = data;
+            }
+        }
+
+        // Tính totalPages dựa trên allTotal và limit
+        const totalPages = Math.ceil(allTotal / limit);
+
+        console.log('Tổng phân loại:', loaiMonData.length);
+        console.log('Món ăn có loại:', Object.keys(groupedMonAnTheoLoai).length);
+        console.log('Danh mục có món ăn:', Object.keys(filteredGroupedLoaiMon).length);
+        console.log('Tổng số món ăn:', allTotal);
+        console.log('Tổng trang:', totalPages);
+        console.log('Tổng trang danh mục:', totalPagesCategories);
+
         res.render("admin/admin", {
             title: "Danh Sách Món Ăn & Loại Món",
             user: req.session.user,
             content: "admin/mon-an",
             monAnList,
-            categories, // Truyền danh sách tất cả loại món để điền vào dropdown lọc
+            categories,
             currentPage: page,
-            totalPages,
+            totalPages: totalPages,
             currentPageCategories: pageCategories,
-            totalPagesCategories,
-            groupedLoaiMon,
-            searchTerm, // Truyền lại searchTerm để giữ giá trị trong input
-            selectedTypeId: typeId, // Truyền lại typeId để giữ lựa chọn trong dropdown
+            totalPagesCategories: totalPagesCategories,
+            groupedLoaiMon: filteredGroupedLoaiMon,
+            groupedMonAnTheoLoai,
+            tongLoaiMonCoMon: totalCategories,
+            searchTerm,
+            selectedTypeId: typeId,
             error: null,
             stats: {},
         });
@@ -1516,6 +1587,7 @@ router.get('/admin/mon-an', ensureAdmin, async (req, res) => {
         });
     }
 });
+
 
 
 // POST: Thêm món ăn mới
@@ -2108,36 +2180,29 @@ router.put('/admin/nguoi-dung/:id', ensureAdmin, upload.single('hinh_anh'), asyn
 });
 
 // Route DELETE xóa người dùng
-router.delete('/admin/nguoi-dung/:id', ensureAdmin, async (req, res) => {
+router.delete("/admin/nguoi-dung/:id", ensureAdmin, async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Kiểm tra tồn tại người dùng
-    const [existing] = await query('SELECT AVARTAR_URL FROM nguoi_dung WHERE ID_CHINH_ND = ?', [id]);
+    // Kiểm tra sự tồn tại của người dùng
+    const [existing] = await query("SELECT ID_CHINH_ND, AVARTAR_URL FROM nguoi_dung WHERE ID_CHINH_ND = ?", [id]);
     if (!existing) {
-      return res.status(404).json({ message: 'Không tìm thấy người dùng' });
+      return res.status(404).json({ message: "Không tìm thấy người dùng" });
     }
 
-    // Xóa ảnh đại diện nếu có
-    if (existing.AVARTAR_URL) {
-      const avatarPath = path.join(__dirname, '..', 'public', existing.AVARTAR_URL);
-      try {
-        await fs.unlink(avatarPath);
-      } catch (err) {
-        console.warn('Không thể xóa ảnh cũ:', err.message);
-      }
-    }
+    // Xóa thư mục hình ảnh
+    const avatarDir = path.join(__dirname, "..", "public", "Uploads", "images", "nguoidung", String(id));
+    console.log(`Đang cố gắng xóa thư mục: ${avatarDir}`);
+    await deleteDirectory(avatarDir);
 
     // Xóa người dùng
-    const result = await query('DELETE FROM nguoi_dung WHERE ID_CHINH_ND = ?', [id]);
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ message: 'Người dùng không tồn tại hoặc đã bị xóa' });
-    }
+    await query("DELETE FROM nguoi_dung WHERE ID_CHINH_ND = ?", [id]);
 
-    res.json({ message: 'Xóa người dùng thành công' });
+    // Phản hồi thành công
+    res.json({ message: "Xóa người dùng và thư mục hình ảnh thành công" });
   } catch (err) {
-    console.error('Lỗi khi xóa người dùng:', err);
-    res.status(500).json({ message: 'Lỗi server: ' + err.message });
+    console.error("Lỗi khi xóa người dùng:", err);
+    res.status(500).json({ message: "Lỗi server: " + err.message });
   }
 });
 
@@ -2541,20 +2606,7 @@ router.get('/admin/phan-hoi-cam-xuc', ensureAdmin, async (req, res) => {
   }
 });
 
-// // Route xóa cảm xúc
-// router.delete('/admin/cam-xuc-binh-luan/:id', ensureAdmin, async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const result = await query('DELETE FROM cam_xuc_binh_luan WHERE ID_CHINH_CXBL = ?', [id]);
-//     if (result.affectedRows === 0) {
-//       return res.status(404).json({ message: 'Không tìm thấy cảm xúc' });
-//     }
-//     res.json({ message: 'Xóa cảm xúc thành công' });
-//   } catch (err) {
-//     console.error('Lỗi khi xóa cảm xúc:', err);
-//     res.status(500).json({ message: 'Lỗi server' });
-//   }
-// });
+
 router.get('/admin/trang-ca-nhan', ensureAdmin, async (req, res) => {
   try {
     const currentUserId = req.session.user?.ID_CHINH_ND;

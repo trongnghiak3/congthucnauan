@@ -15,20 +15,20 @@
         <div class="relative group animate-slide-up bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden">
           <%- include('../partials/recipeCard.ejs', { recipe: recipe }) %>
           
-          <div class="absolute inset-0 bg-black bg-opacity-60 rounded-xl flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 p-4 space-y-3">
-            <% if (recipe.TRANG_THAI_DUYET_ === 'Đang chờ duyệt' || recipe.TRANG_THAI_DUYET_ === 'Bị từ chối') { %>
-              <a href="/dang-cong-thuc/<%= recipe.ID_CHINH_CT %>" class="w-full max-w-[150px] text-center bg-yellow-500 text-white px-5 py-2 rounded-lg font-semibold hover:bg-yellow-600 transition transform hover:scale-105 flex items-center justify-center gap-2 text-sm md:text-base">
-                <i class="fas fa-edit"></i> Sửa
-              </a>
-              <button onclick="deleteRecipe('<%= recipe.ID_CHINH_CT %>')" class="w-full max-w-[150px] text-center bg-red-500 text-white px-5 py-2 rounded-lg font-semibold hover:bg-red-600 transition transform hover:scale-105 flex items-center justify-center gap-2 text-sm md:text-base">
-                <i class="fas fa-trash"></i> Xóa
-              </button>
-            <% } else if (recipe.TRANG_THAI_DUYET_ === 'Đã duyệt') { %>
-              <a href="/cong-thuc/<%= recipe.ID_CHINH_CT %>" class="w-full max-w-[180px] text-center bg-blue-500 text-white px-5 py-2 rounded-lg font-semibold hover:bg-blue-600 transition transform hover:scale-105 flex items-center justify-center gap-2 text-sm md:text-base">
-                <i class="fas fa-eye"></i> Xem công thức
-              </a>
-            <% } %>
-          </div>
+       <div class="absolute inset-0 bg-black bg-opacity-60 rounded-xl flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 p-4 space-y-3">
+  <% if (recipe.TRANG_THAI_DUYET_ === 'Đang chờ duyệt' || recipe.TRANG_THAI_DUYET_ === 'Từ chối') { %>
+    <a href="/dang-cong-thuc/<%= recipe.ID_CHINH_CT %>" class="w-full max-w-[150px] text-center bg-yellow-500 text-white px-5 py-2 rounded-lg font-semibold hover:bg-yellow-600 transition transform hover:scale-105 flex items-center justify-center gap-2 text-sm md:text-base">
+      <i class="fas fa-edit"></i> Sửa
+    </a>
+    <button onclick="deleteRecipe('<%= recipe.ID_CHINH_CT %>')" class="w-full max-w-[150px] text-center bg-red-500 text-white px-5 py-2 rounded-lg font-semibold hover:bg-red-600 transition transform hover:scale-105 flex items-center justify-center gap-2 text-sm md:text-base">
+      <i class="fas fa-trash"></i> Xóa
+    </button>
+  <% } else if (recipe.TRANG_THAI_DUYET_ === 'Đã duyệt') { %>
+    <a href="/cong-thuc/<%= recipe.ID_CHINH_CT %>" class="w-full max-w-[180px] text-center bg-blue-500 text-white px-5 py-2 rounded-lg font-semibold hover:bg-blue-600 transition transform hover:scale-105 flex items-center justify-center gap-2 text-sm md:text-base">
+      <i class="fas fa-eye"></i> Xem công thức
+    </a>
+  <% } %>
+</div>
 
           <span class="absolute top-3 right-3 z-10 inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm
             <%= recipe.TRANG_THAI_DUYET_ === 'Đã duyệt' ? 'bg-green-100 text-green-700' : 
@@ -51,30 +51,5 @@
 </div>
 
 <script>
-  async function deleteRecipe(recipeId) {
-    if (!confirm('Bạn có chắc chắn muốn xóa công thức này? Hành động này không thể hoàn tác.')) return;
-    
-    try {
-      const response = await fetch(`/delete-recipe/${recipeId}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          // You might need to include a CSRF token here if you're using one
-          // 'X-CSRF-TOKEN': 'your-csrf-token' 
-        },
-      });
-      const data = await response.json();
-      
-      if (response.ok) {
-        alert(data.message || 'Công thức đã được xóa thành công!');
-        window.location.reload(); // Reload to reflect changes
-      } else {
-        // Handle specific error messages from the server
-        alert(data.message || 'Đã có lỗi xảy ra khi xóa công thức. Vui lòng thử lại.');
-      }
-    } catch (error) {
-      console.error('Lỗi khi gửi yêu cầu xóa:', error);
-      alert('Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng của bạn.');
-    }
-  }
+ 
 </script>

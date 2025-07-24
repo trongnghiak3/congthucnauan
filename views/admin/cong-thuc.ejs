@@ -1,33 +1,34 @@
 <!-- Header -->
 <!-- Form lọc và nút thêm công thức -->
 <!-- Form lọc -->
-<form id="searchForm" class="bg-white p-4 rounded-lg shadow-md border flex flex-col sm:flex-row sm:items-end flex-wrap gap-4 mb-6 text-sm">
+<form id="searchForm" class="bg-white p-3 rounded-md shadow border flex flex-col sm:flex-row sm:items-end flex-wrap gap-3 mb-4 text-sm">
 
   <!-- Tên / Mô tả -->
-  <div class="flex-1 min-w-[180px]">
-    <label for="filterSearch" class="block font-medium text-gray-700 mb-1">Tên / Mô tả</label>
+  <div class="flex-1 min-w-[150px]">
+    <label for="filterSearch" class="block text-gray-700 mb-1">Tên / Mô tả</label>
     <input type="text" id="filterSearch" placeholder="Tên hoặc mô tả"
-           class="w-full border px-2 py-1.5 rounded focus:outline-none focus:ring-2 focus:ring-yellow-400 shadow-sm" />
+           class="w-full border px-2 py-1 rounded focus:outline-none focus:ring-1 focus:ring-yellow-400" />
   </div>
 
   <!-- Tên món -->
-  <div class="flex-1 min-w-[180px]">
-    <label for="filterFoodName" class="block font-medium text-gray-700 mb-1">Tên món</label>
+  <div class="flex-1 min-w-[150px]">
+    <label for="filterFoodName" class="block text-gray-700 mb-1">Tên món</label>
     <input type="text" id="filterFoodName" placeholder="Tên món ăn"
-           class="w-full border px-2 py-1.5 rounded focus:outline-none focus:ring-2 focus:ring-yellow-400 shadow-sm" />
+           class="w-full border px-2 py-1 rounded focus:outline-none focus:ring-1 focus:ring-yellow-400" />
   </div>
 
   <!-- Ngày tạo -->
-  <div class="min-w-[160px]">
-    <label for="filterDate" class="block font-medium text-gray-700 mb-1">Ngày tạo</label>
+  <div class="min-w-[140px]">
+    <label for="filterDate" class="block text-gray-700 mb-1">Ngày tạo</label>
     <input type="date" id="filterDate"
-           class="w-full border px-2 py-1.5 rounded focus:outline-none focus:ring-2 focus:ring-yellow-400 shadow-sm" />
+           class="w-full border px-2 py-1 rounded focus:outline-none focus:ring-1 focus:ring-yellow-400" />
   </div>
 
   <!-- Người tạo -->
-  <div class="min-w-[160px]">
-    <label for="filterCreator" class="block font-medium text-gray-700 mb-1">Người tạo</label>
-    <select id="filterCreator" class="w-full border px-2 py-1.5 rounded focus:outline-none focus:ring-2 focus:ring-yellow-400 shadow-sm">
+  <div class="min-w-[140px]">
+    <label for="filterCreator" class="block text-gray-700 mb-1">Người tạo</label>
+    <select id="filterCreator"
+            class="w-full border px-2 py-1 rounded focus:outline-none focus:ring-1 focus:ring-yellow-400">
       <option value="">Tất cả</option>
       <option value="me">Tôi</option>
       <option value="admin">Admin khác</option>
@@ -36,9 +37,10 @@
   </div>
 
   <!-- Trạng thái duyệt -->
-  <div class="min-w-[160px]">
-    <label for="filterStatus" class="block font-medium text-gray-700 mb-1">Trạng thái</label>
-    <select id="filterStatus" class="w-full border px-2 py-1.5 rounded focus:outline-none focus:ring-2 focus:ring-yellow-400 shadow-sm">
+  <div class="min-w-[140px]">
+    <label for="filterStatus" class="block text-gray-700 mb-1">Trạng thái</label>
+    <select id="filterStatus"
+            class="w-full border px-2 py-1 rounded focus:outline-none focus:ring-1 focus:ring-yellow-400">
       <option value="">Tất cả</option>
       <option value="Đang chờ duyệt">Đang chờ</option>
       <option value="Đã duyệt">Đã duyệt</option>
@@ -49,22 +51,23 @@
   <!-- Nút hành động -->
   <div class="flex flex-wrap gap-2 mt-1">
     <button type="button" onclick="filterRecipes()"
-            class="bg-yellow-500 text-white px-3 py-1.5 rounded hover:bg-yellow-600 shadow">
+            class="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600">
       <i class="fas fa-filter mr-1"></i> Lọc
     </button>
 
     <button type="button" onclick="resetSearchForm()"
-            class="bg-gray-500 text-white px-3 py-1.5 rounded hover:bg-gray-600 shadow">
+            class="bg-gray-500 text-white px-3 py-1 rounded hover:bg-gray-600">
       <i class="fas fa-undo mr-1"></i> Đặt lại
     </button>
 
     <a href="/admin/cong-thuc/add"
        onclick="event.preventDefault(); loadPage('/admin/cong-thuc/add', this)"
-       class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1.5 rounded inline-flex items-center gap-2 shadow">
+       class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded inline-flex items-center gap-2">
       <i class="fas fa-plus"></i> Thêm
     </a>
   </div>
 </form>
+
 
 
 
@@ -87,6 +90,8 @@
           <th class="p-1 border-r">Video</th>
           <th class="p-1 border-r">Ngày Tạo</th>
           <th class="p-1 border-r">Ngày Cập nhật</th>
+          <th class="p-1 border-r">Ngày Duyệt</th>
+          <th class="p-1 border-r">Lý Do Từ Chối</th>
           <th class="p-1 border-r">Trạng Thái</th>
           <!-- <th class="p-1">Hành Động</th> -->
         </tr>
@@ -173,7 +178,12 @@
               <td class="p-1 border-r">
                 <%= recipe.NGAY_CAP_NHAT_CT ? new Date(recipe.NGAY_CAP_NHAT_CT).toLocaleDateString('vi-VN') : '--' %>
               </td>
-
+              <td class="p-1 border-r">
+  <%= recipe.NGAY_DUYET ? new Date(recipe.NGAY_DUYET).toLocaleDateString('vi-VN') : '--' %>
+</td>
+<td class="p-1 border-r text-red-500 text-xs">
+  <%= recipe.LY_DO_TU_CHOI || '--' %>
+</td>
               <!-- Trạng thái -->
               <td class="p-1 border-r">
                 <span class="inline-block px-1 py-0.5 rounded-full text-xs
@@ -195,35 +205,58 @@
       </tbody>
     </table>
   </div>
+<div class="flex items-center justify-center space-x-1 mt-4"> <% const visiblePages = 2; %>
 
-  <!-- Phân trang -->
- <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
-  <div class="mt-4 flex justify-center space-x-2">
     <% if (currentPage > 1) { %>
-      <a href="#"
-         onclick="loadPage('/admin/cong-thuc?page=<%= currentPage - 1 %>'); return false;"
-         class="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 text-sm transition">
-        ‹ Trước
-      </a>
+        <a href="#"
+            onclick="goToPage(<%= currentPage - 1 %>); return false;"
+            class="
+                px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 text-sm transition
+                flex items-center justify-center
+            ">
+            ‹ Trước
+        </a>
     <% } %>
 
-    <% for (let i = 1; i <= totalPages; i++) { %>
-      <a href="#"
-         onclick="loadPage('/admin/cong-thuc?page=<%= i %>'); return false;"
-         class="px-3 py-1 rounded-lg border text-sm <%= i === currentPage ? 'bg-yellow-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100' %> transition">
-        <%= i %>
-      </a>
+    <% if (currentPage > visiblePages + 2) { %>
+        <a href="#"
+            onclick="goToPage(1); return false;"
+            class="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 text-sm transition">
+            1
+        </a>
+        <span class="px-2 py-1 text-gray-500">...</span> <% } %>
+
+    <% for (let i = Math.max(1, currentPage - visiblePages); i <= Math.min(totalPages, currentPage + visiblePages); i++) { %>
+        <a href="#"
+            onclick="goToPage(<%= i %>); return false;"
+            class="px-3 py-1 rounded-lg border text-sm transition
+            <%= i === currentPage ? 'bg-yellow-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100' %>">
+            <%= i %>
+        </a>
+    <% } %>
+
+    <% if (currentPage < totalPages - visiblePages - 1) { %>
+        <span class="px-2 py-1 text-gray-500">...</span> <a href="#"
+            onclick="goToPage(<%= totalPages %>); return false;"
+            class="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 text-sm transition">
+            <%= totalPages %>
+        </a>
     <% } %>
 
     <% if (currentPage < totalPages) { %>
-      <a href="#"
-         onclick="loadPage('/admin/cong-thuc?page=<%= currentPage + 1 %>'); return false;"
-         class="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 text-sm transition">
-        Sau ›
-      </a>
+        <a href="#"
+            onclick="goToPage(<%= currentPage + 1 %>); return false;"
+            class="
+                px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 text-sm transition
+                flex items-center justify-center
+            ">
+            Sau ›
+        </a>
     <% } %>
-  </div>
-<% } %>
+
+</div>
+
+
 
 
 </div>

@@ -1,81 +1,81 @@
 console.log("script.js đã tải thành công!");
 // console.log("User hiện tại:", req.user);
 // Hàm tải trang bằng AJAX
-function loadPage(url, element) {
-    console.log("🔄 Bắt đầu tải trang từ URL:", url);
-    const content = document.querySelector("#content");
+    function loadPage(url, element) {
+        console.log("🔄 Bắt đầu tải trang từ URL:", url);
+        const content = document.querySelector("#content");
 
-    if (!content) {
-        console.error("❌ Không tìm thấy phần tử #content trong DOM");
-        return;
-    }
-
-    content.innerHTML = '<div class="text-center py-8 text-yellow-600">⏳ Đang tải...</div>';
-
-    fetch(url, {
-        headers: {
-            'Accept': 'text/html',
-            'X-Requested-With': 'XMLHttpRequest'
+        if (!content) {
+            console.error("❌ Không tìm thấy phần tử #content trong DOM");
+            return;
         }
-    })
-        .then(async (response) => {
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.error(`❌ Lỗi HTTP ${response.status}:`, errorText);
-                throw new Error(`HTTP error! status: ${response.status}`);
+
+        content.innerHTML = '<div class="text-center py-8 text-yellow-600">⏳ Đang tải...</div>';
+
+        fetch(url, {
+            headers: {
+                'Accept': 'text/html',
+                'X-Requested-With': 'XMLHttpRequest'
             }
-            return response.text();
         })
-        .then((data) => {
-            console.log("📦 HTML trả về (đã cắt):", data.slice(0, 500), "...");
-            if (url.includes('/admin/cong-thuc/add') || url.includes('/admin/cong-thuc/edit')) {
-                if (!data.includes('id="add-recipe-form"')) {
-                    console.error("❌ HTML trả về không chứa #add-recipe-form");
+            .then(async (response) => {
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error(`❌ Lỗi HTTP ${response.status}:`, errorText);
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
-            } else if (url.includes('/admin/cong-thuc')) {
-                if (!data.includes('id="searchForm"')) {
-                    console.error("❌ HTML trả về không chứa #searchForm");
-                }
-            }
-
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(data, "text/html");
-            const newContentHTML = doc.querySelector("#content")?.innerHTML;
-
-            if (newContentHTML) {
-                content.innerHTML = newContentHTML;
+                return response.text();
+            })
+            .then((data) => {
+                console.log("📦 HTML trả về (đã cắt):", data.slice(0, 500), "...");
                 if (url.includes('/admin/cong-thuc/add') || url.includes('/admin/cong-thuc/edit')) {
-                    initializeAddRecipe();
+                    if (!data.includes('id="add-recipe-form"')) {
+                        console.error("❌ HTML trả về không chứa #add-recipe-form");
+                    }
                 } else if (url.includes('/admin/cong-thuc')) {
-                    initializeRecipesList();
-                } else if (url.includes('/admin/nguoi-dung')) {
-                    bindUserEventListeners();
-                } else {
-                    initializePage(url);
+                    if (!data.includes('id="searchForm"')) {
+                        console.error("❌ HTML trả về không chứa #searchForm");
+                    }
                 }
-            } else {
-                console.error("❌ Không tìm thấy #content trong HTML trả về");
-                content.innerHTML = '<div class="text-center py-8 text-red-600">⚠️ Không tìm thấy nội dung để hiển thị.</div>';
-            }
 
-            document.querySelectorAll(".sidebar-item").forEach((item) => {
-                item.classList.remove("active");
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(data, "text/html");
+                const newContentHTML = doc.querySelector("#content")?.innerHTML;
+
+                if (newContentHTML) {
+                    content.innerHTML = newContentHTML;
+                    if (url.includes('/admin/cong-thuc/add') || url.includes('/admin/cong-thuc/edit')) {
+                        initializeAddRecipe();
+                    } else if (url.includes('/admin/cong-thuc')) {
+                        initializeRecipesList();
+                    } else if (url.includes('/admin/nguoi-dung')) {
+                        bindUserEventListeners();
+                    } else {
+                        initializePage(url);
+                    }
+                } else {
+                    console.error("❌ Không tìm thấy #content trong HTML trả về");
+                    content.innerHTML = '<div class="text-center py-8 text-red-600">⚠️ Không tìm thấy nội dung để hiển thị.</div>';
+                }
+
+                document.querySelectorAll(".sidebar-item").forEach((item) => {
+                    item.classList.remove("active");
+                });
+                if (element) {
+                    element.classList.add("active");
+                }
+
+                window.history.pushState({ path: url }, "", url);
+            })
+            .catch((err) => {
+                console.error("🚨 Lỗi fetch hoặc DOM:", err);
+                content.innerHTML = `
+                <div class="bg-red-100 text-red-700 p-4 rounded-lg mt-4 shadow">
+                    ❌ Không thể tải trang: <strong>${err.message}</strong><br>
+                    🔍 Kiểm tra xem file EJS có bị lỗi hoặc thiếu không.<br>
+                </div>`;
             });
-            if (element) {
-                element.classList.add("active");
-            }
-
-            window.history.pushState({ path: url }, "", url);
-        })
-        .catch((err) => {
-            console.error("🚨 Lỗi fetch hoặc DOM:", err);
-            content.innerHTML = `
-            <div class="bg-red-100 text-red-700 p-4 rounded-lg mt-4 shadow">
-                ❌ Không thể tải trang: <strong>${err.message}</strong><br>
-                🔍 Kiểm tra xem file EJS có bị lỗi hoặc thiếu không.<br>
-            </div>`;
-        });
-}
+    }
 // Xử lý dropdown avatar
 const avatar = document.getElementById("user-avatar");
 const dropdown = document.getElementById("user-dropdown");
@@ -89,6 +89,12 @@ document.addEventListener("click", function (e) {
         }
     }
 });
+function goToPage(pageNumber) {
+    const url = new URL(window.location.href);
+    url.searchParams.set('page', pageNumber); // Cập nhật tham số page
+    const newUrl = url.pathname + url.search;
+    loadPage(newUrl);
+  }
 function filterRecipes() {
     const searchForm = document.getElementById('searchForm');
     if (!searchForm) {
@@ -375,37 +381,47 @@ function handleApprove() {
     }
 }
 function handleReject() {
-    const contextMenu = document.getElementById('contextMenu');
-    const recipeId = contextMenu.dataset.recipeId;
-    if (recipeId) {
-        if (confirm('Bạn có chắc muốn từ chối công thức này?')) {
-            fetch(`/admin/cong-thuc/reject/${recipeId}`, {
-                method: 'PUT',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Content-Type': 'application/json'
-                }
-            })
-                .then(async (response) => {
-                    if (!response.ok) {
-                        const errorText = await response.text();
-                        throw new Error(`Lỗi từ server: ${errorText}`);
-                    }
-                    return response.json();
-                })
-                .then(() => {
-                    showAdminNotification('Công thức đã được từ chối!', 'success');
-                    loadPage('/admin/cong-thuc', document.querySelector('#content')); // Tải lại danh sách
-                })
-                .catch((err) => {
-                    console.error('Lỗi từ chối công thức:', err);
-                    showError('Đã xảy ra lỗi: ' + err.message);
-                });
-        }
-    } else {
-        showError("Không tìm thấy ID công thức để từ chối!");
-    }
+  const contextMenu = document.getElementById('contextMenu');
+  const recipeId = contextMenu.dataset.recipeId;
+
+  if (!recipeId) {
+    showError("Không tìm thấy ID công thức để từ chối!");
+    return;
+  }
+
+  const reason = prompt('Nhập lý do từ chối công thức này:');
+
+  if (reason === null) return; // Người dùng nhấn Cancel
+  if (reason.trim() === '') {
+    showError('Bạn cần nhập lý do từ chối!');
+    return;
+  }
+
+  fetch(`/admin/cong-thuc/reject/${recipeId}`, {
+    method: 'PUT',
+    headers: {
+      'X-Requested-With': 'XMLHttpRequest',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ ly_do_tu_choi: reason.trim() }) // Gửi lý do lên server
+  })
+    .then(async (response) => {
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Lỗi từ server: ${errorText}`);
+      }
+      return response.json();
+    })
+    .then(() => {
+      showAdminNotification('Công thức đã bị từ chối!', 'success');
+      loadPage('/admin/cong-thuc', document.querySelector('#content'));
+    })
+    .catch((err) => {
+      console.error('Lỗi từ chối công thức:', err);
+      showError('Đã xảy ra lỗi: ' + err.message);
+    });
 }
+
 function handleDelete() {
     const contextMenu = document.getElementById('contextMenu');
     const recipeId = contextMenu.dataset.recipeId;

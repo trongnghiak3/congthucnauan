@@ -478,12 +478,18 @@ function filterDishes() {
   console.log('Cập nhật tổng số món ăn:', visibleCount);
 }
 
-// Hàm chuyển đổi hiển thị món ăn theo nhóm
-function toggleDishes(groupId) {
-  const rows = document.querySelectorAll(`.dish-row[data-group="${groupId}"]`);
-  rows.forEach(row => row.classList.toggle('hidden'));
-  console.log(`Chuyển đổi hiển thị nhóm món ăn ID: ${groupId}`);
-}
+
+
+  function toggleDishes(typeId) {
+    const rows = document.querySelectorAll(`.dish-row[data-group="${typeId}"]`);
+    rows.forEach(row => {
+      row.classList.toggle('hidden');
+    });
+    // Thêm class active cho hàng tiêu đề khi mở
+    const categoryRow = document.querySelector(`.category-row[onclick="toggleDishes('${typeId}')"]`);
+    categoryRow.classList.toggle('active');
+  }
+
 
 // Hàm gắn sự kiện cho món ăn
 function bindDishEventListeners() {

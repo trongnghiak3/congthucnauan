@@ -32,12 +32,22 @@
     </div>
 
     <div class="p-6 sm:p-8 md:p-10">
-        <h2 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 border-b-2 border-yellow-500 pb-2 inline-block">Mô tả món ăn</h2>
-        <p class="text-gray-700 text-base sm:text-lg leading-relaxed mb-8">
-            <%= recipe.MOTA %>
-        </p>
+   <!-- MÔ TẢ MÓN ĂN -->
+<h2 class="text-2xl sm:text-3xl font-extrabold text-gray-800 mb-4 pb-2 border-b-4 border-yellow-400 inline-flex items-center gap-2 animate-fade-in">
+  🍜 Mô tả món ăn
+</h2>
+<div class="bg-gray-50 rounded-xl shadow-md p-5 sm:p-6 mb-8 animate-fade-in delay-100">
+  <p class="text-gray-800 text-base sm:text-lg leading-relaxed tracking-wide">
+    <%= recipe.MOTA %>
+  </p>
+</div>
 
-        <h2 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 border-b-2 border-yellow-500 pb-2 inline-block">Thông tin chung</h2>
+
+<!-- THÔNG TIN CHUNG -->
+<h2 class="text-2xl sm:text-3xl font-extrabold text-gray-800 mb-4 pb-2 border-b-4 border-yellow-400 inline-flex items-center gap-2 animate-fade-in delay-200">
+  📋 Thông tin chung
+</h2>
+
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 text-base text-gray-800">
             <span class="flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-xl py-3 px-5 shadow-sm hover:shadow-md hover:bg-blue-100 transition-all duration-200 cursor-default">
                 <i class="fas fa-clock text-blue-600 text-lg"></i>
@@ -105,17 +115,36 @@
         </ul>
       </div>
 
-      <!-- Instructions -->
-      <div class="bg-white rounded-3xl shadow-xl p-5 sm:p-7 mb-6">
-        <h3
-          class="text-2xl font-bold text-gray-700 mmb-5 flex items-center border-b pb-3 border-yellow-200"
-        >
-          <i class="fas fa-book-open mr-2.5 text-yellow-500 text-xl"></i> Hướng dẫn
-        </h3>
-        <p class="text-gray-700 leading-relaxed text-base whitespace-pre-line">
-          <%= recipe.HUONG_DAN %>
-        </p>
-      </div>
+<!-- Instructions -->
+<div class="bg-white rounded-3xl shadow-xl p-5 sm:p-7 mb-6">
+  <h3 class="text-2xl font-bold text-gray-700 mb-5 flex items-center border-b pb-3 border-yellow-200">
+    <i class="fas fa-book-open mr-2.5 text-yellow-500 text-xl"></i> Hướng dẫn
+  </h3>
+
+  <div class="space-y-6">
+    <% 
+      const buocHuongDan = recipe.HUONG_DAN.split('\n').filter(line => line.trim() !== '');
+      buocHuongDan.forEach(line => {
+        const match = line.match(/^(Bước\s*\d+):(.*)/i);
+    %>
+      <% if (match) { %>
+        <div class="p-4 bg-gray-50 border-l-4 border-yellow-400 rounded-xl shadow-sm">
+          <h4 class="text-base sm:text-lg font-semibold text-yellow-700 mb-1 flex items-center">
+            <i class="fas fa-check-circle mr-2 text-yellow-500"></i>
+            <%= match[1].trim() %>
+          </h4>
+          <p class="text-gray-800 leading-relaxed text-sm sm:text-base">
+            <%= match[2].trim() %>
+          </p>
+        </div>
+      <% } else { %>
+        <p class="text-gray-700 leading-relaxed text-sm"><%= line.trim() %></p>
+      <% } %>
+    <% }); %>
+  </div>
+</div>
+
+
 
       <!-- Video -->
       <% if (recipe.VIDEO) { %>
@@ -390,12 +419,13 @@
                                   <div
                                     class="absolute hidden group-hover:block bg-white border border-gray-200 rounded-lg p-2.5 z-10 min-w-[140px] shadow-lg top-full mt-1.5 left-0"
                                   >
-                                    <% reply.reaction_users && reply.reaction_users.forEach(user => { %>
-                                      <p class="text-xs text-gray-700 py-0.5 border-b border-gray-100 last:border-b-0">
-                                        <span class="font-semibold"><%= user.TEN_NGUOI_DUNG %></span>
-                                        <%= emotionIcons[user.LOAI_CAM_XUC.toLowerCase()] %>
-                                      </p>
-                                    <% }) %>
+                                <% if (reply.reaction_users_list && reply.reaction_users_list.length > 0) { %>
+    <% reply.reaction_users_list.forEach(userReaction => { %>
+        <span class="reaction-tooltip-item">
+            <%= userReaction.TEN_NGUOI_DUNG %> đã thả <%= userReaction.LOAI_CAM_XUC %>
+        </span>
+    <% }); %>
+<% } %>
                                   </div>
                                 </div>
                               <% } %>
@@ -550,14 +580,19 @@
           <% }); %>
         </div>
       </div>
-<section class="mt-6">
-  <h2 class="text-xl font-bold mb-4">Đánh giá người dùng</h2>
+<section class="mt-6 bg-white rounded-3xl shadow-xl p-5 sm:p-7 mb-6 ">
+ <h2 class="text-2xl font-bold mb-4 flex items-center gap-2 text-gray-90">
+  <i class="fas fa-star text-yellow-500"></i>
+  Đánh giá người dùng
+</h2>
+
   <% if (userRatings.length > 0) { %>
     <% userRatings.forEach(rating => { %>
       <div class="flex items-start gap-4 mb-4 p-4 border rounded bg-white shadow-sm">
         <img src="<%= rating.AVARTAR_URL %>" alt="avatar" class="w-10 h-10 rounded-full object-cover">
         <div>
-          <p class="font-semibold"><%= rating.TEN_NGUOI_DUNG %> - ⭐ <%= rating.DANH_GIA %>/5</p>
+       <p class="font-semibold"><%= rating.TEN_NGUOI_DUNG %> - ⭐ <%= rating.DANH_GIA %> sao</p>
+
           <% if (rating.NOI_DUNG_DG) { %>
             <p class="italic mt-1 text-gray-700">"<%= rating.NOI_DUNG_DG %>"</p>
           <% } %>
@@ -591,94 +626,98 @@
 
     <!-- Sidebar -->
     <div class="lg:col-span-1">
-      <div class="bg-white rounded-3xl shadow-xl p-5 sm:p-7 sticky top-8">
-        <h3
-          class="text-xl font-bold text-gray-700 mb-5 flex items-center border-b pb-3 border-yellow-200"
-        >
-          <i class="fas fa-info-circle mr-2.5 text-yellow-500 text-lg"></i> Thông tin công thức
-        </h3>
-        <div class="space-y-3 text-gray-700 text-base">
-          <p class="flex items-center">
-            <i class="fas fa-folder mr-2.5 text-yellow-500"></i>
-            <span class="font-medium">Danh mục:</span>
-            <%= categories.map(c => c.TEN_LM).join(', ') %>
-          </p>
-          <p class="flex items-center">
-            <i class="fas fa-user mr-2.5 text-yellow-500"></i>
-            <span class="font-medium">Tác giả:</span> <%= recipe.tac_gia %>
-          </p>
-        </div>
-
-        <% if (user) { %>
-      <div class="mt-7">
-  <h3 class="text-xl font-bold text-yellow-600 mb-5 flex items-center border-b pb-3 border-yellow-200">
-    <i class="fas fa-star mr-2.5 text-yellow-600 text-lg"></i> Đánh giá
+   <div class="bg-white rounded-3xl shadow-xl p-5 sm:p-7 sticky top-8">
+  <!-- Thông tin công thức -->
+  <h3 class="text-xl font-bold text-gray-90 mb-5 flex items-center border-b pb-3 border-yellow-200">
+    <i class="fas fa-info-circle mr-2.5 text-yellow-500 text-lg"></i> Thông tin công thức
   </h3>
 
-  <% if (!userRating) { %>
-    <form
-      action="/cong-thuc/<%= recipe.ID_CHINH_CT %>/danh-gia"
-      method="POST"
-      class="space-y-3"
-    >
-      <!-- Stars -->
-      <div class="rating-stars flex justify-center space-x-1 mb-3">
-        <% for (let i = 5; i >= 1; i--) { %>
-          <input type="radio" id="star<%= i %>" name="danh_gia" value="<%= i %>" hidden />
-          <label for="star<%= i %>" title="<%= i %> sao"
-            class="star-label text-gray-300 text-3xl cursor-pointer hover:text-yellow-400 transition-colors duration-200">
-            <i class="fas fa-star"></i>
-          </label>
-        <% } %>
-      </div>
+  <div class="space-y-3 text-gray-90 text-base">
+    <p class="flex items-center">
+      <i class="fas fa-folder mr-2.5 text-yellow-500"></i>
+      <span class="font-medium">Danh mục:</span>
+      <span class="ml-1"><%= categories.map(c => c.TEN_LM).join(', ') %></span>
+    </p>
+    <p class="flex items-center">
+      <i class="fas fa-user mr-2.5 text-yellow-500"></i>
+      <span class="font-medium">Tác giả:</span>
+      <span class="ml-1"><%= recipe.tac_gia %></span>
+    </p>
+  </div>
 
-      <!-- Nội dung -->
-      <textarea
-        name="noi_dung"
-        class="w-full p-2.5 border border-gray-300 rounded-xl focus:ring-3 focus:ring-yellow-200 focus:border-yellow-400 transition text-sm text-gray-800"
-        placeholder="Nội dung đánh giá (tùy chọn)"
-        rows="3"
-      ></textarea>
+  <!-- Đánh giá + yêu thích -->
+  <% if (user) { %>
+    <div class="mt-7">
+      <h3 class="text-xl font-bold text-gray-90 mb-5 flex items-center border-b pb-3 border-yellow-200">
+        <i class="fas fa-star mr-2.5 text-yellow-500 text-lg"></i> Đánh giá
+      </h3>
 
-      <button
-        type="submit"
-        class="w-full px-5 py-2.5 bg-yellow-500 text-white font-semibold rounded-full hover:bg-yellow-600 transition duration-300 ease-in-out shadow-md hover:shadow-lg flex items-center justify-center text-sm"
-      >
-        <i class="fas fa-paper-plane mr-2"></i> Gửi đánh giá
-      </button>
-    </form>
-  <% } else { %>
-    <div class="text-green-700 font-medium text-sm">
-      ✅ Bạn đã đánh giá công thức này với <strong><%= userRating.DANH_GIA %> sao</strong>.
+      <% if (!userRating) { %>
+        <form action="/cong-thuc/<%= recipe.ID_CHINH_CT %>/danh-gia" method="POST" class="space-y-3">
+          <!-- Stars -->
+          <div class="rating-stars flex justify-center space-x-1 mb-3">
+            <% for (let i = 5; i >= 1; i--) { %>
+              <input type="radio" id="star<%= i %>" name="danh_gia" value="<%= i %>" hidden />
+              <label for="star<%= i %>" title="<%= i %> sao"
+                class="star-label text-gray-300 text-3xl cursor-pointer hover:text-yellow-400 transition-colors duration-200">
+                <i class="fas fa-star"></i>
+              </label>
+            <% } %>
+          </div>
+
+          <!-- Nội dung -->
+          <textarea
+            name="noi_dung"
+            class="w-full p-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400 transition text-sm text-gray-800"
+            placeholder="Nội dung đánh giá (tùy chọn)"
+            rows="3"
+          ></textarea>
+
+          <button
+            type="submit"
+            class="w-full px-5 py-2.5 bg-yellow-500 text-white font-semibold rounded-full hover:bg-yellow-600 transition duration-300 ease-in-out shadow-md hover:shadow-lg flex items-center justify-center text-sm"
+          >
+            <i class="fas fa-paper-plane mr-2"></i> Gửi đánh giá
+          </button>
+        </form>
+      <% } else { %>
+        <!-- Hiển thị đánh giá đã gửi -->
+        <div class="text-green-700 font-medium text-sm flex items-center gap-2">
+          <i class="fas fa-check-circle text-green-600"></i>
+          Bạn đã đánh giá:
+          <span class="flex items-center">
+            <% for (let i = 1; i <= 5; i++) { %>
+              <i class="fas fa-star <%= i <= userRating.DANH_GIA ? 'text-yellow-400' : 'text-gray-300' %> text-sm"></i>
+            <% } %>
+          </span>
+        </div>
+      <% } %>
+
+      <!-- Form yêu thích -->
+      <form action="/cong-thuc/<%= recipe.ID_CHINH_CT %>/yeu-thich" method="POST" class="mt-4">
+        <button
+          type="submit"
+          class="w-full flex items-center justify-center px-5 py-2.5 border-2
+            <%= recipe.isFavorite
+              ? 'border-gray-400 text-gray-600 bg-gray-100 hover:bg-gray-200'
+              : 'border-red-500 text-red-500 hover:bg-red-500 hover:text-white' %>
+            rounded-full transition duration-300 ease-in-out font-semibold text-sm"
+        >
+          <i class="fas fa-heart mr-2 text-base"></i>
+          <%= recipe.isFavorite ? 'Đã yêu thích' : 'Thêm vào yêu thích' %>
+        </button>
+      </form>
     </div>
+  <% } else { %>
+    <!-- Thông báo chưa đăng nhập -->
+    <p class="text-gray-600 text-base mt-5 p-3 bg-yellow-50 border-l-4 border-yellow-300 rounded-xl">
+      Vui lòng
+      <a href="/login" class="text-yellow-600 font-semibold hover:underline">đăng nhập</a>
+      để đánh giá hoặc yêu thích công thức.
+    </p>
   <% } %>
-
-  <!-- Form yêu thích -->
-  <form
-    action="/cong-thuc/<%= recipe.ID_CHINH_CT %>/yeu-thich"
-    method="POST"
-    class="mt-3"
-  >
-    <button
-      type="submit"
-      class="w-full flex items-center justify-center px-5 py-2.5 border-2 <%= recipe.isFavorite ? 'border-gray-400 text-gray-600 bg-gray-100 hover:bg-gray-200' : 'border-red-500 text-red-500 hover:bg-red-500 hover:text-white' %> rounded-full transition duration-300 ease-in-out font-semibold text-sm"
-    >
-      <i class="fas fa-heart mr-2 text-base"></i>
-      <%= recipe.isFavorite ? 'Đã yêu thích' : 'Thêm vào yêu thích' %>
-    </button>
-  </form>
 </div>
 
-        <% } else { %>
-          <p class="text-gray-600 text-base mt-5 p-3 bg-yellow-50 rounded-xl">
-            Vui lòng
-            <a href="/login" class="text-yellow-600 font-semibold hover:underline"
-              >đăng nhập</a
-            >
-            để đánh giá hoặc yêu thích.
-          </p>
-        <% } %>
-      </div>
     </div>
   </div>
 
