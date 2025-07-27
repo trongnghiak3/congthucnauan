@@ -22,21 +22,29 @@
     </div>
 
     <div class="w-full md:w-1/2 h-full flex items-center justify-center bg-white p-4 md:p-10">
-      <div class="w-full max-w-lg"> <h2 class="text-4xl font-extrabold text-yellow-600 mb-3 text-center">Chào mừng đến với <span class="text-gray-800">KemzRecipe</span></h2> <p class="text-center text-gray-600 mb-8 text-lg leading-normal"> Đăng nhập để khám phá<br> hàng ngàn công thức nấu ăn hấp dẫn! 🍱
+      <div class="w-full max-w-lg">
+        <h2 class="text-4xl font-extrabold text-yellow-600 mb-3 text-center">
+          Chào mừng đến với <span class="text-gray-800">KemzRecipe</span>
+        </h2>
+        <p class="text-center text-gray-600 mb-8 text-lg leading-normal">
+          Đăng nhập để khám phá<br> hàng ngàn công thức nấu ăn hấp dẫn! 🍱
         </p>
 
-        <form action="/login" method="POST" class="space-y-6 text-base"> <div>
-            <label for="email" class="block text-gray-800 font-semibold mb-1.5">📧 Email</label> <input
+        <form action="/dang-nhap" method="POST" class="space-y-6 text-base">
+          <div>
+            <label for="email" class="block text-gray-800 font-semibold mb-1.5">📧 Email</label>
+            <input
               type="email"
               id="email"
               name="email"
               required
-              placeholder="you@example.com"
+              placeholder="ban@vidu.com"
               class="w-full p-3.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-3 focus:ring-yellow-400 transition text-sm" />
           </div>
 
           <div>
-            <label for="password" class="block text-gray-800 font-semibold mb-1.5">🔒 Mật khẩu</label> <div class="relative">
+            <label for="password" class="block text-gray-800 font-semibold mb-1.5">🔒 Mật khẩu</label>
+            <div class="relative">
               <input
                 type="password"
                 id="password"
@@ -47,7 +55,7 @@
               <button
                 type="button"
                 id="togglePassword"
-                class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm" >
+                class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">
                 👁️
               </button>
             </div>
@@ -56,32 +64,40 @@
           <div>
             <button
               type="submit"
-              class="w-full bg-yellow-500 hover:bg-yellow-600 text-white py-3 rounded-lg font-semibold text-lg transition duration-200 shadow-md" >
+              class="w-full bg-yellow-500 hover:bg-yellow-600 text-white py-3 rounded-lg font-semibold text-lg transition duration-200 shadow-md">
               🔓 Đăng Nhập
             </button>
           </div>
 
-          <div class="text-center">
-            <a href="/doi-mat-khau" class="text-sm text-yellow-600 hover:underline font-medium">Quên mật khẩu?</a> </div>
+<!-- Quay về trang chủ -->
+        <div class="text-center ">
+          <a href="/" class="text-sm text-gray-500 hover:text-yellow-600 hover:underline transition">
+            ← Quay về trang chủ
+          </a>
+        </div>
+        
 
           <div class="text-center mt-3">
-            <p class="text-sm text-gray-600"> Bạn chưa có tài khoản?
-              <a href="/register" class="text-yellow-600 hover:underline font-semibold">Đăng ký ngay</a>
+            <p class="text-sm text-gray-600">Bạn chưa có tài khoản?
+              <a href="/dang-ky" class="text-yellow-600 hover:underline font-semibold">Đăng ký ngay</a>
             </p>
           </div>
         </form>
+
+       
       </div>
     </div>
   </div>
+
+  <script>
+    const passwordInput = document.getElementById("password");
+    const togglePasswordBtn = document.getElementById("togglePassword");
+
+    togglePasswordBtn.addEventListener("click", function () {
+      const type = passwordInput.getAttribute("type") === "password" ? "text" : "password";
+      passwordInput.setAttribute("type", type);
+      this.textContent = type === "password" ? "👁️" : "🙈";
+    });
+  </script>
 </body>
 </html>
-<script>
-  const passwordInput = document.getElementById("password");
-  const togglePasswordBtn = document.getElementById("togglePassword");
-
-  togglePasswordBtn.addEventListener("click", function () {
-    const type = passwordInput.getAttribute("type") === "password" ? "text" : "password";
-    passwordInput.setAttribute("type", type);
-    this.textContent = type === "password" ? "👁️" : "🙈"; // đổi icon
-  });
-</script>

@@ -757,50 +757,53 @@ router.delete("/admin/cong-thuc/:id", ensureAdmin, async (req, res) => {
 });
 
 // Duyệt công thức
-router.put("/admin/cong-thuc/approve/:id", ensureAdmin, async (req, res) => {
+router.put('/admin/cong-thuc/approve/:id', ensureAdmin, async (req, res) => {
   const recipeId = req.params.id;
   const adminId = req.session.user.ID_CHINH_ND; // Lấy ID của admin đang thao tác
 
   try {
     // Bước 1: Lấy thông tin công thức và ID_CHINH_ND của người đăng
-    // Cần lấy TEN_CT và ID_CHINH_ND của người đăng để gửi thông báo
     const [recipe] = await query(
       `SELECT TEN_CT, ID_CHINH_ND, TRANG_THAI_DUYET_ FROM cong_thuc WHERE ID_CHINH_CT = ?`,
       [recipeId]
     );
 
     if (!recipe) {
-      return res.status(404).json({ message: "Công thức không tồn tại." });
+      return res.status(404).json({ message: 'Công thức không tồn tại.' });
     }
 
-    if (recipe.TRANG_THAI_DUYET_ !== "Đang chờ duyệt") {
-      return res.status(400).json({ message: "Công thức này không thể được duyệt (không phải trạng thái chờ duyệt)." });
+    // Bước 2: Kiểm tra trạng thái công thức
+    if (recipe.TRANG_THAI_DUYET_ !== 'Đang chờ duyệt' && recipe.TRANG_THAI_DUYET_ !== 'Từ chối') {
+      return res.status(400).json({ 
+        message: 'Công thức này không thể được duyệt (không phải trạng thái chờ duyệt hoặc từ chối).' 
+      });
     }
 
-    // Bước 2: Cập nhật trạng thái duyệt công thức
+    // Bước 3: Cập nhật trạng thái duyệt công thức và xóa lý do từ chối
     await query(
-      `UPDATE cong_thuc SET TRANG_THAI_DUYET_ = 'Đã duyệt', NGAY_DUYET = CURDATE() WHERE ID_CHINH_CT = ?`,
+      `UPDATE cong_thuc SET TRANG_THAI_DUYET_ = 'Đã duyệt', LY_DO_TU_CHOI = NULL, NGAY_DUYET = CURDATE() WHERE ID_CHINH_CT = ?`,
       [recipeId]
     );
 
-    // Bước 3: Gửi thông báo cho người đăng công thức
+    // BướcKiểm tra trạng thái công thức và thông báo cho người dùng
     const tenCongThuc = recipe.TEN_CT;
     const nguoiDangCongThucId = recipe.ID_CHINH_ND;
 
-    // Đảm bảo không gửi thông báo nếu admin là người đăng công thức (hiếm nhưng có thể xảy ra)
-    if (nguoiDangCongThucId) { // Đảm bảo ID người đăng tồn tại
-        const notificationContent = `Công thức "${tenCongThuc}" của bạn đã được duyệt và công khai!`;
-        await query(
-            `INSERT INTO THONG_BAO (LOAI_TB, NOI_DUNG_TB, ID_MUC_TIEU, ID_CHINH_ND, DA_DOC, DA_XOA, NGAY_TAO_TB)
-             VALUES (?, ?, ?, ?, FALSE, FALSE, NOW())`,
-            ['duyet_cong_thuc', notificationContent, nguoiDangCongThucId, adminId] // adminId là người tạo thông báo
-        );
+    // Bước 4: Gửi thông báo cho người đăng công thức
+    if (nguoiDangCongThucId && nguoiDangCongThucId !== adminId) { // Đảm bảo không gửi thông báo nếu admin là người đăng
+      const notificationContent = `Công thức "${tenCongThuc}" của bạn đã được duyệt và công khai!`;
+      await query(
+        `INSERT INTO THONG_BAO (LOAI_TB, NOI_DUNG_TB, ID_MUC_TIEU, ID_CHINH_ND, DA_DOC, DA_XOA, NGAY_TAO_TB)
+         VALUES (?, ?, ?, ?, FALSE, FALSE, NOW())`,
+        ['duyet_cong_thuc', notificationContent, nguoiDangCongThucId, adminId]
+      );
     }
 
-    return res.json({ message: "Duyệt công thức thành công!" });
+    console.log('Công thức với ID', recipeId, 'đã được duyệt thành công');
+    return res.json({ message: 'Duyệt công thức thành công!' });
   } catch (err) {
-    console.error("Lỗi duyệt công thức:", err);
-    return res.status(500).json({ message: "Lỗi server: " + err.message });
+    console.error('Lỗi duyệt công thức:', err);
+    return res.status(500).json({ message: 'Lỗi server: ' + err.message });
   }
 });
 
@@ -2121,7 +2124,8 @@ router.put('/admin/nguoi-dung/:id', ensureAdmin, upload.single('hinh_anh'), asyn
       return res.status(404).json({ message: `Không tìm thấy người dùng với ID ${userId}` });
     }
 
-    const { TEN_NGUOI_DUNG, EMAIL_, MAT_KHAU, VAI_TRO, TRANG_THAI, SO_DIEN_THOAI_ } = req.body;
+    // QUAN TRỌNG: Đã xóa VAI_TRO khỏi destructuring nếu bạn không muốn nó thay đổi ở đây
+    const { TEN_NGUOI_DUNG, EMAIL_, MAT_KHAU, TRANG_THAI, SO_DIEN_THOAI_ } = req.body;
 
     if (!TEN_NGUOI_DUNG || !TEN_NGUOI_DUNG.trim()) {
       if (req.file) await fs.unlink(req.file.path).catch(err => console.error('Lỗi xóa file tạm:', err));
@@ -2167,8 +2171,9 @@ router.put('/admin/nguoi-dung/:id', ensureAdmin, upload.single('hinh_anh'), asyn
     }
 
     await query(
-      'UPDATE nguoi_dung SET TEN_NGUOI_DUNG = ?, EMAIL_ = ?, MAT_KHAU = ?, VAI_TRO = ?, TRANG_THAI = ?, SO_DIEN_THOAI_ = ?, AVARTAR_URL = ? WHERE ID_CHINH_ND = ?',
-      [TEN_NGUOI_DUNG.trim(), EMAIL_.trim(), hashedPassword, VAI_TRO || existing.VAI_TRO, TRANG_THAI || existing.TRANG_THAI, SO_DIEN_THOAI_ || null, imagePath, userId]
+      'UPDATE nguoi_dung SET TEN_NGUOI_DUNG = ?, EMAIL_ = ?, MAT_KHAU = ?, TRANG_THAI = ?, SO_DIEN_THOAI_ = ?, AVARTAR_URL = ? WHERE ID_CHINH_ND = ?',
+      // Đảm bảo VAI_TRO KHÔNG được đưa vào mệnh đề SET nếu bạn muốn ngăn chặn thay đổi
+      [TEN_NGUOI_DUNG.trim(), EMAIL_.trim(), hashedPassword, TRANG_THAI || existing.TRANG_THAI, SO_DIEN_THOAI_ || null, imagePath, userId]
     );
 
     res.status(200).json({ message: 'Cập nhật người dùng thành công!' });
@@ -2178,7 +2183,6 @@ router.put('/admin/nguoi-dung/:id', ensureAdmin, upload.single('hinh_anh'), asyn
     res.status(500).json({ message: 'Lỗi server: ' + error.message });
   }
 });
-
 // Route DELETE xóa người dùng
 router.delete("/admin/nguoi-dung/:id", ensureAdmin, async (req, res) => {
   try {

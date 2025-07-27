@@ -42,51 +42,46 @@
 
             <div class="overflow-x-auto">
                 <table class="min-w-full border border-gray-300 rounded-lg overflow-hidden shadow-sm">
-                    <thead class="bg-gray-100 text-gray-700 uppercase text-xs font-medium select-none">
-                        <tr>
-                            <th class="px-4 py-2 border-r border-gray-300 text-left">ID</th>
-                            <th class="px-4 py-2 border-r border-gray-300 text-left">Tên Nguyên Liệu</th>
-                            <th class="px-4 py-2 border-r border-gray-300 text-left">Đơn Vị</th>
-                            <th class="px-4 py-2 text-left">Hành Động</th>
-                        </tr>
-                    </thead>
-                    <tbody class="text-gray-800 text-sm" id="ingredientsTableBody">
-                        <% if (ingredients && ingredients.length > 0) { %>
-                        <% ingredients.forEach(ingredient => { %>
-                        <tr class="hover:bg-yellow-50 transition duration-200">
-                            <td class="px-4 py-2 border-t border-gray-200">
-                                <%= ingredient.ID_CHINH_NL %>
-                            </td>
-                            <td class="px-4 py-2 border-t border-gray-200">
-                                <%= ingredient.TEN_NL %>
-                            </td>
-                            <td class="px-4 py-2 border-t border-gray-200">
-                                <%= ingredient.DON_VI %>
-                            </td>
-                            <td class="px-4 py-2 border-t border-gray-200 space-x-2">
-                                <button onclick="openEditModal(
-                                    '<%= ingredient.ID_CHINH_NL %>',
-                                    '<%= encodeURIComponent(ingredient.TEN_NL) %>',
-                                    '<%= encodeURIComponent(ingredient.DON_VI) %>'
-                                )"
-                                    class="bg-yellow-400 hover:bg-yellow-500 text-white px-2 py-1 rounded-lg shadow-sm text-sm transition duration-200">
-                                    ✏ Sửa
-                                </button>
-                                <button onclick="confirmDeleteIngredient('<%= ingredient.ID_CHINH_NL %>')"
-                                    class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded-lg shadow-sm text-sm transition duration-200">
-                                    🗑 Xóa
-                                </button>
-                            </td>
-                        </tr>
-                        <% }) %>
-                        <% } else { %>
-                        <tr>
-                            <td colspan="4" class="text-center py-3 text-gray-400 italic text-sm">
-                                Không có nguyên liệu nào!
-                            </td>
-                        </tr>
-                        <% } %>
-                    </tbody>
+          <thead class="bg-gray-100 text-gray-700 uppercase text-xs font-medium select-none">
+  <tr>
+    <th class="px-4 py-2 border-r border-gray-300 text-left">STT</th>
+    <th class="px-4 py-2 border-r border-gray-300 text-left">Tên Nguyên Liệu</th>
+    <th class="px-4 py-2 border-r border-gray-300 text-left">Đơn Vị</th>
+    <th class="px-4 py-2 text-left">Hành Động</th>
+  </tr>
+</thead>
+<tbody class="text-gray-800 text-sm" id="ingredientsTableBody">
+  <% if (ingredients && ingredients.length > 0) { %>
+    <% ingredients.forEach((ingredient, index) => { %>
+      <tr class="hover:bg-yellow-50 transition duration-200">
+        <td class="px-4 py-2 border-t border-gray-200"><%= index + 1 %></td>
+        <td class="px-4 py-2 border-t border-gray-200"><%= ingredient.TEN_NL %></td>
+        <td class="px-4 py-2 border-t border-gray-200"><%= ingredient.DON_VI %></td>
+        <td class="px-4 py-2 border-t border-gray-200 space-x-2">
+          <button onclick="openEditModal(
+              '<%= ingredient.ID_CHINH_NL %>',
+              '<%= encodeURIComponent(ingredient.TEN_NL) %>',
+              '<%= encodeURIComponent(ingredient.DON_VI) %>'
+          )"
+            class="bg-yellow-400 hover:bg-yellow-500 text-white px-2 py-1 rounded-lg shadow-sm text-sm transition duration-200">
+            ✏ Sửa
+          </button>
+          <button onclick="confirmDeleteIngredient('<%= ingredient.ID_CHINH_NL %>')"
+            class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded-lg shadow-sm text-sm transition duration-200">
+            🗑 Xóa
+          </button>
+        </td>
+      </tr>
+    <% }) %>
+  <% } else { %>
+    <tr>
+      <td colspan="4" class="text-center py-3 text-gray-400 italic text-sm">
+        Không có nguyên liệu nào!
+      </td>
+    </tr>
+  <% } %>
+</tbody>
+
                 </table>
             </div>
             <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>

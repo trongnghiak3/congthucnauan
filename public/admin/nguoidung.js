@@ -1,4 +1,3 @@
-
 // Hàm gắn sự kiện cho form
 function bindUserEventListeners() {
     console.log('Gọi bindUserEventListeners cho /admin/nguoi-dung');
@@ -58,7 +57,7 @@ function previewImage(input, previewElementId) {
 }
 
 // Hàm mở modal để thêm người dùng
-  function openAddUserModal() {
+function openAddUserModal() {
     const modal = document.getElementById('userModal');
     const form = document.getElementById('userForm');
     const modalTitle = document.getElementById('modalTitle');
@@ -68,14 +67,15 @@ function previewImage(input, previewElementId) {
     const emailInput = document.getElementById('email');
     const soDienThoaiInput = document.getElementById('soDienThoai');
     const matKhauInput = document.getElementById('matKhau');
-    const vaiTroInput = document.getElementById('vaiTro');
+    const vaiTroInput = document.getElementById('vaiTro'); // Giữ lại để gán giá trị mặc định
     const trangThaiInput = document.getElementById('trangThai');
     const imagePreview = document.getElementById('imagePreview');
     const ngayTaoInput = document.getElementById('ngayTao');
     const ngayCapNhatInput = document.getElementById('ngayCapNhat');
     const trangThaiField = document.getElementById('trangThaiField');
+    const vaiTroField = document.getElementById('vaiTroField'); // Lấy phần tử vaiTroField
 
-    if (!modal || !form || !modalTitle || !submitButton || !userIdInput || !tenNguoiDungInput || !emailInput || !soDienThoaiInput || !matKhauInput || !vaiTroInput || !trangThaiInput || !imagePreview || !ngayTaoInput || !ngayCapNhatInput || !trangThaiField) {
+    if (!modal || !form || !modalTitle || !submitButton || !userIdInput || !tenNguoiDungInput || !emailInput || !soDienThoaiInput || !matKhauInput || !vaiTroInput || !trangThaiInput || !imagePreview || !ngayTaoInput || !ngayCapNhatInput || !trangThaiField || !vaiTroField) {
       console.error('Không tìm thấy modal hoặc các phần tử form');
       showError('Lỗi: Không tìm thấy modal hoặc form!');
       return;
@@ -89,11 +89,16 @@ function previewImage(input, previewElementId) {
     emailInput.value = '';
     soDienThoaiInput.value = '';
     matKhauInput.value = '';
-    vaiTroInput.value = 'nguoidung';
+    vaiTroInput.value = 'nguoidung'; // Đặt vai trò mặc định là 'nguoidung'
     trangThaiInput.value = 'hoatdong';
     ngayTaoInput.value = '';
     ngayCapNhatInput.value = '';
-    trangThaiField.style.display = 'none';
+
+    // Ẩn trường vai trò khi thêm người dùng
+    vaiTroField.classList.add('hidden');
+    vaiTroField.style.display = 'none'; // Đảm bảo ẩn bằng cả style để tương thích tốt hơn
+
+    trangThaiField.style.display = 'none'; // Giữ trạng thái ẩn khi thêm
     imagePreview.src = '/default.jpg';
     imagePreview.classList.remove('hidden');
 
@@ -134,14 +139,15 @@ async function openEditUserModal(id) {
       const emailInput = document.getElementById('email');
       const soDienThoaiInput = document.getElementById('soDienThoai');
       const matKhauInput = document.getElementById('matKhau');
-      const vaiTroInput = document.getElementById('vaiTro');
+      const vaiTroInput = document.getElementById('vaiTro'); // Giữ lại để gán giá trị
       const trangThaiInput = document.getElementById('trangThai');
       const imagePreview = document.getElementById('imagePreview');
       const ngayTaoInput = document.getElementById('ngayTao');
       const ngayCapNhatInput = document.getElementById('ngayCapNhat');
       const trangThaiField = document.getElementById('trangThaiField');
+      const vaiTroField = document.getElementById('vaiTroField'); // Lấy phần tử vaiTroField
 
-      if (!modal || !form || !modalTitle || !submitButton || !userIdInput || !tenNguoiDungInput || !emailInput || !soDienThoaiInput || !matKhauInput || !vaiTroInput || !trangThaiInput || !imagePreview || !ngayTaoInput || !ngayCapNhatInput || !trangThaiField) {
+      if (!modal || !form || !modalTitle || !submitButton || !userIdInput || !tenNguoiDungInput || !emailInput || !soDienThoaiInput || !matKhauInput || !vaiTroInput || !trangThaiInput || !imagePreview || !ngayTaoInput || !ngayCapNhatInput || !trangThaiField || !vaiTroField) {
         console.error('Không tìm thấy modal hoặc các phần tử form');
         showError('Lỗi: Không tìm thấy modal hoặc form!');
         return;
@@ -155,11 +161,16 @@ async function openEditUserModal(id) {
       emailInput.value = result.EMAIL_ || '';
       soDienThoaiInput.value = result.SO_DIEN_THOAI_ || '';
       matKhauInput.value = ''; // Không hiển thị mật khẩu để bảo mật
-      vaiTroInput.value = result.VAI_TRO || 'nguoidung';
+      vaiTroInput.value = result.VAI_TRO || 'nguoidung'; // Vẫn gán giá trị vai trò từ dữ liệu người dùng
+
+      // Ẩn trường vai trò khi sửa người dùng
+      vaiTroField.classList.add('hidden');
+      vaiTroField.style.display = 'none'; // Đảm bảo ẩn bằng cả style để tương thích tốt hơn
+
       trangThaiInput.value = result.TRANG_THAI || 'hoatdong';
       ngayTaoInput.value = result.NGAY_TAO_ND ? new Date(result.NGAY_TAO_ND).toLocaleString('vi-VN') : '';
       ngayCapNhatInput.value = result.NGAY_CAP_NHAT_ND ? new Date(result.NGAY_CAP_NHAT_ND).toLocaleString('vi-VN') : '';
-      trangThaiField.style.display = 'block';
+      trangThaiField.style.display = 'block'; // Trường trạng thái hiển thị khi sửa
       imagePreview.src = result.AVARTAR_URL && result.AVARTAR_URL.trim() ? result.AVARTAR_URL : '/default.jpg';
       imagePreview.classList.remove('hidden');
 
@@ -176,16 +187,22 @@ function closeUserModal() {
     const modal = document.getElementById('userModal');
     const form = document.getElementById('userForm');
     const imagePreview = document.getElementById('imagePreview');
-    if (modal && form && imagePreview) {
+    const vaiTroField = document.getElementById('vaiTroField'); // Lấy phần tử vaiTroField
+
+    if (modal && form && imagePreview && vaiTroField) {
       modal.classList.add('hidden');
       form.reset();
       form.setAttribute('data-user-id', '');
       imagePreview.src = '/default.jpg';
       imagePreview.classList.remove('hidden');
+      // Đảm bảo trường vai trò bị ẩn khi đóng modal
+      vaiTroField.classList.add('hidden');
+      vaiTroField.style.display = 'none';
     }
   }
 
 // Hàm xử lý submit form
+
 function bindFormSubmitUser() {
     const form = document.getElementById('userForm');
     if (!form) {
@@ -197,7 +214,7 @@ function bindFormSubmitUser() {
     form.addEventListener('submit', handleUserFormSubmit);
     console.log('Đã gắn sự kiện submit cho #userForm tại', new Date().toISOString());
 
-   async function handleUserFormSubmit(e) {
+    async function handleUserFormSubmit(e) {
   e.preventDefault();
   console.log('Form #userForm submitted tại', new Date().toISOString());
   console.log('Dataset khi submit:', form.dataset);
@@ -220,8 +237,9 @@ function bindFormSubmitUser() {
   const phoneRegex = /^0\d{9}$/;
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-  if (!phoneRegex.test(soDienThoai)) {
-    showError('Số điện thoại không hợp lệ. Phải gồm 10 chữ số và bắt đầu bằng số 0.');
+  // *** THAY ĐỔI Ở ĐÂY: Cho phép trường số điện thoại trống hoặc đúng định dạng ***
+  if (soDienThoai && soDienThoai.trim() !== '' && !phoneRegex.test(soDienThoai)) {
+    showError('Số điện thoại không hợp lệ. Phải gồm 10 chữ số và bắt đầu bằng số 0 (nếu có nhập).');
     return;
   }
 
@@ -269,7 +287,7 @@ function bindFormSubmitUser() {
   }
 
 // Hàm xóa người dùng
- function confirmDeleteUser(id) {
+  function confirmDeleteUser(id) {
     if (!confirm('Bạn có chắc chắn muốn xóa người dùng này?')) return;
 
     fetch(`/admin/nguoi-dung/${id}`, {
@@ -310,50 +328,51 @@ document.addEventListener('DOMContentLoaded', () => {
   console.log('DOMContentLoaded triggered at', new Date().toISOString());
   bindUserEventListeners();
 });
-    function filterUsers() {
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
-            const roleFilter = document.getElementById('roleFilter').value;
-            const statusFilter = document.getElementById('statusFilter').value;
-            const rows = document.querySelectorAll('#userTableBody .user-row');
-            const noUserFoundRow = document.querySelector('.no-user-found-message');
-            let hasVisibleRows = false;
+function filterUsers() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+    // const roleFilter = document.getElementById('roleFilter').value; // Bỏ dòng này
+    const statusFilter = document.getElementById('statusFilter').value;
+    const rows = document.querySelectorAll('#userTableBody .user-row');
+    const noUserFoundRow = document.querySelector('.no-user-found-message');
+    let hasVisibleRows = false;
 
-            rows.forEach(row => {
-                const userId = row.querySelector('.user-id').textContent.toLowerCase();
-                const userName = row.querySelector('.user-name').textContent.toLowerCase();
-                const userEmail = row.querySelector('.user-email').textContent.toLowerCase();
-                const userPhone = row.querySelector('.user-phone').textContent.toLowerCase().replace(/[^0-9]/g, ''); // Remove non-numeric chars for phone search
-                const userRole = row.querySelector('.role-span').textContent.toLowerCase().trim();
-                const userStatus = row.querySelector('.status-span').textContent.toLowerCase().trim();
+    rows.forEach(row => {
+        const userId = row.querySelector('.user-id').textContent.toLowerCase();
+        const userName = row.querySelector('.user-name').textContent.toLowerCase();
+        const userEmail = row.querySelector('.user-email').textContent.toLowerCase();
+        const userPhone = row.querySelector('.user-phone').textContent.toLowerCase().replace(/[^0-9]/g, ''); // Xóa ký tự không phải số cho tìm kiếm điện thoại
+        const userRole = row.querySelector('.role-span').textContent.toLowerCase().trim(); // Vẫn cần lấy userRole nếu bạn hiển thị nó, nhưng không dùng để lọc
+        const userStatus = row.querySelector('.status-span').textContent.toLowerCase().trim();
 
-                // Check for search term match across multiple fields
-                const matchesSearch = (searchTerm === '' ||
-                    userName.includes(searchTerm) ||
-                    userEmail.includes(searchTerm) ||
-                    userPhone.includes(searchTerm) ||
-                    userId.includes(searchTerm)
-                );
+        // Kiểm tra từ khóa tìm kiếm trên nhiều trường
+        const matchesSearch = (searchTerm === '' ||
+            userName.includes(searchTerm) ||
+            userEmail.includes(searchTerm) ||
+            userPhone.includes(searchTerm) ||
+            userId.includes(searchTerm)
+        );
 
-                // Check for role filter match
-                const matchesRole = (roleFilter === '' || userRole === roleFilter);
+        // Bỏ kiểm tra khớp bộ lọc vai trò
+        // const matchesRole = (roleFilter === '' || userRole === roleFilter);
 
-                // Check for status filter match
-                const matchesStatus = (statusFilter === '' || userStatus === statusFilter);
+        // Kiểm tra khớp bộ lọc trạng thái
+        const matchesStatus = (statusFilter === '' || userStatus === statusFilter);
 
-                if (matchesSearch && matchesRole && matchesStatus) {
-                    row.style.display = '';
-                    hasVisibleRows = true;
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-
-            // Show/hide "No user found" message
-            if (noUserFoundRow) {
-                if (hasVisibleRows) {
-                    noUserFoundRow.style.display = 'none';
-                } else {
-                    noUserFoundRow.style.display = '';
-                }
-            }
+        // Điều kiện hiển thị chỉ còn dựa vào tìm kiếm và trạng thái
+        if (matchesSearch && matchesStatus) { // Đã bỏ matchesRole
+            row.style.display = '';
+            hasVisibleRows = true;
+        } else {
+            row.style.display = 'none';
         }
+    });
+
+    // Hiển thị/ẩn thông báo "Không tìm thấy người dùng"
+    if (noUserFoundRow) {
+        if (hasVisibleRows) {
+            noUserFoundRow.style.display = 'none';
+        } else {
+            noUserFoundRow.style.display = '';
+        }
+    }
+}

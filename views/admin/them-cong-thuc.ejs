@@ -124,98 +124,92 @@
     </section>
 
     <!-- BƯỚC 2 -->
-    <section id="step2" class="hidden space-y-6 border-t pt-6">
-        <% nguyen_lieu.sort((a, b) => a.TEN_NL.localeCompare(b.TEN_NL)); %>
+<section id="step2" class="hidden space-y-6 border-t pt-6 pb-32">
+    <% nguyen_lieu.sort((a, b) => a.TEN_NL.localeCompare(b.TEN_NL)); %>
 
-        <!-- Tiêu đề -->
-        <label class="block text-sm font-semibold text-yellow-600 mb-2">🥕 Nguyên Liệu</label>
+    <label class="block text-sm font-semibold text-yellow-600 mb-2">🥕 Nguyên Liệu</label> 
 
-        <!-- Template ẩn để thêm nguyên liệu -->
-        <template id="template_nguyen_lieu">
-            <div class="grid grid-cols-12 gap-2 items-center nguyen_lieu_item">
-                <div class="col-span-2">
-                    <select name="nguyen_lieu_id[]" class="tom-select w-full p-2 border rounded-lg text-base">
-                        <option disabled selected>Chọn nguyên liệu</option>
-                        <% nguyen_lieu.forEach(n => { %>
-                            <option value="<%= n.ID_CHINH_NL %>" data-donvi="<%= n.DON_VI %>"><%= n.TEN_NL %></option>
-                        <% }) %>
-                        <option value="khac">Khác (nhập tay)</option>
-                    </select>
-                </div>
-                <input type="text" name="ten_nguyen_lieu_khac[]" placeholder="Tên mới"
-                    class="hidden col-span-2 p-2 border rounded-lg text-base" />
-                <input type="number" name="so_luong[]" step="0.01" placeholder="Số lượng"
-                    class="col-span-2 p-2 border rounded-lg text-base" required />
-                <input type="text" name="don_vi[]" placeholder="Đơn vị"
-                    class="col-span-1 p-2 border rounded-lg text-base" readonly />
-                <input type="text" name="don_vi_khac[]" placeholder="Đơn vị"
-                    class="hidden col-span-1 p-2 border rounded-lg text-base" />
-                <input type="text" name="ghi_chu[]" placeholder="Ghi chú"
-                    class="col-span-3 p-2 border rounded-lg text-base" />
-                <button type="button" onclick="removeNguyenLieu(this)"
-                    class="col-span-1 text-red-500 hover:text-red-700 font-bold text-base">❌</button>
+    <template id="template_nguyen_lieu">
+        <div class="grid grid-cols-12 gap-2 items-center nguyen_lieu_item">
+            <div class="col-span-2">
+                <select name="nguyen_lieu_id[]" class="tom-select w-full p-2 border rounded-lg text-base">
+                    <option disabled selected>Chọn nguyên liệu</option>
+                    <% nguyen_lieu.forEach(n => { %>
+                        <option value="<%= n.ID_CHINH_NL %>" data-donvi="<%= n.DON_VI %>"><%= n.TEN_NL %></option>
+                    <% }) %>
+                    <option value="khac">Khác (nhập tay)</option>
+                </select>
             </div>
-        </template>
-
-        <!-- Khối scroll nguyên liệu -->
-        <div class="border border-gray-200 rounded-md max-h-[500px] overflow-y-auto p-3 bg-gray-50">
-            <div id="nguyen_lieu_container" class="space-y-3">
-                <% const renderNguyenLieuRow = (nl = {}, index = 0, isSelected = false) => { %>
-                    <div class="grid grid-cols-12 gap-2 items-center nguyen_lieu_item">
-                        <div class="col-span-2">
-                            <select name="nguyen_lieu_id[]" class="tom-select w-full p-2 border rounded-lg text-base">
-                                <option disabled <%= !isSelected && index === 0 ? 'selected' : '' %>>Chọn nguyên liệu</option>
-                                <% nguyen_lieu.forEach(n => { %>
-                                    <option value="<%= n.ID_CHINH_NL %>" data-donvi="<%= n.DON_VI %>"
-                                        <%= isSelected && n.ID_CHINH_NL === nl.ID_CHINH_NL ? 'selected' : '' %>>
-                                        <%= n.TEN_NL %>
-                                    </option>
-                                <% }) %>
-                                <option value="khac">Khác (nhập tay)</option>
-                            </select>
-                        </div>
-                        <input type="text" name="ten_nguyen_lieu_khac[]" placeholder="Tên mới"
-                            class="hidden col-span-2 p-2 border rounded-lg text-base" />
-                        <input type="number" name="so_luong[]" value="<%= nl.SO_LUONG || '' %>"
-                            step="0.01" placeholder="Số lượng" class="col-span-2 p-2 border rounded-lg text-base" required />
-                        <input type="text" name="don_vi[]" value="<%= nl.DON_VI || '' %>"
-                            placeholder="Đơn vị" class="col-span-1 p-2 border rounded-lg text-base" readonly />
-                        <input type="text" name="don_vi_khac[]" placeholder="Đơn vị"
-                            class="hidden col-span-1 p-2 border rounded-lg text-base" />
-                        <input type="text" name="ghi_chu[]" value="<%= nl.GHI_CHU || '' %>"
-                            placeholder="Ghi chú" class="col-span-3 p-2 border rounded-lg text-base" />
-                        <button type="button" onclick="removeNguyenLieu(this)"
-                            class="col-span-1 text-red-500 hover:text-red-700 font-bold text-base">❌</button>
-                    </div>
-                <% } %>
-                <% if (typeof selectedNguyenLieu !== 'undefined' && selectedNguyenLieu.length > 0) {
-                    selectedNguyenLieu.forEach((nl, index) => { %>
-                        <%= renderNguyenLieuRow(nl, index, true) %>
-                <% }); } else { for (let i = 0; i < 6; i++) { %>
-                    <%= renderNguyenLieuRow({}, i, false) %>
-                <% } } %>
-            </div>
+            <input type="text" name="ten_nguyen_lieu_khac[]" placeholder="Tên mới"
+                class="hidden col-span-2 p-2 border rounded-lg text-base" />
+            <input type="number" name="so_luong[]" step="0.01" placeholder="Số lượng"
+                class="col-span-2 p-2 border rounded-lg text-base" required />
+            <input type="text" name="don_vi[]" placeholder="Đơn vị"
+                class="col-span-1 p-2 border rounded-lg text-base" readonly />
+            <input type="text" name="don_vi_khac[]" placeholder="Đơn vị"
+                class="hidden col-span-1 p-2 border rounded-lg text-base" />
+            <input type="text" name="ghi_chu[]" placeholder="Ghi chú"
+                class="col-span-3 p-2 border rounded-lg text-base" />
+            <button type="button" onclick="removeNguyenLieu(this)"
+                class="col-span-1 text-red-500 hover:text-red-700 font-bold text-base">❌</button>
         </div>
+    </template>
 
-        <!-- Nút thêm nguyên liệu -->
-        <div>
-            <button type="button" onclick="addNguyenLieu()" class="text-yellow-600 hover:text-yellow-800 font-semibold text-base">
-                ➕ Thêm nguyên liệu
+    <div class="border border-gray-200 rounded-md max-h-[500px] overflow-y-auto p-3 bg-gray-50">
+        <div id="nguyen_lieu_container" class="space-y-3">
+            <% const renderNguyenLieuRow = (nl = {}, index = 0, isSelected = false) => { %>
+                <div class="grid grid-cols-12 gap-2 items-center nguyen_lieu_item">
+                    <div class="col-span-2">
+                        <select name="nguyen_lieu_id[]" class="tom-select w-full p-2 border rounded-lg text-base">
+                            <option disabled <%= !isSelected && index === 0 ? 'selected' : '' %>>Chọn nguyên liệu</option>
+                            <% nguyen_lieu.forEach(n => { %>
+                                <option value="<%= n.ID_CHINH_NL %>" data-donvi="<%= n.DON_VI %>"
+                                    <%= isSelected && n.ID_CHINH_NL === nl.ID_CHINH_NL ? 'selected' : '' %>>
+                                    <%= n.TEN_NL %>
+                                </option>
+                            <% }) %>
+                            <option value="khac">Khác (nhập tay)</option>
+                        </select>
+                    </div>
+                    <input type="text" name="ten_nguyen_lieu_khac[]" placeholder="Tên mới"
+                        class="hidden col-span-2 p-2 border rounded-lg text-base" />
+                    <input type="number" name="so_luong[]" value="<%= nl.SO_LUONG || '' %>"
+                        step="0.01" placeholder="Số lượng" class="col-span-2 p-2 border rounded-lg text-base" required />
+                    <input type="text" name="don_vi[]" value="<%= nl.DON_VI || '' %>"
+                        placeholder="Đơn vị" class="col-span-1 p-2 border rounded-lg text-base" readonly />
+                    <input type="text" name="don_vi_khac[]" placeholder="Đơn vị"
+                        class="hidden col-span-1 p-2 border rounded-lg text-base" />
+                    <input type="text" name="ghi_chu[]" value="<%= nl.GHI_CHU || '' %>"
+                        placeholder="Ghi chú" class="col-span-3 p-2 border rounded-lg text-base" />
+                    <button type="button" onclick="removeNguyenLieu(this)"
+                        class="col-span-1 text-red-500 hover:text-red-700 font-bold text-base">❌</button>
+                </div>
+            <% } %>
+            <% if (typeof selectedNguyenLieu !== 'undefined' && selectedNguyenLieu.length > 0) {
+                selectedNguyenLieu.forEach((nl, index) => { %>
+                    <%= renderNguyenLieuRow(nl, index, true) %>
+            <% }); } else { for (let i = 0; i < 6; i++) { %>
+                <%= renderNguyenLieuRow({}, i, false) %>
+            <% } } %>
+        </div>
+    </div>
+
+    <div class="flex justify-end mt-4"> <button type="button" onclick="addNguyenLieu()" class="text-yellow-600 hover:text-yellow-800 font-semibold text-base">
+            ➕ Thêm nguyên liệu
+        </button>
+    </div>
+
+    <div class="sticky bottom-0 bg-white border-t pt-4 mt-6 z-10">
+        <div class="flex justify-between">
+            <button type="button" id="btnPrevStep"
+                class="bg-gray-500 hover:bg-gray-600 text-white font-semibold px-4 py-2 rounded-lg shadow-md text-base">
+                ⬅️ Quay Lại
+            </button>
+            <button type="submit"
+                class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-5 py-2 rounded-lg shadow-md text-base">
+                💾 Lưu Công Thức
             </button>
         </div>
-
-        <!-- Nút cố định ở dưới -->
-        <div class="sticky bottom-0 bg-white border-t pt-4 mt-6 z-10">
-            <div class="flex justify-between">
-                <button type="button" id="btnPrevStep"
-                    class="bg-gray-500 hover:bg-gray-600 text-white font-semibold px-4 py-2 rounded-lg shadow-md text-base">
-                    ⬅️ Quay Lại
-                </button>
-                <button type="submit"
-                    class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-5 py-2 rounded-lg shadow-md text-base">
-                    💾 Lưu Công Thức
-                </button>
-            </div>
-        </div>
-    </section>
+    </div>
+</section>
 </form> 

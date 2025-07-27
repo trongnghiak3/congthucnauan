@@ -35,7 +35,7 @@ const upload = multer({
     }
     cb(null, true);
   },
-  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB
+ limits: { fileSize: 100 * 1024 * 1024 }, // Tăng lên 100MBB
 });
 
 
@@ -1898,10 +1898,23 @@ const result = await query(
 router.put(
   '/dang-cong-thuc/:id',
   ensureLoggedIn,
-  upload.fields([
-    { name: 'hinh_anh', maxCount: 1 },
-    { name: 'video_file', maxCount: 1 },
-  ]),
+  (req, res, next) => {
+    upload.fields([
+      { name: 'hinh_anh', maxCount: 1 },
+      { name: 'video_file', maxCount: 1 },
+    ])(req, res, (err) => {
+      if (err instanceof multer.MulterError) {
+        if (err.code === 'LIMIT_FILE_SIZE') {
+          return res.status(400).json({ message: 'File tải lên quá lớn! Kích thước tối đa là 100MB.' });
+        }
+        return res.status(400).json({ message: 'Lỗi khi tải lên file: ' + err.message });
+      } else if (err) {
+        console.error('Lỗi upload:', err);
+        return res.status(400).json({ message: 'Lỗi khi tải lên file: ' + err.message });
+      }
+      next();
+    });
+  },
   async (req, res) => {
     let recipeId = req.params.id;
     try {
@@ -1920,8 +1933,12 @@ router.put(
       const userId = req.session.user.ID_CHINH_ND;
 
       // Validate công thức
-      const [recipe] = await query('SELECT * FROM cong_thuc WHERE ID_CHINH_CT = ? AND ID_CHINH_ND = ? AND TRANG_THAI_DUYET_ = ?', [recipeId, userId, 'Đang chờ duyệt']);
+      const [recipe] = await query(
+        'SELECT * FROM cong_thuc WHERE ID_CHINH_CT = ? AND ID_CHINH_ND = ? AND TRANG_THAI_DUYET_ IN (?, ?)',
+        [recipeId, userId, 'Đang chờ duyệt', 'Từ chối']
+      );
       if (!recipe) {
+        console.log(`Công thức không tồn tại hoặc không thể chỉnh sửa: ID_CHINH_CT=${recipeId}, ID_CHINH_ND=${userId}`);
         return res.status(403).json({ message: 'Công thức không tồn tại hoặc không thể chỉnh sửa!' });
       }
 
@@ -1938,23 +1955,31 @@ router.put(
       const tenBuocArray = normalizeArray(ten_buoc);
       const buocNauArray = normalizeArray(buoc_nau);
 
+      // Kiểm tra bước nấu
       if (tenBuocArray.length === 0 || buocNauArray.length === 0 || tenBuocArray.length !== buocNauArray.length) {
         return res.status(400).json({ message: 'Phải có ít nhất một bước nấu hợp lệ!' });
       }
-      if (tenBuocArray.some(t => !t.trim()) || buocNauArray.some(b => !b.trim())) {
+      if (tenBuocArray.some(t => !t?.trim()) || buocNauArray.some(b => !b?.trim())) {
         return res.status(400).json({ message: 'Tên bước và mô tả bước là bắt buộc!' });
       }
       if (soLuongs.length === 0) {
         return res.status(400).json({ message: 'Vui lòng thêm ít nhất một nguyên liệu!' });
       }
 
+      // Tạo chuỗi hướng dẫn
+      let huongDan;
+      try {
+        huongDan = tenBuocArray
+          .map((ten, i) => `Bước ${i + 1}: ${ten.trim()} - ${buocNauArray[i].trim()}`)
+          .join('\n\n');
+      } catch (err) {
+        console.error('Lỗi khi tạo chuỗi huongDan:', err);
+        return res.status(400).json({ message: 'Dữ liệu bước nấu không hợp lệ!' });
+      }
+
       // Kiểm tra món ăn
       const [monAn] = await query('SELECT ID_CHINH_MA FROM mon_an WHERE ID_CHINH_MA = ?', [ID_CHINH_MA]);
       if (!monAn) return res.status(400).json({ message: 'Món ăn không tồn tại!' });
-
-      const huongDan = tenBuocArray
-        .map((ten, i) => `Bước ${i + 1}: ${ten.trim()} - ${buocNauArray[i].trim()}`)
-        .join('\n\n');
 
       // Xử lý file upload
       const createDir = async (type) => {
@@ -2008,42 +2033,47 @@ router.put(
         }
       }
 
-      // Cập nhật công thức
-     await query(
-  `
-  UPDATE cong_thuc 
-  SET 
-    ID_CHINH_MA = ?, 
-    TEN_CT = ?, 
-    MOTA = ?, 
-    HUONG_DAN = ?, 
-    THOI_GIAN_NAU = ?, 
-    DO_KHO = ?, 
-    SO_PHAN_AN = ?, 
-    HINH_ANH_CT = ?, 
-    VIDEO = ?, 
-    NGAY_CAP_NHAT_CT = CURDATE()
-  WHERE 
-    ID_CHINH_CT = ? AND 
-    ID_CHINH_ND = ? AND 
-    TRANG_THAI_DUYET_ = ?
-  `,
-  [
-    ID_CHINH_MA,
-    TEN_CT.trim(),
-    MOTA.trim(),
-    huongDan,
-    THOI_GIAN_NAU || null,
-    DO_KHO || null,
-    SO_PHAN_AN || null,
-    finalImagePath,
-    finalVideoPath,
-    recipeId,
-    userId,
-    'Đang chờ duyệt'
-  ]
-);
+      // Cập nhật công thức, không đặt lại LY_DO_TU_CHOI
+      const updateResult = await query(
+        `
+        UPDATE cong_thuc 
+        SET 
+          ID_CHINH_MA = ?, 
+          TEN_CT = ?, 
+          MOTA = ?, 
+          HUONG_DAN = ?, 
+          THOI_GIAN_NAU = ?, 
+          DO_KHO = ?, 
+          SO_PHAN_AN = ?, 
+          HINH_ANH_CT = ?, 
+          VIDEO = ?, 
+          TRANG_THAI_DUYET_ = ?,
+          NGAY_CAP_NHAT_CT = CURDATE()
+        WHERE 
+          ID_CHINH_CT = ? AND 
+          ID_CHINH_ND = ?
+        `,
+        [
+          ID_CHINH_MA,
+          TEN_CT.trim(),
+          MOTA.trim(),
+          huongDan,
+          THOI_GIAN_NAU || null,
+          DO_KHO || null,
+          SO_PHAN_AN || null,
+          finalImagePath,
+          finalVideoPath,
+          'Đang chờ duyệt',
+          recipeId,
+          userId
+        ]
+      );
 
+      // Kiểm tra số hàng bị ảnh hưởng
+      if (updateResult.affectedRows === 0) {
+        console.error(`Không thể cập nhật công thức: ID_CHINH_CT=${recipeId}, ID_CHINH_ND=${userId}`);
+        return res.status(500).json({ message: 'Không thể cập nhật công thức do lỗi dữ liệu!' });
+      }
 
       // Xóa nguyên liệu cũ
       await query('DELETE FROM cong_thuc_nguyen_lieu WHERE ID_CHINH_CT = ?', [recipeId]);
@@ -2096,13 +2126,40 @@ router.put(
         `
         INSERT INTO cong_thuc_nguyen_lieu (ID_CHINH_CT, ID_CHINH_NL, SO_LUONG, GHI_CHU)
         VALUES ${placeholders}
-      `,
+        `,
         values
       );
 
+      // Gửi thông báo cho người dùng và admin
+      const [nguoiDungDangBai] = await query("SELECT TEN_NGUOI_DUNG FROM nguoi_dung WHERE ID_CHINH_ND = ?", [userId]);
+      const tenNguoiDungDangBai = nguoiDungDangBai?.TEN_NGUOI_DUNG || "Một người dùng";
+
+      const admins = await query(`SELECT ID_CHINH_ND FROM nguoi_dung WHERE VAI_TRO = 'admin'`);
+      const recipients = new Set(admins.map(admin => admin.ID_CHINH_ND));
+      if (!recipients.has(userId)) {
+        recipients.add(userId);
+      }
+      const uniqueRecipients = Array.from(recipients);
+
+      for (const recipientId of uniqueRecipients) {
+        let notificationContent = '';
+        if (recipientId === userId) {
+          notificationContent = `Công thức "${TEN_CT.trim()}" của bạn đã được cập nhật và đang chờ duyệt.`;
+        } else {
+          notificationContent = `Công thức "${TEN_CT.trim()}" của ${tenNguoiDungDangBai} đã được cập nhật và đang chờ duyệt.`;
+        }
+        
+        await query(
+          `INSERT INTO THONG_BAO (LOAI_TB, NOI_DUNG_TB, ID_MUC_TIEU, ID_CHINH_ND, DA_DOC, DA_XOA, NGAY_TAO_TB)
+           VALUES (?, ?, ?, ?, FALSE, FALSE, NOW())`,
+          ['cong_thuc', notificationContent, recipientId, userId]
+        );
+      }
+
+      console.log(`Cập nhật công thức thành công: ID_CHINH_CT=${recipeId}, ID_CHINH_ND=${userId}`);
       return res.status(200).json({ message: 'Cập nhật công thức thành công!', recipeId });
-    } catch (err) {
-      console.error('Lỗi server:', err);
+    }catch (err) {
+      console.error('Lỗi server khi cập nhật công thức:', err);
       return res.status(500).json({ message: 'Lỗi server: ' + err.message });
     }
   }

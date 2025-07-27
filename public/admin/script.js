@@ -196,7 +196,9 @@ function initializeRecipesList() {
     }
 
     // Thêm sự kiện contextmenu cho bảng
-    const table = document.getElementById('recipeTable');
+   // Thêm sự kiện contextmenu cho bảng
+   // Thêm sự kiện contextmenu cho bảng
+   const table = document.getElementById('recipeTable');
     if (table) {
         table.addEventListener('contextmenu', (e) => {
             const row = e.target.closest('.recipe-row');
@@ -214,9 +216,16 @@ function initializeRecipesList() {
             const recipeId = row.querySelector('td').textContent.trim(); // Lấy nội dung cột đầu tiên
             contextMenu.dataset.recipeId = recipeId;
 
-            // 👉 Xử lý role để ẩn/hiện nút chỉnh sửa
+            // Lấy trạng thái duyệt từ cột trạng thái
+            const statusCell = row.querySelector('td:nth-last-child(1) span'); // Cột trạng thái là cột cuối cùng
+            const status = statusCell ? statusCell.textContent.trim() : '';
+
+            // Xử lý role để ẩn/hiện nút chỉnh sửa
             const role = row.dataset.role;
             const editOption = document.querySelector('#contextMenu li[onclick="handleEdit()"]');
+            const rejectOption = document.querySelector('#contextMenu li[onclick="handleReject()"]');
+            const approveOption = document.querySelector('#contextMenu li[onclick="handleApprove()"]');
+
             if (editOption) {
                 if (role === 'nguoidung') {
                     editOption.classList.add('hidden');
@@ -224,6 +233,21 @@ function initializeRecipesList() {
                     editOption.classList.remove('hidden');
                 }
             }
+
+            // Xử lý ẩn/hiện tùy chọn dựa trên trạng thái
+            if (rejectOption && approveOption) {
+                if (status === 'Đã duyệt') {
+                    rejectOption.classList.add('hidden');
+                    approveOption.classList.add('hidden');
+                } else if (status === 'Từ chối') {
+                    rejectOption.classList.add('hidden');
+                    approveOption.classList.remove('hidden');
+                } else {
+                    rejectOption.classList.remove('hidden');
+                    approveOption.classList.remove('hidden');
+                }
+            }
+
             // Hiển thị menu tại vị trí chuột
             contextMenu.classList.remove('hidden');
             const menuWidth = contextMenu.offsetWidth;
@@ -277,17 +301,35 @@ function onNguyenLieuChange(select) {
 function addNguyenLieu() {
     const container = document.getElementById('nguyen_lieu_container');
     const template = document.getElementById('template_nguyen_lieu');
+    const addButton = document.querySelector('button[onclick="addNguyenLieu()"]'); // Lấy tham chiếu đến nút "Thêm nguyên liệu"
 
     if (!template) {
         console.error("❌ Không tìm thấy template_nguyen_lieu");
         return;
     }
 
+    // --- Bắt đầu phần thêm logic giới hạn ---
+    const maxAllowedItems = 15; // Đặt giới hạn tối đa bạn muốn ở đây, ví dụ 15
+    const currentItemsCount = container.querySelectorAll('.nguyen_lieu_item').length;
+
+    if (currentItemsCount >= maxAllowedItems) {
+        showError(`Bạn chỉ có thể thêm tối đa ${maxAllowedItems} nguyên liệu.`);
+        if (addButton) {
+            addButton.classList.add('hidden'); // Ẩn nút nếu đã đạt giới hạn
+        }
+        return;
+    }
+    // --- Kết thúc phần thêm logic giới hạn ---
+
     const clone = template.content.cloneNode(true);
     const item = clone.querySelector('.nguyen_lieu_item');
 
     const select = item.querySelector('select[name="nguyen_lieu_id[]"]');
     if (select) {
+        // Hủy bỏ TomSelect cũ trước khi khởi tạo mới nếu có
+        if (select.tomselect) {
+            select.tomselect.destroy();
+        }
         const ts = new TomSelect(select, {
             create: false,
             maxOptions: 500,
@@ -299,6 +341,14 @@ function addNguyenLieu() {
     }
 
     container.appendChild(clone);
+
+    // Sau khi thêm, kiểm tra lại số lượng để ẩn nút nếu cần
+    const newItemsCount = container.querySelectorAll('.nguyen_lieu_item').length;
+    if (newItemsCount >= maxAllowedItems) {
+        if (addButton) {
+            addButton.classList.add('hidden');
+        }
+    }
 }
 
 function removeVideo() {
@@ -318,8 +368,20 @@ function removeVideo() {
 
 function removeNguyenLieu(button) {
     const item = button.closest('.nguyen_lieu_item');
-    if (document.querySelectorAll('.nguyen_lieu_item').length > 1) {
+    const container = document.getElementById('nguyen_lieu_container');
+    const addButton = document.querySelector('button[onclick="addNguyenLieu()"]'); // Lấy tham chiếu đến nút "Thêm nguyên liệu"
+
+    const currentItemsCount = container.querySelectorAll('.nguyen_lieu_item').length;
+    const maxAllowedItems = 15; // **Phải khớp với giá trị trong addNguyenLieu()**
+
+    if (currentItemsCount > 1) { // Luôn giữ lại ít nhất 1 nguyên liệu
         item.remove();
+        // Sau khi xóa, kiểm tra và hiển thị lại nút nếu số lượng < giới hạn
+        if (currentItemsCount - 1 < maxAllowedItems) { // currentItemsCount là số lượng TRƯỚC khi xóa
+            if (addButton) {
+                addButton.classList.remove('hidden'); // Hiển thị nút trở lại
+            }
+        }
     } else {
         showError("Phải có ít nhất một nguyên liệu!");
     }

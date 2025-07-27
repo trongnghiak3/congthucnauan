@@ -58,30 +58,46 @@
       </tbody>
     </table>
   </div>
+<% if (totalPages && totalPages > 1) { %>
+  <div class="mt-4 flex justify-center space-x-2">
+    
+    <!-- Nút Trước -->
+    <% if (currentPage > 1) { %>
+      <a
+        href="#"
+        onclick="loadPage('/admin/danh-gia?page=<%= currentPage - 1 %>', document.querySelector('#content')); return false;"
+        class="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 transition text-sm"
+      >
+        ‹ Trước
+      </a>
+    <% } %>
 
-  <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
-    <div class="mt-4 flex justify-center space-x-2">
-      <% if (currentPage > 1) { %>
-        <a
-          href="#"
-          onclick="loadPage('/admin/danh-gia?page=<%= currentPage - 1 %>', document.querySelector('#content')); return false;"
-          class="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 transition text-sm"
-        >‹ Trước</a>
-      <% } %>
-      <% for (let i = 1; i <= totalPages; i++) { %>
-        <a
-          href="#"
-          onclick="loadPage('/admin/danh-gia?page=<%= i %>', document.querySelector('#content')); return false;"
-          class="px-3 py-1 rounded-lg border text-sm <%= i === currentPage ? 'bg-yellow-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100' %>"
-        ><%= i %></a>
-      <% } %>
-      <% if (currentPage < totalPages) { %>
-        <a
-          href="#"
-          onclick="loadPage('/admin/danh-gia?page=<%= currentPage + 1 %>', document.querySelector('#content')); return false;"
-          class="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 transition text-sm"
-        >Sau ›</a>
-      <% } %>
-    </div>
-  <% } %>
+    <!-- Số trang -->
+    <% for (let i = 1; i <= totalPages; i++) { %>
+      <a
+        href="#"
+        onclick="loadPage('/admin/danh-gia?page=<%= i %>', document.querySelector('#content')); return false;"
+        class="px-3 py-1 rounded-lg border text-sm 
+               <%= i === currentPage 
+                   ? 'bg-yellow-500 text-white' 
+                   : 'bg-white text-gray-700 hover:bg-gray-100' %>"
+      >
+        <%= i %>
+      </a>
+    <% } %>
+
+    <!-- Nút Sau -->
+    <% if (currentPage < totalPages) { %>
+      <a
+        href="#"
+        onclick="loadPage('/admin/danh-gia?page=<%= currentPage + 1 %>', document.querySelector('#content')); return false;"
+        class="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 transition text-sm"
+      >
+        Sau ›
+      </a>
+    <% } %>
+
+  </div>
+<% } %>
+
 </div>

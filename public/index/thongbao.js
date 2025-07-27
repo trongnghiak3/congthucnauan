@@ -87,7 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const errorData = await response.json();
                     if (response.status === 401) {
                         alert(errorData.error || 'Vui lòng đăng nhập để tiếp tục.');
-                        window.location.href = '/login';
+                        window.location.href = '/dang-nhap';
                         return;
                     }
                     throw new Error(errorData.error || 'Đã xảy ra lỗi trên máy chủ.');

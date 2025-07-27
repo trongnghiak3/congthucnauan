@@ -5,12 +5,12 @@ const { query } = require("../config/db");
 
 const toBase64 = (buffer) => (buffer ? `data:image/png;base64,${buffer.toString("base64")}` : null);
 
-router.get("/login", (req, res) => {
+router.get("/dang-nhap", (req, res) => {
     res.render("index/dang-nhap", { title: "Đăng nhập", message: "Xin chào EJS!" });
 });
 
-// POST /login - Xử lý đăng nhập
-router.post("/login", async (req, res) => {
+// POST- Xử lý đăng nhập
+router.post("/dang-nhap", async (req, res) => {
     const { email, password } = req.body;
     try {
         const results = await query("SELECT * FROM nguoi_dung WHERE EMAIL_ = ?", [email]);
@@ -46,11 +46,11 @@ router.post("/login", async (req, res) => {
     }
 });
 
-router.get("/register", (req, res) => {
+router.get("/dang-ky", (req, res) => {
     res.render("index/dang-ky", { title: "Đăng ký" });
 });
 
-router.post("/register", async (req, res) => {
+router.post("/dang-ky", async (req, res) => {
     const { name, email, password } = req.body;
     if (!name || !email || !password) {
         return res.status(400).send("Vui lòng nhập đầy đủ thông tin.");
@@ -68,22 +68,20 @@ router.post("/register", async (req, res) => {
             "nguoidung", // Fixed to string "user"
             "hoatdong", // Default status
         ]);
-        res.redirect("/login");
+        res.redirect("/dang-nhap");
     } catch (err) {
         console.error("Lỗi lưu người dùng:", err);
         res.status(500).send("Lỗi server");
     }
 });
 
-router.get("/logout", (req, res) => {
-    req.session.destroy((err) => {
-        if (err) console.error("Lỗi khi đăng xuất:", err);
-        res.redirect("/login");
-    });
+router.get('/dang-xuat', (req, res) => {
+  req.session.destroy(); // nếu dùng session
+  res.clearCookie('token'); // nếu dùng cookie JWT
+  res.redirect('/dang-nhap');
 });
+
 // GET - hiển thị form đổi mật khẩu
-// GET - đổi mật khẩu dùng chung
-// GET - Hiển thị form đổi mật khẩu
 router.get('/doi-mat-khau', async (req, res) => {
     // Đảm bảo req.session.user tồn tại. Nếu không, chuyển hướng.
     const user = req.session.user;
@@ -124,6 +122,7 @@ router.get('/doi-mat-khau', async (req, res) => {
         res.status(500).send('Lỗi máy chủ');
     }
 });
+
 
 // POST - Xử lý đổi mật khẩu dùng chung
 router.post('/doi-mat-khau', async (req, res) => {

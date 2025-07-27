@@ -11,7 +11,7 @@ const ensureLoggedIn = (req, res, next) => {
             
             // Lưu URL hiện tại để chuyển hướng sau khi đăng nhập
             req.session.returnTo = req.originalUrl;
-            return res.redirect("/login");
+            return res.redirect("/dang-nhap");
         }
         
         next();

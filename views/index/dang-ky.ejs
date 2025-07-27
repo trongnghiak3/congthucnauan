@@ -21,62 +21,72 @@
       />
     </div>
 
-    <div class="w-full md:w-1/2 h-full flex items-center justify-center bg-white p-4 md:p-10"> <div class="w-full max-w-lg"> <h2 class="text-4xl font-extrabold text-yellow-600 text-center mb-3">Tạo Tài Khoản</h2> <p class="text-center text-gray-600 mb-8 text-lg">Tham gia KemzRecipe và khám phá hương vị tuyệt vời mỗi ngày! 🧁</p> <form action="/register" method="POST" class="space-y-5 text-base"> <div>
-            <label for="name" class="block text-gray-800 font-semibold mb-1.5">👤 Họ và tên</label> <input
-              type="text"
-              id="name"
-              name="name"
-              required
-              placeholder="Nguyễn Văn A"
+    <div class="w-full md:w-1/2 h-full flex items-center justify-center bg-white p-4 md:p-10">
+      <div class="w-full max-w-lg">
+        <h2 class="text-4xl font-extrabold text-yellow-600 text-center mb-3">Tạo Tài Khoản</h2>
+        <p class="text-center text-gray-600 mb-8 text-lg">Tham gia KemzRecipe và khám phá hương vị tuyệt vời mỗi ngày! 🧁</p>
+
+        <form action="/dang-ky" method="POST" class="space-y-5 text-base">
+          <div>
+            <label for="name" class="block text-gray-800 font-semibold mb-1.5">👤 Họ và tên</label>
+            <input type="text" id="name" name="name" required placeholder="Nguyễn Văn A"
               class="w-full p-3.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-3 focus:ring-yellow-400 transition text-sm" />
           </div>
 
           <div>
-            <label for="email" class="block text-gray-800 font-semibold mb-1.5">📧 Email</label> <input
-              type="email"
-              id="email"
-              name="email"
-              required
-              placeholder="you@example.com"
+            <label for="email" class="block text-gray-800 font-semibold mb-1.5">📧 Email</label>
+            <input type="email" id="email" name="email" required placeholder="nguyenvana@email.com"
               class="w-full p-3.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-3 focus:ring-yellow-400 transition text-sm" />
           </div>
 
           <div>
-            <label for="password" class="block text-gray-800 font-semibold mb-1.5">🔒 Mật khẩu</label> <input
-              type="password"
-              id="password"
-              name="password"
-              required
-              placeholder="Ít nhất 8 ký tự"
-              class="w-full p-3.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-3 focus:ring-yellow-400 transition text-sm" />
+            <label for="password" class="block text-gray-800 font-semibold mb-1.5">🔒 Mật khẩu</label>
+            <div class="relative">
+              <input type="password" id="password" name="password" required placeholder="Ít nhất 8 ký tự"
+                class="w-full p-3.5 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-3 focus:ring-yellow-400 transition text-sm" />
+              <button type="button" id="togglePassword" class="absolute right-3 top-3.5 text-xl text-gray-500">👁️</button>
+            </div>
           </div>
 
           <div>
-            <label for="confirmPassword" class="block text-gray-800 font-semibold mb-1.5">✅ Xác nhận mật khẩu</label> <input
-              type="password"
-              id="confirmPassword"
-              name="confirmPassword"
-              required
-              placeholder="Nhập lại mật khẩu"
-              class="w-full p-3.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-3 focus:ring-yellow-400 transition text-sm" />
+            <label for="confirmPassword" class="block text-gray-800 font-semibold mb-1.5">✅ Xác nhận mật khẩu</label>
+            <div class="relative">
+              <input type="password" id="confirmPassword" name="confirmPassword" required placeholder="Nhập lại mật khẩu"
+                class="w-full p-3.5 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-3 focus:ring-yellow-400 transition text-sm" />
+              <button type="button" id="toggleConfirmPassword" class="absolute right-3 top-3.5 text-xl text-gray-500">👁️</button>
+            </div>
           </div>
 
           <div>
-            <button
-              type="submit"
-              class="w-full bg-yellow-500 hover:bg-yellow-600 text-white py-3 rounded-lg font-semibold text-base transition duration-200 shadow-md" >
+            <button type="submit"
+              class="w-full bg-yellow-500 hover:bg-yellow-600 text-white py-3 rounded-lg font-semibold text-base transition duration-200 shadow-md">
               🎉 Đăng Ký
             </button>
           </div>
 
           <div class="text-center mt-3">
             <p class="text-sm text-gray-600">Đã có tài khoản?
-              <a href="/login" class="text-yellow-600 hover:underline font-semibold">Đăng nhập ngay</a>
+              <a href="/dang-nhap" class="text-yellow-600 hover:underline font-semibold">Đăng nhập ngay</a>
             </p>
           </div>
         </form>
       </div>
     </div>
   </div>
+
+  <script>
+    function togglePasswordVisibility(inputId, buttonId) {
+      const input = document.getElementById(inputId);
+      const button = document.getElementById(buttonId);
+      button.addEventListener('click', () => {
+        const isPassword = input.type === 'password';
+        input.type = isPassword ? 'text' : 'password';
+        button.textContent = isPassword ? '🙈' : '👁️';
+      });
+    }
+
+    togglePasswordVisibility('password', 'togglePassword');
+    togglePasswordVisibility('confirmPassword', 'toggleConfirmPassword');
+  </script>
 </body>
 </html>
