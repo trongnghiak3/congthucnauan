@@ -59,7 +59,7 @@ app.use("/", authRoutes);
 app.use("/", profileRoutes);
 app.use("/", adminRoutes);
 
-const ip = "192.168.1.12";
+const ip = "192.168.1.31";
 app.listen(port, ip, () => {
   console.log(`Máy chủ đang chạy tại http://${ip}:${port}`);
 });

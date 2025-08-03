@@ -659,16 +659,34 @@
   </h3>
 
   <div class="space-y-3 text-gray-90 text-base">
-    <p class="flex items-center">
-      <i class="fas fa-folder mr-2.5 text-yellow-500"></i>
-      <span class="font-medium">Danh mục:</span>
-      <span class="ml-1"><%= categories.map(c => c.TEN_LM).join(', ') %></span>
-    </p>
-    <p class="flex items-center">
-      <i class="fas fa-user mr-2.5 text-yellow-500"></i>
-      <span class="font-medium">Tác giả:</span>
-      <span class="ml-1"><%= recipe.tac_gia %></span>
-    </p>
+<p class="flex flex-wrap items-center text-gray-800 leading-relaxed">
+  <i class="fas fa-folder mr-2.5 text-yellow-500"></i>
+  <span class="font-medium mr-1">Danh mục:</span>
+  <% categories.forEach((c, index) => { %>
+    <span class="text-sm text-gray-700 bg-gray-100 px-2 py-0.5 rounded-full mr-1 mb-1">
+      <%= c.TEN_LM %>
+    </span>
+  <% }) %>
+</p>
+
+<p class="flex items-center">
+  <i class="fas fa-user mr-2.5 text-yellow-500"></i>
+  <span class="font-medium mr-2">Tác giả:</span>
+
+  <% if (recipe.avatar_tac_gia_hien_thi) { %>
+    <img src="<%= recipe.avatar_tac_gia_hien_thi %>" alt="Avatar tác giả" class="w-7 h-7 rounded-full mr-2 object-cover">
+  <% } else { %>
+    <img src="/uploads/default-avatar.png" alt="Avatar mặc định" class="w-7 h-7 rounded-full mr-2 object-cover">
+  <% } %>
+
+  <span class="text-gray-800 font-semibold flex items-center">
+    <%= recipe.tac_gia %>
+    <% if (recipe.VAI_TRO === 'admin') { %>
+      <span class="ml-1 text-gray-500 font-normal">(Quản trị viên)</span>
+    <% } %>
+  </span>
+</p>
+
   </div>
 
   <!-- Đánh giá + yêu thích -->
@@ -708,15 +726,18 @@
         </form>
       <% } else { %>
         <!-- Hiển thị đánh giá đã gửi -->
-        <div class="text-green-700 font-medium text-sm flex items-center gap-2">
-          <i class="fas fa-check-circle text-green-600"></i>
-          Bạn đã đánh giá:
-          <span class="flex items-center">
-            <% for (let i = 1; i <= 5; i++) { %>
-              <i class="fas fa-star <%= i <= userRating.DANH_GIA ? 'text-yellow-400' : 'text-gray-300' %> text-sm"></i>
-            <% } %>
-          </span>
-        </div>
+      <% if (userRating) { %>
+  <div class="text-green-700 font-medium text-sm flex items-center gap-2">
+    <i class="fas fa-check-circle text-green-600"></i>
+    Bạn đã đánh giá:
+    <span class="flex items-center">
+      <% for (let i = 1; i <= 5; i++) { %>
+        <i class="fas fa-star <%= i <= userRating.DANH_GIA ? 'text-yellow-400' : 'text-gray-300' %> text-sm"></i>
+      <% } %>
+    </span>
+  </div>
+<% } %>
+
       <% } %>
 
       <!-- Form yêu thích -->
@@ -792,3 +813,4 @@
     animation: slideIn 0.5s ease-out;
   }
 </style>
+   <script src="/index/chitietcongthuc.js"></script>

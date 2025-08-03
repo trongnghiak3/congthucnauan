@@ -11,77 +11,78 @@
   <div class="overflow-x-auto px-4 py-2 bg-white border border-t-0 rounded-b-lg">
     <table class="min-w-full text-sm text-gray-700">
       <thead>
-        <tr class="bg-gray-100 text-gray-700 uppercase text-xs font-semibold">
-          <th class="px-4 py-2 text-center">STT</th>
-          <th class="px-4 py-2 text-left">Người Dùng</th>
-          <th class="px-4 py-2 text-left">Bình Luận</th>
-          <th class="px-4 py-2 text-left">Loại Cảm Xúc</th>
-          <th class="px-4 py-2 text-center">Ngày</th>
-        </tr>
+      <tr class="bg-gray-100 text-gray-700 uppercase text-xs font-semibold">
+  <th class="px-4 py-2 text-center">STT</th>
+  <th class="px-4 py-2 text-left">Người Dùng</th>
+  <th class="px-4 py-2 text-left">Bình Luận</th>
+  <th class="px-4 py-2 text-left">Người Nhận</th>
+  <th class="px-4 py-2 text-left">Loại Cảm Xúc</th>
+  <th class="px-4 py-2 text-center">Ngày</th>
+</tr>
       </thead>
-      <tbody>
-        <% if (groupedEmotions && Object.keys(groupedEmotions).length > 0) { %>
-          <% Object.keys(groupedEmotions).forEach((tenCT, index) => {
-            const list = groupedEmotions[tenCT];
-          %>
-            <tr class="hover:bg-yellow-50 cursor-pointer bg-gray-50" onclick="toggleEmotions('<%= tenCT %>')">
-              <td colspan="6" class="text-center font-medium py-2 text-sm">
-                🍽 Công thức: <%= tenCT %>
-              </td>
-            </tr>
-            <% list.forEach((emo, i) => { %>
-              <tr class="emotion-row hidden border-b border-gray-100 text-sm" data-group="<%= tenCT %>">
-                <td class="p-2 text-center"><%= i + 1 %></td>
-                <td class="p-2"><%= emo.TEN_NGUOI_DUNG %> – <%= emo.EMAIL_ %></td>
-                <td class="p-2"><%= emo.NOI_DUNG_BL %></td>
-                <td class="p-2">
-                  <%
-                    const emotionIcons = {
-                      like: '👍',
-                      love: '❤️',
-                      haha: '😂',
-                      wow: '😮',
-                      sad: '😢',
-                      angry: '😣'
-                    };
-                    const emotion = emo.LOAI_CAM_XUC_BL.toLowerCase();
-                  %>
-                  <%= emotionIcons[emotion] || emotion %>
-                </td>
-                <td class="p-2 text-center">
-                  <%= new Date(emo.NGAY_TAO_CX_BL).toLocaleDateString('vi-VN') %>
-                </td>
-              </tr>
-            <% }) %>
-          <% }) %>
-        <% } else { %>
-          <tr>
-            <td colspan="6" class="text-center py-4 text-gray-400 italic text-sm">Không có cảm xúc nào.</td>
-          </tr>
-        <% } %>
-      </tbody>
+     <tbody>
+  <% if (groupedEmotions && Object.keys(groupedEmotions).length > 0) { %>
+    <% Object.entries(groupedEmotions).forEach(([tenCT, bls]) => { %>
+      <tr onclick="toggleEmotions('<%= tenCT %>')" class="cursor-pointer bg-gray-50 hover:bg-yellow-50">
+        <td colspan="6" class="text-center font-semibold py-4 text-sm">
+          🍽 Công thức: <%= tenCT %> – <%= bls.length %> bình luận
+        </td>
+      </tr>
+
+      <% bls.forEach((emo, i) => { %>
+        <tr class="emotion-row hidden border-b text-sm" data-group="<%= tenCT %>">
+          <td class="p-2 text-center"><%= i + 1 %></td>
+          <td class="p-2"><%= emo.TEN_NGUOI_DUNG %> – <%= emo.EMAIL_ %></td>
+          <td class="p-2"><%= emo.NOI_DUNG_BL %></td>
+          <td class="p-2"><%= emo.TEN_NGUOI_NHAN %> – <%= emo.EMAIL_NGUOI_NHAN %></td>
+       <td class="p-2">
+  <%
+    const icons = {
+      like: '👍', love: '❤️', haha: '😂',
+      wow: '😮', sad: '😢', angry: '😡'
+    };
+    const counts = {};
+    emo.cảm_xúc.forEach(c => {
+      const type = c.loại?.toLowerCase();
+      counts[type] = (counts[type] || 0) + 1;
+    });
+  %>
+  <% Object.keys(counts).forEach(type => { %>
+    <span title="<%= type %>"><%= icons[type] || type %> ×<%= counts[type] %></span>&nbsp;
+  <% }) %>
+</td>
+
+        </tr>
+      <% }) %>
+    <% }) %>
+  <% } else { %>
+    <tr>
+      <td colspan="6" class="text-center py-4 text-gray-400 italic text-sm">Không có cảm xúc nào.</td>
+    </tr>
+  <% } %>
+</tbody>
+
     </table>
   </div>
+<% if (totalPages > 1) { %>
+  <div class="mt-4 flex justify-center space-x-2">
+    <% if (currentPage > 1) { %>
+      <a href="#" onclick="loadPage('/admin/binh-luan-cam-xuc?page=<%= currentPage - 1 %>', document.querySelector('#content')); return false;"
+         class="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 text-sm">‹ Trước</a>
+    <% } %>
 
-  <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
-    <div class="mt-4 flex justify-center space-x-2">
-      <% if (currentPage > 1) { %>
-        <a href="#"
-          onclick="loadPage('/admin/cam-xuc-binh-luan?page=<%= currentPage - 1 %>', document.querySelector('#content')); return false;"
-          class="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 transition text-sm">‹ Trước</a>
-      <% } %>
-      <% for (let i = 1; i <= totalPages; i++) { %>
-        <a href="#"
-          onclick="loadPage('/admin/cam-xuc-binh-luan?page=<%= i %>', document.querySelector('#content')); return false;"
-          class="px-3 py-1 rounded-lg border text-sm <%= i === currentPage ? 'bg-yellow-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100' %>">
-          <%= i %>
-        </a>
-      <% } %>
-      <% if (currentPage < totalPages) { %>
-        <a href="#"
-          onclick="loadPage('/admin/cam-xuc-binh-luan?page=<%= currentPage + 1 %>', document.querySelector('#content')); return false;"
-          class="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 transition text-sm">Sau ›</a>
-      <% } %>
-    </div>
-  <% } %>
+    <% for (let i = 1; i <= totalPages; i++) { %>
+      <a href="#" onclick="loadPage('/admin/binh-luan-cam-xuc?page=<%= i %>', document.querySelector('#content')); return false;"
+         class="px-3 py-1 rounded-lg border text-sm <%= i === currentPage ? 'bg-yellow-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100' %>">
+        <%= i %>
+      </a>
+    <% } %>
+
+    <% if (currentPage < totalPages) { %>
+      <a href="#" onclick="loadPage('/admin/binh-luan-cam-xuc?page=<%= currentPage + 1 %>', document.querySelector('#content')); return false;"
+         class="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 text-sm">Sau ›</a>
+    <% } %>
+  </div>
+<% } %>
+
 </div>

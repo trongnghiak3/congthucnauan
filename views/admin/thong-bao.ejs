@@ -1,88 +1,107 @@
-<div class="bg-white rounded-lg shadow-lg p-6">
-  <h2 class="text-2xl font-bold text-gray-800 mb-6">Danh Sách Thông Báo</h2>
+<div id="content">
+  <div class="rounded-lg shadow-lg p-6 min-h-screen">
+    <h2 class="text-2xl font-bold text-gray-800 mb-6">Danh Sách Thông Báo</h2>
 
-  <!-- Thanh tìm kiếm và bộ lọc -->
-  <div class="flex justify-between items-center mb-6">
-    <div class="relative w-1/3">
-      <input type="text" id="search-thong-bao" placeholder="Tìm kiếm thông báo..." 
-             class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-yellow-500"
-             value="<%= search || '' %>">
-      <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-    </div>
-    <div>
-      <select id="filter-thong-bao" class="px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-yellow-500">
-        <option value="all" <%= filter === 'all' ? 'selected' : '' %>>Tất cả</option>
-        <option value="unread" <%= filter === 'unread' ? 'selected' : '' %>>Chưa đọc</option>
-        <option value="read" <%= filter === 'read' ? 'selected' : '' %>>Đã đọc</option>
-      </select>
-    </div>
-  </div>
-
-  <!-- Danh sách thông báo -->
-<div id="thong-bao-list" class="space-y-4">
-  <% if (thong_bao && thong_bao.length > 0) { %>
-    <% thong_bao.forEach(tb => { 
-      let bgColor = 'bg-gray-50';
-      let borderColor = 'border-gray-300';
-      if (tb.LOAI_TB === 'cong_thuc') {
-        bgColor = 'bg-blue-50'; borderColor = 'border-blue-400';
-      } else if (tb.LOAI_TB === 'binh_luan') {
-        bgColor = 'bg-green-50'; borderColor = 'border-green-400';
-      } else if (tb.LOAI_TB === 'phan_hoi_binh_luan') {
-        bgColor = 'bg-purple-50'; borderColor = 'border-purple-400';
-      } else if (tb.LOAI_TB === 'danh_gia') {
-        bgColor = 'bg-yellow-50'; borderColor = 'border-yellow-400';
-      } else if (tb.LOAI_TB === 'yeu_thich') {
-        bgColor = 'bg-red-50'; borderColor = 'border-red-400';
-      } else if (tb.LOAI_TB === 'binh_luan_cam_xuc' || tb.LOAI_TB === 'phan_hoi_cam_xuc') {
-        bgColor = 'bg-pink-50'; borderColor = 'border-pink-400';
-      }
-    %>
-      <div class="thong-bao-item flex items-start gap-3 p-4 border-l-4 shadow-md rounded-xl <%= bgColor %> <%= borderColor %> <%= tb.DA_DOC ? 'opacity-60' : '' %>"
-           data-id="<%= tb.ID_CHINH_TB %>" data-type="<%= tb.LOAI_TB %>">
-        <i class="fas fa-bell text-yellow-500 text-lg mt-1"></i>
-        <div class="flex-1">
-          <p class="text-gray-800 text-base font-semibold"><%= tb.NOI_DUNG_TB %></p>
-
-          <% if ((tb.LOAI_TB === 'binh_luan_cam_xuc' || tb.LOAI_TB === 'phan_hoi_cam_xuc') && tb.NOI_DUNG_TB.includes('cảm xúc')) {
-               const emotionMatch = tb.NOI_DUNG_TB.match(/cảm xúc (\w+)/);
-               const emotion = emotionMatch ? emotionMatch[1] : null;
-               const emotionIcons = { like: '👍', love: '❤️', haha: '😂', wow: '😮', sad: '😢', angry: '😣' };
-               const icon = emotion ? emotionIcons[emotion] || '' : '';
-          %>
-            <p class="text-gray-600 text-sm italic">Cảm xúc: <%= icon %></p>
-          <% } %>
-
-          <p class="text-gray-500 text-sm italic"><%= new Date(tb.NGAY_TAO_TB).toLocaleString('vi-VN') %></p>
-
-          <div class="mt-2 flex gap-4">
-            <% if (typeof tb.ID_CHINH_TB !== 'undefined') { %>
-              <button class="mark-read-btn text-blue-600 font-medium text-sm underline">Đã đọc</button>
-              <button class="delete-btn text-red-600 font-medium text-sm underline">Xóa</button>
-            <% } %>
-          </div>
-        </div>
+    <!-- Thanh tìm kiếm và bộ lọc -->
+    <div class="flex justify-between items-center mb-6">
+      <div class="relative w-1/3">
+        <input type="text" id="search-thong-bao" placeholder="Tìm kiếm thông báo..." 
+               class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+               value="<%= search || '' %>">
+        <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
       </div>
-    <% }); %>
-  <% } else { %>
-    <p class="text-gray-500 text-center">Không có thông báo nào.</p>
-  <% } %>
-</div>
+      <div>
+        <select id="filter-thong-bao" class="px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-yellow-500">
+          <option value="all" <%= filter === 'all' ? 'selected' : '' %>>Tất cả</option>
+          <option value="unread" <%= filter === 'unread' ? 'selected' : '' %>>Chưa đọc</option>
+          <option value="read" <%= filter === 'read' ? 'selected' : '' %>>Đã đọc</option>
+        </select>
+      </div>
+    </div>
 
+    <!-- Danh sách thông báo -->
+    <div id="thong-bao-list" class="space-y-4">
+      <% if (thong_bao && thong_bao.length > 0) { %>
+        <% thong_bao.forEach(tb => { 
+          let bgColor = 'bg-gray-50';
+          let borderColor = 'border-gray-300';
+          let iconClass = 'fas fa-bell';
+          let iconColor = 'text-yellow-500';
+          if (tb.LOAI_TB === 'cong_thuc') {
+            bgColor = 'bg-blue-50'; borderColor = 'border-blue-400'; iconClass = 'fas fa-utensils'; iconColor = 'text-blue-500';
+          } else if (tb.LOAI_TB === 'binh_luan') {
+            bgColor = 'bg-green-50'; borderColor = 'border-green-400'; iconClass = 'fas fa-comments'; iconColor = 'text-green-500';
+          } else if (tb.LOAI_TB === 'phan_hoi_binh_luan') {
+            bgColor = 'bg-purple-50'; borderColor = 'border-purple-400'; iconClass = 'fas fa-reply'; iconColor = 'text-purple-500';
+          } else if (tb.LOAI_TB === 'danh_gia') {
+            bgColor = 'bg-yellow-50'; borderColor = 'border-yellow-400'; iconClass = 'fas fa-star'; iconColor = 'text-yellow-500';
+          } else if (tb.LOAI_TB === 'yeu_thich') {
+            bgColor = 'bg-red-50'; borderColor = 'border-red-400'; iconClass = 'fas fa-heart'; iconColor = 'text-red-500';
+          } else if (tb.LOAI_TB === 'binh_luan_cam_xuc' || tb.LOAI_TB === 'phan_hoi_cam_xuc') {
+            bgColor = 'bg-pink-50'; borderColor = 'border-pink-400'; iconClass = 'fas fa-smile'; iconColor = 'text-pink-500';
+          }
+        %>
+          <div class="thong-bao-item flex items-start gap-3 p-4 border-l-4 shadow-md rounded-xl <%= bgColor %> <%= borderColor %> <%= tb.DA_DOC ? 'opacity-75' : '' %>"
+               data-id="<%= tb.ID_CHINH_TB %>" data-type="<%= tb.LOAI_TB %>">
+            <i class="<%= iconClass %> <%= iconColor %> text-lg mt-1"></i>
+            <div class="flex-1">
+              <p class="text-gray-800 text-base font-semibold"><%= tb.NOI_DUNG_TB %></p>
+              <% 
+              const emotionIcons = {
+                like: '\u{1F44D}', // 👍
+                love: '\u{2764}\u{FE0F}', // ❤️
+                haha: '\u{1F602}', // 😂
+                wow: '\u{1F62E}', // 😮
+                sad: '\u{1F622}', // 😢
+                angry: '\u{1F623}' // 😣
+              };
+              let emotionIcon = '';
+              if (tb.LOAI_TB === 'binh_luan_cam_xuc' || tb.LOAI_TB === 'phan_hoi_cam_xuc') {
+                const match = tb.NOI_DUNG_TB.match(/[\u{1F600}-\u{1F64F}\u{1F900}-\u{1F9FF}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}]/u);
+                if (match) {
+                  emotionIcon = match[0];
+                } else {
+                  const wordMatch = tb.NOI_DUNG_TB.match(/đã thả ([a-zA-Z]+)/i);
+                  if (wordMatch && wordMatch[1]) {
+                    const emo = wordMatch[1].toLowerCase();
+                    emotionIcon = emotionIcons[emo] || '';
+                  }
+                }
+              }
+              %>
+              <% if (emotionIcon) { %>
+                <p class="text-gray-600 text-sm italic">Cảm xúc: <%= emotionIcon %></p>
+              <% } %>
+              <p class="text-gray-500 text-sm italic"><%= new Date(tb.NGAY_TAO_TB).toLocaleString('vi-VN') %></p>
+              <div class="mt-2 flex gap-4">
+                <% if (typeof tb.ID_CHINH_TB !== 'undefined' && !tb.DA_DOC) { %>
+                  <button class="mark-read-btn text-blue-600 font-medium text-sm underline">Đã đọc</button>
+                <% } %>
+                <% if (typeof tb.ID_CHINH_TB !== 'undefined') { %>
+                  <button class="delete-btn text-red-600 font-medium text-sm underline">Xóa</button>
+                <% } %>
+              </div>
+            </div>
+          </div>
+        <% }); %>
+      <% } else { %>
+        <p class="text-gray-500 text-center">Không có thông báo nào.</p>
+      <% } %>
+    </div>
 
-  <!-- Phân trang -->
-  <div class="mt-6 flex justify-center">
-    <nav class="flex items-center gap-2">
-      <a href="/admin/thong-bao?page=<%= currentPage > 1 ? currentPage - 1 : 1 %><%= filter ? '&filter=' + filter : '' %><%= search ? '&search=' + search : '' %>" 
-         class="px-4 py-2 bg-yellow-500 text-white rounded-lg <%= currentPage === 1 ? 'opacity-50 cursor-not-allowed' : '' %>"
-         <%= currentPage === 1 ? 'disabled' : '' %>>Trước</a>
-      <span class="px-4 py-2 text-gray-700">Trang <%= currentPage %> / <%= totalPages %></span>
-      <a href="/admin/thong-bao?page=<%= currentPage < totalPages ? currentPage + 1 : totalPages %><%= filter ? '&filter=' + filter : '' %><%= search ? '&search=' + search : '' %>" 
-         class="px-4 py-2 bg-yellow-500 text-white rounded-lg <%= currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : '' %>"
-         <%= currentPage === totalPages ? 'disabled' : '' %>>Sau</a>
-    </nav>
+    <!-- Phân trang -->
+    <div class="mt-6 flex justify-center">
+      <nav class="flex items-center gap-2">
+        <a href="<%= urlPrefix %>/thong-bao?page=<%= currentPage > 1 ? currentPage - 1 : 1 %><%= filter !== 'all' ? '&filter=' + filter : '' %><%= search ? '&search=' + encodeURIComponent(search) : '' %>" 
+           class="pagination-link px-4 py-2 bg-yellow-500 text-white rounded-lg <%= currentPage === 1 ? 'opacity-50 cursor-not-allowed' : '' %>">
+          Trước
+        </a>
+        <span class="px-4 py-2 text-gray-700">Trang <%= currentPage %> / <%= totalPages %></span>
+        <a href="<%= urlPrefix %>/thong-bao?page=<%= currentPage < totalPages ? currentPage + 1 : totalPages %><%= filter !== 'all' ? '&filter=' + filter : '' %><%= search ? '&search=' + encodeURIComponent(search) : '' %>" 
+           class="pagination-link px-4 py-2 bg-yellow-500 text-white rounded-lg <%= currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : '' %>">
+          Sau
+        </a>
+      </nav>
+    </div>
   </div>
 </div>
-
-<!-- Pop-up thông báo -->
-<div id="admin-thong-bao" class="hidden"></div>

@@ -10,13 +10,14 @@
   }
 %>
 
-<div class="recipe-card bg-white rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer group"
+<div class="recipe-card bg-white rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer group "
+     data-id="<%= recipe.ID_CHINH_CT %>" <%# Thêm data-id %>
      data-category-id="<%= recipe.loai_mon_ids %>"
      data-portion="<%= recipe.SO_PHAN_AN %>"
      data-time="<%= Math.floor(recipe.THOI_GIAN_NAU / 60) %>"
      data-difficulty="<%= recipe.DO_KHO %>"
      onclick="window.location.href='/cong-thuc/<%= recipe.ID_CHINH_CT %>'">
-
+     
   <%# --- Hình ảnh --- %>
   <div class="relative h-48 sm:h-52 overflow-hidden rounded-t-3xl">
     <% if (recipe.HINH_ANH_CT) { %>

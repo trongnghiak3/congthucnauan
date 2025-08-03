@@ -1,135 +1,121 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-  <meta charset="UTF-8" />
-  <title>KemRecipe</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat+Alternates:wght@400;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-  <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
-</head>
-  <style>
-    body { font-family: 'Montserrat Alternates', sans-serif; }
-  </style>
-</head>
+    <!DOCTYPE html>
+    <html lang="vi">
+    <head>
+        <meta charset="UTF-8" />
+        <title>KemRecipe</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link href="https://fonts.googleapis.com/css2?family=Montserrat+Alternates:wght@400;600;700&display=swap" rel="stylesheet" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+        <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
+        
+    </head>
+    <style>
+        body { font-family: 'Montserrat Alternates', sans-serif; }
+    </style>
+    <body class="flex flex-col min-h-screen">
+        <div id="admin-notification" class="hidden"></div>
+<nav class="bg-white shadow py-2 md:py-4">
+  <div class="max-w-screen-2xl mx-auto px-4 md:px-6 lg:px-8 flex justify-between items-center">
+    <a href="/" class="text-lg md:text-2xl font-bold text-gray-700 hover:text-yellow-500 flex items-center gap-2">
+      <i class="fa-solid fa-ice-cream text-yellow-500"></i> KemRecipe
+    </a>
 
-<body class="bg-gray-50 text-sm flex flex-col min-h-screen">
-  <div id="admin-notification" class="hidden"></div>
-  <!-- Navbar -->
-<nav class="bg-white shadow py-2 md:py-3">
-    <div class="max-w-8xl mx-auto px-4 flex justify-between items-center">
-        <a href="/" class="text-lg md:text-2xl font-bold text-gray-700 hover:text-yellow-500 flex items-center gap-2">
-            <i class="fa-solid fa-ice-cream text-yellow-500"></i> KemRecipe
-        </a>
-
-        <ul class="hidden md:flex items-center space-x-4 md:text-base lg:space-x-6 text-gray-600 font-medium"> <li><a href="/" class="hover:text-yellow-500"><i class="fa-solid fa-house mr-1"></i>Trang chủ</a></li>
-            <li><a href="/mon-an" class="hover:text-yellow-500"><i class="fa-solid fa-mug-hot mr-1"></i>Khám phá Món ăn</a></li>
-            <li><a href="/cong-thuc" class="hover:text-yellow-500"><i class="fa-solid fa-utensils mr-1"></i>Công thức</a></li>
-            <li><a href="/danh-muc" class="hover:text-yellow-500"><i class="fa-solid fa-folder-open mr-1"></i>Danh mục loại món</a></li>
-            <li><a href="/gioi-thieu" class="hover:text-yellow-500"><i class="fa-solid fa-circle-info mr-1"></i>Giới thiệu</a></li>
-            <li><a href="/lien-he" class="hover:text-yellow-500"><i class="fa-solid fa-envelope mr-1"></i>Liên hệ</a></li>
-        </ul>
-
-        <div class="flex items-center space-x-3">
-            <% if (typeof user !== 'undefined' && user) { %>
-                <div class="relative hidden md:flex items-center space-x-2 cursor-pointer" id="user-avatar">
-                    <img src="<%= user.avatar || '/default-avatar.png' %>" class="w-8 h-8 rounded-full border object-cover" alt="Avatar" />
-                    <span class="truncate max-w-[100px] md:max-w-[150px] text-gray-700 font-medium"><%= user.TEN_NGUOI_DUNG %></span> <div id="user-dropdown" class="absolute right-0 top-full mt-2 w-44 bg-white shadow rounded-md text-sm hidden z-50">
-                        <a href="/profile" class="block px-4 py-2 hover:text-yellow-500"><i class="fa-solid fa-user mr-2"></i>Thông tin cá nhân</a>
-                        <a href="/cong-thuc-cua-toi" class="block px-4 py-2 hover:text-yellow-500"><i class="fa-solid fa-receipt mr-2"></i>Công thức của tôi</a>
-                        <a href="/doi-mat-khau" class="block px-4 py-2 hover:text-yellow-500"><i class="fa-solid fa-key mr-2"></i>Đổi mật khẩu</a>
-                        <a href="/dang-nhap" class="block px-4 py-2 hover:text-yellow-500"><i class="fa-solid fa-right-from-bracket mr-2"></i>Đăng xuất</a>
-                    </div>
-                </div>
-
-                <div class="relative hidden md:flex items-center">
-                    <button id="notification-toggle" class="text-xl text-gray-700 hover:text-yellow-500 relative">
-                        <i class="fa-solid fa-bell"></i>
-                        <span id="unread-notification-count" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center hidden">
-                        </span>
-                    </button>
-
-                    <div id="notification-dropdown"
-                        class="absolute right-0 mt-2 w-72 bg-white rounded-md shadow-md hidden z-50 max-h-80 overflow-y-auto border border-gray-200">
-                        <div class="p-3">
-                            <h3 class="text-base font-semibold text-gray-800 border-b pb-2 mb-2">Thông báo mới</h3>
-                            <div id="notification-preview" class="space-y-3">
-                                <p class="text-sm text-gray-500 text-center">Đang tải thông báo...</p>
-                            </div>
-                            <div class="mt-4 text-center border-t pt-3">
-                                <a href="/thong-bao"
-                                    class="block px-3 py-1 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 text-sm">
-                                    Xem tất cả
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <a href="/dang-cong-thuc"
-                    class="hidden md:block bg-yellow-500 text-white text-sm px-3 py-1.5 rounded-full font-semibold hover:bg-yellow-600 transition">
-                    <i class="fa-solid fa-plus mr-1"></i>Đăng món
-                </a>
-            <% } else { %>
-                <a href="/dang-nhap"
-                    class="hidden md:flex bg-yellow-500 text-white text-sm px-4 py-1.5 rounded-md hover:bg-yellow-600 transition">
-                    <i class="fa-solid fa-right-to-bracket mr-2"></i>Đăng nhập
-                </a>
-            <% } %>
-
-            <button id="menu-toggle" class="md:hidden text-xl text-gray-700">
-                <i class="fa-solid fa-bars"></i>
-            </button>
-        </div>
-    </div>
-
-    <ul id="mobile-menu" class="md:hidden hidden flex-col space-y-2 py-3 px-4 bg-white shadow mt-2 text-gray-600 text-sm font-medium">
-        <li><a href="/" class="block py-2 px-3 rounded-md hover:text-yellow-500 hover:bg-yellow-100"><i class="fa-solid fa-house mr-1"></i>Trang chủ</a></li>
-        <li><a href="/mon-an" class="block py-2 px-3 rounded-md hover:text-yellow-500 hover:bg-yellow-100"><i class="fa-solid fa-mug-hot mr-1"></i>Món ăn</a></li>
-        <li><a href="/cong-thuc" class="block py-2 px-3 rounded-md hover:text-yellow-500 hover:bg-yellow-100"><i class="fa-solid fa-utensils mr-1"></i>Công thức</a></li>
-        <li><a href="/danh-muc" class="block py-2 px-3 rounded-md hover:text-yellow-500 hover:bg-yellow-100"><i class="fa-solid fa-folder-open mr-1"></i>Danh mục</a></li>
-        <li><a href="/gioi-thieu" class="block py-2 px-3 rounded-md hover:text-yellow-500 hover:bg-yellow-100"><i class="fa-solid fa-circle-info mr-1"></i>Giới thiệu</a></li>
-        <li><a href="/lien-he" class="block py-2 px-3 rounded-md hover:text-yellow-500 hover:bg-yellow-100"><i class="fa-solid fa-envelope mr-1"></i>Liên hệ</a></li>
-
-        <% if (typeof user !== 'undefined' && user) { %>
-            <li><a href="/profile" class="block py-2 px-3 rounded-md hover:text-yellow-500 hover:bg-yellow-100"><i class="fa-solid fa-user mr-1"></i>Thông tin cá nhân</a></li>
-            <li><a href="/cong-thuc-cua-toi" class="block py-2 px-3 rounded-md hover:text-yellow-500 hover:bg-yellow-100"><i class="fa-solid fa-receipt mr-1"></i>Công thức của tôi</a></li>
-            <li><a href="/dang-cong-thuc" class="block py-2 px-3 rounded-md hover:text-yellow-500 hover:bg-yellow-100"><i class="fa-solid fa-plus mr-1"></i>Đăng công thức</a></li>
-            <li><a href="/doi-mat-khau" class="block py-2 px-3 rounded-md hover:text-yellow-500 hover:bg-yellow-100"><i class="fa-solid fa-key mr-1"></i>Đổi mật khẩu</a></li>
-
-            <li>
-                <a href="/thong-bao" class="block py-2 px-3 rounded-md hover:text-yellow-500 hover:bg-yellow-100">
-                    <i class="fa-solid fa-bell mr-1"></i>Thông báo
-                </a>
-            </li>
-
-            <li><a href="/dang-xuat" class="block py-2 px-3 rounded-md hover:text-yellow-500 hover:bg-yellow-100"><i class="fa-solid fa-right-from-bracket mr-1"></i>Đăng xuất</a></li>
-        <% } else { %>
-            <li><a href="/dang-nhap" class="block py-2 px-3 text-white bg-yellow-500 rounded-md hover:bg-yellow-600"><i class="fa-solid fa-right-to-bracket mr-1"></i>Đăng nhập</a></li>
-        <% } %>
+    <ul class="hidden lg:flex items-center space-x-3 lg:space-x-6 text-sm md:text-base text-gray-600 font-medium">
+      <li><a href="/" class="hover:text-yellow-500"><i class="fa-solid fa-house mr-1"></i>Trang chủ</a></li>
+      <li><a href="/mon-an" class="hover:text-yellow-500"><i class="fa-solid fa-mug-hot mr-1"></i>Món ăn</a></li>
+      <li><a href="/cong-thuc" class="hover:text-yellow-500"><i class="fa-solid fa-utensils mr-1"></i>Công thức</a></li>
+      <li><a href="/danh-muc" class="hover:text-yellow-500"><i class="fa-solid fa-folder-open mr-1"></i>Danh mục</a></li>
+      <li><a href="/gioi-thieu" class="hover:text-yellow-500"><i class="fa-solid fa-circle-info mr-1"></i>Giới thiệu</a></li>
+      <li><a href="/lien-he" class="hover:text-yellow-500"><i class="fa-solid fa-envelope mr-1"></i>Liên hệ</a></li>
     </ul>
-</nav>
 
-  <!-- Nội dung -->
-<div class="flex-grow">
-    <main class="px-3 md:px-4 mt-4">
-      <%- include(viewPath) %>
-    </main>
+    <div class="flex items-center space-x-2 md:space-x-3 lg:space-x-4">
+      <% if (typeof user !== 'undefined' && user) { %>
+        <div class="relative hidden md:flex items-center gap-2 cursor-pointer" id="user-avatar">
+          <img src="<%= user.avatar || '/default-avatar.png' %>" class="w-8 h-8 rounded-full border object-cover" alt="Avatar" />
+          <span class="truncate max-w-[80px] md:max-w-[120px] lg:max-w-[150px] text-gray-700 font-medium"><%= user.TEN_NGUOI_DUNG %></span>
+          <div id="user-dropdown" class="absolute right-0 top-full mt-2 w-44 bg-white shadow rounded-md text-sm hidden z-50">
+            <a href="/profile" class="block px-4 py-2 hover:text-yellow-500"><i class="fa-solid fa-user mr-2"></i>Thông tin cá nhân</a>
+            <a href="/cong-thuc-cua-toi" class="block px-4 py-2 hover:text-yellow-500"><i class="fa-solid fa-receipt mr-2"></i>Công thức của tôi</a>
+            <a href="/doi-mat-khau" class="block px-4 py-2 hover:text-yellow-500"><i class="fa-solid fa-key mr-2"></i>Đổi mật khẩu</a>
+            <a href="/dang-nhap" class="block px-4 py-2 hover:text-yellow-500"><i class="fa-solid fa-right-from-bracket mr-2"></i>Đăng xuất</a>
+          </div>
+        </div>
+
+        <div class="relative hidden md:flex items-center">
+          <button id="notification-toggle" class="text-xl text-gray-700 hover:text-yellow-500 relative">
+            <i class="fa-solid fa-bell"></i>
+            <span id="unread-notification-count" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center hidden"></span>
+          </button>
+          <div id="notification-dropdown" class="absolute top-full right-0 mt-2 w-72 bg-white rounded-md shadow-md hidden z-50 max-h-80 overflow-y-auto border border-gray-200">
+            <div class="p-3">
+              <h3 class="text-base font-semibold text-gray-800 border-b pb-2 mb-2">Thông báo mới</h3>
+              <div id="notification-preview" class="space-y-3">
+                <p class="text-sm text-gray-500 text-center">Đang tải thông báo...</p>
+              </div>
+              <div class="mt-4 text-center border-t pt-3">
+                <a href="/thong-bao" class="block px-3 py-1 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 text-sm">Xem tất cả</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <a href="/dang-cong-thuc" class="hidden md:block bg-yellow-500 text-white text-sm px-3 py-1.5 rounded-full font-semibold hover:bg-yellow-600 transition lg:px-4">
+          <i class="fa-solid fa-plus mr-1"></i>Đăng món
+        </a>
+      <% } else { %>
+        <a href="/dang-nhap" class="hidden md:flex bg-yellow-500 text-white text-sm px-3 py-1.5 rounded-md hover:bg-yellow-600 transition lg:px-4">
+          <i class="fa-solid fa-right-to-bracket mr-2"></i>Đăng nhập
+        </a>
+      <% } %>
+
+      <button id="menu-toggle" class="lg:hidden text-xl text-gray-700">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+    </div>
   </div>
 
-  <!-- Footer -->
-  <%- include('../partials/footer') %>
+  <ul id="mobile-menu" class="lg:hidden hidden flex-col space-y-2 py-3 px-4 bg-white shadow mt-2 text-gray-600 text-sm font-medium">
+    <li><a href="/" class="block py-2 px-3 rounded-md hover:text-yellow-500 hover:bg-yellow-100"><i class="fa-solid fa-house mr-1"></i>Trang chủ</a></li>
+    <li><a href="/mon-an" class="block py-2 px-3 rounded-md hover:text-yellow-500 hover:bg-yellow-100"><i class="fa-solid fa-mug-hot mr-1"></i>Món ăn</a></li>
+    <li><a href="/cong-thuc" class="block py-2 px-3 rounded-md hover:text-yellow-500 hover:bg-yellow-100"><i class="fa-solid fa-utensils mr-1"></i>Công thức</a></li>
+    <li><a href="/danh-muc" class="block py-2 px-3 rounded-md hover:text-yellow-500 hover:bg-yellow-100"><i class="fa-solid fa-folder-open mr-1"></i>Danh mục</a></li>
+    <li><a href="/gioi-thieu" class="block py-2 px-3 rounded-md hover:text-yellow-500 hover:bg-yellow-100"><i class="fa-solid fa-circle-info mr-1"></i>Giới thiệu</a></li>
+    <li><a href="/lien-he" class="block py-2 px-3 rounded-md hover:text-yellow-500 hover:bg-yellow-100"><i class="fa-solid fa-envelope mr-1"></i>Liên hệ</a></li>
 
-  <!-- JS -->
-<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
-<script src="/index/index.js"></script>
- <script src="/index/cong-thuc.js"></script>
- <script src="/index/chitietcongthuc.js"></script>
- <script src="/index/profile.js"></script>
- <script src="/index/dangcongthuc.js"></script>
-  <script src="/index/thongbao.js"></script>
-</body>
-</html>
+    <% if (typeof user !== 'undefined' && user) { %>
+      <li><a href="/profile" class="block py-2 px-3 rounded-md hover:text-yellow-500 hover:bg-yellow-100"><i class="fa-solid fa-user mr-1"></i>Thông tin cá nhân</a></li>
+      <li><a href="/cong-thuc-cua-toi" class="block py-2 px-3 rounded-md hover:text-yellow-500 hover:bg-yellow-100"><i class="fa-solid fa-receipt mr-1"></i>Công thức của tôi</a></li>
+      <li><a href="/dang-cong-thuc" class="block py-2 px-3 rounded-md hover:text-yellow-500 hover:bg-yellow-100"><i class="fa-solid fa-plus mr-1"></i>Đăng công thức</a></li>
+      <li><a href="/doi-mat-khau" class="block py-2 px-3 rounded-md hover:text-yellow-500 hover:bg-yellow-100"><i class="fa-solid fa-key mr-1"></i>Đổi mật khẩu</a></li>
+      <li><a href="/thong-bao" class="block py-2 px-3 rounded-md hover:text-yellow-500 hover:bg-yellow-100"><i class="fa-solid fa-bell mr-1"></i>Thông báo</a></li>
+      <li><a href="/dang-xuat" class="block py-2 px-3 rounded-md hover:text-yellow-500 hover:bg-yellow-100"><i class="fa-solid fa-right-from-bracket mr-1"></i>Đăng xuất</a></li>
+    <% } else { %>
+      <li><a href="/dang-nhap" class="block py-2 px-3 text-white bg-yellow-500 rounded-md hover:bg-yellow-600"><i class="fa-solid fa-right-to-bracket mr-1"></i>Đăng nhập</a></li>
+    <% } %>
+  </ul>
+</nav>
+
+
+        <div class="flex-grow">
+            <main class="px-3 md:px-4 mt-4">
+                <%- include(viewPath) %>
+            </main>
+        </div>
+
+        <%- include('../partials/footer') %>
+
+        
+        <!-- JS -->
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+    <script src="/index/index.js"></script>
+
+    
+
+    
+        </body>
+    </html>

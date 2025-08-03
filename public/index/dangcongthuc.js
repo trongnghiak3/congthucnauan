@@ -163,7 +163,7 @@ async function deleteRecipe(recipeId) {
       showAdminNotification('Xóa công thức thành công!', 'success');
       setTimeout(() => {
         window.location.href = '/cong-thuc-cua-toi';
-      }, 3500);
+      }, 1200);
     } catch (err) {
       console.error('Lỗi xóa công thức:', err);
       showError('Đã xảy ra lỗi: ' + err.message);
@@ -414,7 +414,7 @@ function initializeAddRecipe() {
       );
       setTimeout(() => {
         window.location.href = '/cong-thuc-cua-toi';
-      }, 3500);
+      }, 1200);
     } catch (err) {
       console.error("Lỗi gửi form:", err);
       showError("Đã xảy ra lỗi: " + err.message);

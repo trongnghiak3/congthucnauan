@@ -21,16 +21,17 @@
       </thead>
       <tbody class="text-gray-800 text-sm">
         <% if (groupedComments && Object.keys(groupedComments).length > 0) { %>
-          <% Object.keys(groupedComments).forEach((tenCT, index)=> {
-            const list = groupedComments[tenCT];
+          <% Object.entries(groupedComments).forEach(([ctId, groupData], index)=> { // Dùng Object.entries để lấy cả key và value
+            const list = groupData.comments; // Danh sách bình luận
+            const tenCT = groupData.name; // Tên công thức
             %>
-            <tr class="hover:bg-yellow-50 cursor-pointer bg-gray-50" onclick="toggleComments('<%= tenCT %>')">
-              <td colspan="5" class="text-center font-medium py-2 text-sm">
+            <tr class="hover:bg-yellow-50 cursor-pointer bg-gray-50" onclick="toggleComments('<%= ctId %>')">
+              <td colspan="5" class="text-center font-medium py-4 text-sm">
                 🍽 <%= tenCT %>
               </td>
             </tr>
             <% list.forEach((cmt, i)=> { %>
-              <tr class="comment-row hidden border-b border-gray-100" data-group="<%= tenCT %>">
+              <tr class="comment-row hidden border-b border-gray-100" data-group="<%= ctId %>">
                 <td class="p-2 text-center text-sm">
                   <%= i + 1 %>
                 </td>
@@ -61,9 +62,9 @@
     </table>
   </div>
 
-  <% if (typeof totalPages !=='undefined' && totalPages> 1) { %>
+  <% if (typeof totalPages !=='undefined' && totalPages > 1) { %>
     <div class="mt-4 flex justify-center space-x-2">
-      <% if (currentPage> 1) { %>
+      <% if (currentPage > 1) { %>
         <a href="#"
           onclick="loadPage('/admin/binh-luan?page=<%= currentPage - 1 %>', document.querySelector('#content')); return false;"
           class="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 transition text-sm">‹ Trước</a>

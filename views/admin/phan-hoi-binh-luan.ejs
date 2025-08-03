@@ -1,76 +1,75 @@
-<div id="replies-by-comment" class="tab-content" role="tabpanel" aria-labelledby="tab-replies-by-comment">
+<div id="replies-by-recipe" class="tab-content" role="tabpanel" aria-labelledby="tab-replies-by-recipe">
   <div class="flex justify-between items-center px-4 py-2 bg-white border-b border-gray-200 shadow-sm">
     <div class="text-gray-600 text-xs font-medium">
-      Tổng bình luận được phản hồi:
-      <span class="font-semibold text-gray-800"><%= Object.keys(groupedReplies).length %></span>
+      Tổng công thức có phản hồi:
+      <span class="font-semibold text-gray-800"><%= Object.keys(groupedByRecipe).length %></span>
     </div>
   </div>
 
   <div class="overflow-x-auto px-4 py-2 bg-white rounded-b-lg border border-t-0 border-gray-200">
     <table class="min-w-full text-sm text-gray-700">
-      <thead>
-        <tr class="bg-gray-100 text-gray-700 uppercase text-xs font-semibold select-none">
-          <th class="px-4 py-2 text-center border-r border-gray-200 w-10">STT</th>
-          <th class="px-4 py-2 text-left border-r border-gray-200">Công thức</th>
-          <th class="px-4 py-2 text-left border-r border-gray-200 w-40">Người phản hồi</th>
-          <th class="px-4 py-2 text-left border-r border-gray-200">Nội dung phản hồi</th>
-          <th class="px-4 py-2 text-left border-r border-gray-200 w-32">Ngày phản hồi</th>
-          <th class="px-4 py-2 text-center w-28">Hành động</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% if (groupedReplies && Object.keys(groupedReplies).length > 0) { %>
-          <% Object.keys(groupedReplies).forEach((binhLuanId) => { %>
-            <% const replies = groupedReplies[binhLuanId]; %>
-            <% const first = replies[0]; %>
+<thead>
+  <tr class="bg-gray-100 text-gray-700 uppercase text-xs font-semibold select-none">
+    <th class="px-4 py-2 text-center border-r border-gray-200 w-10">STT</th>
+    <th class="px-4 py-2 text-left border-r border-gray-200 w-40">Bình luận</th> <!-- MỚI -->
+    <th class="px-4 py-2 text-left border-r border-gray-200 w-40">Người phản hồi</th>
+    <th class="px-4 py-2 text-left border-r border-gray-200">Nội dung phản hồi</th>
+    <th class="px-4 py-2 text-left border-r border-gray-200 w-32">Ngày phản hồi</th>
+    <th class="px-4 py-2 text-center w-28">Hành động</th>
+  </tr>
+</thead>
 
-            <tr class="bg-yellow-50 hover:bg-yellow-100 cursor-pointer group-header"
-                onclick="toggleReplies('<%= binhLuanId %>')"
+      <tbody>
+        <% if (groupedByRecipe && Object.keys(groupedByRecipe).length > 0) { %>
+          <% Object.entries(groupedByRecipe).forEach(([recipeId, groupData], idx) => { %>
+            <tr class="bg-gray-90 hover:bg-yellow-100 cursor-pointer group-header"
+                onclick="toggleReplies('<%= recipeId %>')"
                 aria-expanded="false"
-                aria-controls="replies-<%= binhLuanId %>">
-              <td colspan="6" class="py-2 px-3 font-medium text-gray-900 text-sm">
+                aria-controls="replies-<%= recipeId %>">
+              <td colspan="6" class="py-4 px-3 font-medium text-gray-900 text-sm">
                 <div class="flex justify-between items-center">
                   <div class="flex items-center gap-1">
                     <span class="text-yellow-600 transition-transform duration-300 toggle-icon">▼</span>
-                    <span>🍲 <span class="text-black font-medium"><%= first.TEN_CT %></span></span>
+                    <span>🍲 <span class="text-black font-medium"><%= groupData.TEN_CT %></span></span>
                   </div>
                   <div class="flex items-center gap-1">
-                    <span class="text-gray-700">💬 "<%= first.NOI_DUNG_BL %>" – </span>
-                    <span class="text-blue-700 font-normal"><%= first.TEN_NGUOI_DUNG_BL %></span>
-                    <span class="text-gray-400 italic text-xs">(<%= replies.length %> phản hồi)</span>
+                    <span class="text-gray-700">(<%= groupData.replies.length %> phản hồi)</span>
                   </div>
                 </div>
               </td>
             </tr>
 
-            <% const renderReplies = (replies, depth = 0) => { %>
-              <% return replies.map((reply, idx) => { %>
-                <tr class="border-b border-gray-100 reply-row hidden text-sm"
-                    data-group="<%= binhLuanId %>"
-                    data-depth="<%= depth %>"
-                    id="replies-<%= binhLuanId %>">
-                  <td class="p-2 text-center"><%= idx + 1 %></td>
-                  <td class="p-2"><%= reply.TEN_CT %></td>
-                  <td class="p-2"><%= reply.TEN_NGUOI_DUNG_PH %> – <%= reply.EMAIL_ %></td>
-                  <td class="p-2 reply-content depth-<%= depth %>">
-                    <span class="text-gray-400"><%= '⤷ '.repeat(depth) %></span><%= reply.NOI_DUNG_PH %>
-                  </td>
-                  <td class="p-2"><%= new Date(reply.NGAY_TAO_PH).toLocaleDateString('vi-VN') %></td>
-                  <td class="p-2 text-center">
-                    <button onclick="confirmDeleteReply('<%= reply.ID_CHINH_PHBL %>')"
-                            class="bg-red-600 hover:bg-red-700 text-white px-2.5 py-1.5 rounded-md transition duration-200 text-xs"
-                            title="Xóa phản hồi">
-                      🗑 Xóa
-                    </button>
-                  </td>
-                </tr>
+            <% const renderReplies = (repliesArray, depth = 0) => { %>
+              <% return repliesArray.map((reply, idxReply) => { %>
+              <tr class="border-b border-gray-100 reply-row hidden text-sm"
+    data-group="<%= recipeId %>"
+    data-depth="<%= depth %>"
+    id="replies-<%= recipeId %>">
+  <td class="p-2 text-center"><%= idxReply + 1 %></td>
+  <td class="p-2 text-gray-700">
+  <%= reply.BINH_LUAN_GOC || '(Không rõ)' %>
+</td>
+  <td class="p-2"><%= reply.TEN_NGUOI_DUNG_PH %> – <%= reply.EMAIL_ %></td>
+  <td class="p-2 reply-content depth-<%= depth %>">
+    <span class="text-gray-400"><%= '⤷ '.repeat(depth) %></span><%= reply.NOI_DUNG_PH %>
+  </td>
+  <td class="p-2"><%= new Date(reply.NGAY_TAO_PH).toLocaleDateString('vi-VN') %></td>
+  <td class="p-2 text-center">
+    <button onclick="confirmDeleteReply('<%= reply.ID_CHINH_PHBL %>')"
+            class="bg-red-600 hover:bg-red-700 text-white px-2.5 py-1.5 rounded-md transition duration-200 text-xs"
+            title="Xóa phản hồi">
+      🗑 Xóa
+    </button>
+  </td>
+</tr>
+
                 <% if (reply.con && reply.con.length > 0) { %>
                   <%- renderReplies(reply.con, depth + 1) %>
                 <% } %>
               <% }).join(''); %>
             <% }; %>
 
-            <%- renderReplies(replies) %>
+            <%- renderReplies(groupData.replies) %>
           <% }); %>
         <% } else { %>
           <tr>
@@ -83,111 +82,120 @@
     </table>
   </div>
 
-  <script>
-    function toggleReplies(id) {
-      const rows = document.querySelectorAll(`.reply-row[data-group="${id}"]`);
-      const header = document.querySelector(`.group-header[onclick="toggleReplies('${id}')"]`);
-      const icon = header.querySelector('.toggle-icon');
-      const isExpanded = header.getAttribute('aria-expanded') === 'true';
-
-      // Thêm hiệu ứng loading nhẹ
-      header.classList.add('loading');
-      setTimeout(() => {
-        header.classList.remove('loading');
-        rows.forEach(row => {
-          row.classList.toggle('hidden');
-          if (!row.classList.contains('hidden')) {
-            row.style.opacity = '0';
-            row.style.transform = 'translateY(-10px)';
-            setTimeout(() => {
-              row.style.opacity = '1';
-              row.style.transform = 'translateY(0)';
-              row.style.transition = 'all 0.3s ease';
-            }, 10);
-          }
-        });
-
-        header.setAttribute('aria-expanded', !isExpanded);
-        icon.style.transform = isExpanded ? 'rotate(0deg)' : 'rotate(-180deg)';
-      }, 200);
-    }
-  </script>
-
-  <style>
-    .reply-row {
-      transition: all 0.3s ease;
-    }
-
-    .group-header {
-      transition: background-color 0.2s ease;
-    }
-
-    .group-header.loading {
-      opacity: 0.7;
-      cursor: wait;
-    }
-
-    .toggle-icon {
-      display: inline-block;
-      transition: transform 0.3s ease;
-    }
-
-    .reply-content {
-      max-width: 350px; /* Adjusted max-width */
-      word-break: break-word;
-    }
-
-    table {
-      border-collapse: collapse;
-    }
-
-    th, td {
-      border-color: #e5e7eb;
-    }
-
-    /* Đệm cho các cấp độ lồng nhau */
-    .depth-0 { padding-left: 8px !important; } /* Reduced padding */
-    .depth-1 { padding-left: 24px !important; } /* Reduced padding */
-    .depth-2 { padding-left: 40px !important; } /* Reduced padding */
-    .depth-3 { padding-left: 56px !important; }
-    .depth-4 { padding-left: 72px !important; }
-    .depth-5 { padding-left: 88px !important; }
-
-
-    /* Responsive cho thiết bị di động */
-    @media (max-width: 640px) {
-      table {
-        display: block;
-        overflow-x: auto;
-      }
-      th, td {
-        min-width: 80px; /* Further reduced min-width */
-      }
-      .reply-content {
-        max-width: 150px; /* Further reduced max-width for mobile */
-      }
-      .group-header {
-        font-size: 0.8rem; /* Further reduced font size for mobile header */
-      }
-    }
-
-    /* Tooltip cho nút xóa */
-    button[title] {
-      position: relative;
-    }
-    button[title]:hover:after {
-      content: attr(title);
-      position: absolute;
-      bottom: 100%;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #333;
-      color: white;
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-size: 0.75rem;
-      white-space: nowrap;
-      z-index: 10;
-    }
-  </style>
+  <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
+    <div class="mt-4 flex justify-center space-x-2">
+      <% if (currentPage > 1) { %>
+        <a href="#"
+           onclick="loadPage('/admin/phan-hoi-binh-luan?page=<%= currentPage - 1 %>', document.querySelector('#content')); return false;"
+           class="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 transition text-sm">‹ Trước</a>
+      <% } %>
+      <% for (let i = 1; i <= totalPages; i++) { %>
+        <a href="#"
+           onclick="loadPage('/admin/phan-hoi-binh-luan?page=<%= i %>', document.querySelector('#content')); return false;"
+           class="px-3 py-1 rounded-lg border text-sm <%= i === currentPage ? 'bg-yellow-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100' %>">
+          <%= i %>
+        </a>
+      <% } %>
+      <% if (currentPage < totalPages) { %>
+        <a href="#"
+           onclick="loadPage('/admin/phan-hoi-binh-luan?page=<%= currentPage + 1 %>', document.querySelector('#content')); return false;"
+           class="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 transition text-sm">Sau ›</a>
+      <% } %>
+    </div>
+  <% } %>
 </div>
+
+<script>
+  function toggleReplies(id) {
+    const rows = document.querySelectorAll(`.reply-row[data-group="${id}"]`);
+    const header = document.querySelector(`.group-header[onclick="toggleReplies('${id}')"]`);
+    const icon = header.querySelector('.toggle-icon');
+    const isExpanded = header.getAttribute('aria-expanded') === 'true';
+
+    header.classList.add('loading');
+    setTimeout(() => {
+      header.classList.remove('loading');
+      rows.forEach(row => {
+        row.classList.toggle('hidden');
+        if (!row.classList.contains('hidden')) {
+          row.style.opacity = '0';
+          row.style.transform = 'translateY(-10px)';
+          setTimeout(() => {
+            row.style.opacity = '1';
+            row.style.transform = 'translateY(0)';
+            row.style.transition = 'all 0.3s ease';
+          }, 10);
+        }
+      });
+
+      header.setAttribute('aria-expanded', !isExpanded);
+      icon.style.transform = isExpanded ? 'rotate(0deg)' : 'rotate(-180deg)';
+    }, 200);
+  }
+</script>
+
+<style>
+  .reply-row {
+    transition: all 0.3s ease;
+  }
+  .group-header {
+    transition: background-color 0.2s ease;
+  }
+  .group-header.loading {
+    opacity: 0.7;
+    cursor: wait;
+  }
+  .toggle-icon {
+    display: inline-block;
+    transition: transform 0.3s ease;
+  }
+  .reply-content {
+    max-width: 350px;
+    word-break: break-word;
+  }
+  table {
+    border-collapse: collapse;
+  }
+  th, td {
+    border-color: #e5e7eb;
+  }
+  /* Đệm cho các cấp độ lồng nhau */
+  .depth-0 { padding-left: 8px !important; }
+  .depth-1 { padding-left: 24px !important; }
+  .depth-2 { padding-left: 40px !important; }
+  .depth-3 { padding-left: 56px !important; }
+  .depth-4 { padding-left: 72px !important; }
+  .depth-5 { padding-left: 88px !important; }
+  @media (max-width: 640px) {
+    table {
+      display: block;
+      overflow-x: auto;
+    }
+    th, td {
+      min-width: 80px;
+    }
+    .reply-content {
+      max-width: 150px;
+    }
+    .group-header {
+      font-size: 0.8rem;
+    }
+  }
+  button[title] {
+    position: relative;
+  }
+  button[title]:hover:after {
+    content: attr(title);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #333;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    z-index: 10;
+  }
+</style>

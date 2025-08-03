@@ -269,6 +269,16 @@ function initializeRecipesList() {
         const contextMenu = document.getElementById('contextMenu');
         if (contextMenu) contextMenu.classList.add('hidden');
     });
+
+      document.querySelectorAll(".page-link").forEach(link => {
+      link.addEventListener("click", function (e) {
+        e.preventDefault();
+        const page = parseInt(this.getAttribute("data-page"));
+        if (!isNaN(page)) {
+          goToPage(page);
+        }
+      });
+    });
 }
 
 function onNguyenLieuChange(select) {
@@ -918,7 +928,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log("Popstate với URL:", path);
         loadPage(path, document.querySelector(`a[href="${path}"]`) || null);
     });
-
+    
 
 });
 

@@ -1,41 +1,244 @@
+// /public/index/index.js
+
 document.addEventListener("DOMContentLoaded", function () {
- // Ẩn/hiện menu di động
-document.getElementById("nut-chuyen-menu")?.addEventListener("click", () => {
-  const menuDiDong = document.getElementById("menu-di-dong");
-  menuDiDong.classList.toggle("an");
-});
 
-// Ẩn/hiện menu thả xuống của người dùng
-document.getElementById("anh-dai-dien-nguoi-dung")?.addEventListener("click", () => {
-  const menuThaSuaXuong = document.getElementById("menu-tha-xuong-nguoi-dung");
-  menuThaSuaXuong.classList.toggle("an");
-});
+    // --- Chức năng menu di động ---
+    const menuToggle = document.getElementById("menu-toggle");
+    const mobileMenu = document.getElementById("mobile-menu");
 
+    if (menuToggle && mobileMenu) {
+        menuToggle.addEventListener("click", () => {
+            mobileMenu.classList.toggle("hidden");
+        });
 
-const nutChuyenMenu = document.getElementById("nut-chuyen-menu");
-const menuDiDong = document.getElementById("menu-di-dong");
-nutChuyenMenu?.addEventListener("click", () => { // Thêm ?. ở đây để đảm bảo an toàn nếu phần tử không tồn tại
-  menuDiDong?.classList.toggle("an"); // Thêm ?. ở đây
-});
-
-// thông báo
-        const toggle = document.getElementById('notification-toggle');
-    const dropdown = document.getElementById('notification-dropdown');
-
-    if (toggle && dropdown) {
-      toggle.addEventListener('click', () => {
-        dropdown.classList.toggle('hidden');
-      });
-
-      // Click ngoài sẽ đóng dropdown
-      document.addEventListener('click', (e) => {
-        if (!dropdown.contains(e.target) && !toggle.contains(e.target)) {
-          dropdown.classList.add('hidden');
-        }
-      });
+        // Đóng mobile menu khi click bên ngoài (tùy chọn)
+        document.addEventListener('click', (e) => {
+            if (!mobileMenu.contains(e.target) && !menuToggle.contains(e.target) && !mobileMenu.classList.contains('hidden')) {
+                mobileMenu.classList.add('hidden');
+            }
+        });
     }
-// gợi ý hôm nay 
-document.getElementById("refresh-today-recipe")?.addEventListener("click", async () => {
+
+    // --- Chức năng menu thả xuống của người dùng ---
+    const userAvatar = document.getElementById("user-avatar");
+    const userDropdown = document.getElementById("user-dropdown");
+
+    if (userAvatar && userDropdown) {
+        userAvatar.addEventListener("click", (e) => {
+            e.stopPropagation(); // Ngăn chặn sự kiện click lan ra document
+            userDropdown.classList.toggle("hidden");
+        });
+
+        // Đóng dropdown khi click bên ngoài
+        document.addEventListener('click', (e) => {
+            if (!userDropdown.contains(e.target) && !userAvatar.contains(e.target)) {
+                userDropdown.classList.add('hidden');
+            }
+        });
+    }
+
+    // --- Chức năng thông báo ---
+    // Hàm định dạng thời gian cho dễ đọc
+    function formatTimeAgo(dateString) {
+        const now = new Date();
+        const notificationDate = new Date(dateString);
+        const seconds = Math.floor((now - notificationDate) / 1000);
+        const minutes = Math.floor(seconds / 60);
+        const hours = Math.floor(minutes / 60);
+        const days = Math.floor(hours / 24);
+        const weeks = Math.floor(days / 7);
+        const months = Math.floor(days / 30);
+        const years = Math.floor(days / 365);
+
+        if (seconds < 60) {
+            return `${seconds} giây trước`;
+        } else if (minutes < 60) {
+            return `${minutes} phút trước`;
+        } else if (hours < 24) {
+            return `${hours} giờ trước`;
+        } else if (days < 7) {
+            return `${days} ngày trước`;
+        } else if (weeks < 4) {
+            return `${weeks} tuần trước`;
+        } else if (months < 12) {
+            return `${months} tháng trước`;
+        } else {
+            return `${years} năm trước`;
+        }
+    }
+
+    const notificationToggle = document.getElementById('notification-toggle');
+    const notificationDropdown = document.getElementById('notification-dropdown');
+    const notificationPreview = document.getElementById('notification-preview');
+    const unreadNotificationCount = document.getElementById('unread-notification-count');
+
+    // Hàm để đánh dấu thông báo đã đọc
+    async function markNotificationAsRead(notificationId) {
+        try {
+            const response = await fetch(`/api/thong-bao/${notificationId}/mark-read`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    // Thêm CSRF token nếu bạn có sử dụng
+                }
+            });
+            if (!response.ok) {
+                console.error('Lỗi khi đánh dấu thông báo đã đọc:', response.statusText);
+            } else {
+                console.log(`Thông báo ID ${notificationId} đã được đánh dấu là đã đọc.`);
+                // Cập nhật số lượng thông báo chưa đọc sau khi đánh dấu
+                fetchUnreadNotificationCount();
+            }
+        } catch (error) {
+            console.error('Lỗi network khi đánh dấu đã đọc:', error);
+        }
+    }
+
+    // Hàm tải thông báo và cập nhật dropdown
+    async function loadNotificationPreview() {
+        notificationPreview.innerHTML = `<p class="text-sm text-gray-500 text-center">Đang tải thông báo...</p>`;
+        try {
+            // Lấy 5 thông báo mới nhất từ API
+            const response = await fetch('/api/thong-bao?limit=5'); // Sử dụng API backend trả về JSON
+            if (!response.ok) {
+                // Xử lý lỗi nếu API không trả về 200 OK
+                throw new Error(`Lỗi HTTP! status: ${response.status}`);
+            }
+            const data = await response.json();
+            const notifications = data.thong_bao;
+
+            if (notifications.length > 0) {
+              notificationPreview.innerHTML = notifications.map(notif => {
+    let iconClass = 'fa-bell';
+    let iconColor = 'text-yellow-500';
+
+    // Ưu tiên duyệt trạng thái
+    if (notif.TRANG_THAI_DUYET_ === 'Đã duyệt') {
+        iconClass = 'fa-check-circle';
+        iconColor = 'text-green-500';
+    } else if (notif.TRANG_THAI_DUYET_ === 'Từ chối') {
+        iconClass = 'fa-times-circle';
+        iconColor = 'text-red-500';
+    } else {
+        switch (notif.LOAI_TB) {
+            case 'cong_thuc':
+                iconClass = 'fa-utensils';
+                iconColor = 'text-blue-500';
+                break;
+            case 'binh_luan':
+                iconClass = 'fa-comments';
+                iconColor = 'text-green-500';
+                break;
+            case 'phan_hoi_binh_luan':
+                iconClass = 'fa-reply';
+                iconColor = 'text-purple-500';
+                break;
+            case 'danh_gia':
+                iconClass = 'fa-star';
+                iconColor = 'text-yellow-500';
+                break;
+            case 'yeu_thich':
+                iconClass = 'fa-heart';
+                iconColor = 'text-red-500';
+                break;
+            case 'binh_luan_cam_xuc':
+            case 'phan_hoi_cam_xuc':
+                iconClass = 'fa-smile';
+                iconColor = 'text-pink-500';
+                break;
+        }
+    }
+
+    return `
+        <a href="/thong-bao?id=${notif.ID_CHINH_TB}"
+           class="flex items-start gap-2 p-2 rounded-md hover:bg-gray-50 ${notif.DA_DOC ? 'text-gray-600' : 'font-semibold text-gray-800'}"
+           data-notification-id="${notif.ID_CHINH_TB}"
+        >
+            <i class="fa ${iconClass} ${iconColor} text-base mt-1"></i>
+            <div class="flex-1">
+                <p class="text-sm leading-snug">${notif.NOI_DUNG_TB}</p>
+                <p class="text-xs text-gray-400 mt-1">${formatTimeAgo(notif.NGAY_TAO_TB)}</p>
+            </div>
+        </a>
+    `;
+}).join('');
+
+
+                // Thêm sự kiện click để đánh dấu đã đọc khi chuyển hướng từ dropdown
+                notificationPreview.querySelectorAll('a').forEach(link => {
+                    link.addEventListener('click', (e) => {
+                        const notificationId = link.dataset.notificationId;
+                        if (notificationId) {
+                            markNotificationAsRead(notificationId);
+                        }
+                        // Tiếp tục hành vi mặc định của link (chuyển hướng)
+                    });
+                });
+
+            } else {
+                notificationPreview.innerHTML = `<p class="text-sm text-gray-500 text-center">Không có thông báo nào.</p>`;
+            }
+            notificationPreview.dataset.loaded = 'true'; // Đánh dấu đã tải
+        } catch (err) {
+            console.error('Lỗi khi tải thông báo:', err);
+            notificationPreview.innerHTML = `<p class="text-red-500 text-center">Lỗi tải thông báo!</p>`;
+        }
+    }
+
+    // Hàm lấy số lượng thông báo chưa đọc
+    async function fetchUnreadNotificationCount() {
+        if (unreadNotificationCount) {
+            try {
+                const response = await fetch('/api/thong-bao/unread-count'); // Sử dụng API backend cho số lượng chưa đọc
+                if (!response.ok) {
+                    throw new Error(`Lỗi HTTP! status: ${response.status}`);
+                }
+                const data = await response.json();
+                const count = data.count;
+
+                if (count > 0) {
+                    unreadNotificationCount.textContent = count;
+                    unreadNotificationCount.classList.remove('hidden');
+                } else {
+                    unreadNotificationCount.classList.add('hidden');
+                }
+            } catch (error) {
+                console.error('Lỗi khi lấy số thông báo chưa đọc:', error);
+                unreadNotificationCount.classList.add('hidden'); // Ẩn badge nếu có lỗi
+            }
+        }
+    }
+
+    // Lắng nghe sự kiện click vào biểu tượng chuông
+    if (notificationToggle && notificationDropdown && notificationPreview) {
+        notificationToggle.addEventListener('click', async (e) => {
+            e.stopPropagation(); // Ngăn chặn sự kiện click lan truyền ra ngoài
+            notificationDropdown.classList.toggle('hidden');
+
+            // Chỉ tải thông báo khi dropdown được mở
+            if (!notificationDropdown.classList.contains('hidden')) {
+                await loadNotificationPreview();
+            }
+            // Luôn cập nhật số lượng chưa đọc khi mở dropdown
+            fetchUnreadNotificationCount();
+        });
+
+        // Đóng dropdown khi click bên ngoài
+        document.addEventListener('click', (e) => {
+            if (!notificationDropdown.contains(e.target) && !notificationToggle.contains(e.target)) {
+                notificationDropdown.classList.add('hidden');
+            }
+        });
+    }
+
+    // Gọi hàm lấy số lượng thông báo chưa đọc khi trang tải xong
+    fetchUnreadNotificationCount(); // Gọi ngay khi DOMContentLoaded để hiển thị badge ban đầu
+
+
+    // --- Chức năng gợi ý hôm nay (Chỉ nếu phần này nằm trên trang chủ hoặc layout chính) ---
+    // Nếu 'refresh-today-recipe' chỉ xuất hiện trên trang chủ, hãy di chuyển phần này vào JS riêng của trang chủ
+    // hoặc đảm bảo ID này không gây lỗi trên các trang khác. Tôi sẽ giữ nó ở đây vì bạn đã đặt nó.
+    document.getElementById("refresh-today-recipe")?.addEventListener("click", async () => {
         try {
             const response = await fetch("/api/random-recipe");
             const todayRecipe = await response.json();
@@ -55,8 +258,8 @@ document.getElementById("refresh-today-recipe")?.addEventListener("click", async
                         <div class="md:flex">
                             <div class="md:w-1/2 h-64 md:h-96 overflow-hidden relative">
                                 <img src="${todayRecipe.HINH_ANH_CT || 'https://via.placeholder.com/600x400/F0F0F0/B0B0B0?text=No+Image'}" 
-                                     alt="${todayRecipe.TEN_CT}" 
-                                     class="w-full h-full object-cover transition-transform duration-500 hover:scale-110" />
+                                            alt="${todayRecipe.TEN_CT}" 
+                                            class="w-full h-full object-cover transition-transform duration-500 hover:scale-110" />
                                 <span class="absolute top-3 left-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white text-xs sm:text-sm font-semibold px-3 py-1.5 rounded-full shadow-md">
                                     ${todayRecipe.TEN_MON_AN || 'Ẩm thực'}
                                 </span>
@@ -103,158 +306,9 @@ document.getElementById("refresh-today-recipe")?.addEventListener("click", async
             console.error("Lỗi làm mới công thức:", err);
         }
     });
-  });
-// menu điện thoại
-   const menuToggle = document.getElementById("menu-toggle");
-    const mobileMenu = document.getElementById("mobile-menu");
 
-    if (menuToggle && mobileMenu) {
-      menuToggle.addEventListener("click", () => {
-        mobileMenu.classList.toggle("hidden");
-      });
-    }
- 
-
-
-
-
-
-
-
-
-    const avatar = document.getElementById("user-avatar");
-    const dropdown = document.getElementById("user-dropdown");
-    if (avatar && dropdown) {
-      avatar.addEventListener("click", () => {
-        dropdown.classList.toggle("hidden");
-      });
-    }
-
-
-
-
-  // // Modal Profile
-  // function openModalProfile() {
-  //   const modal = document.getElementById('updateProfileModal');
-  //   modal.classList.remove('hidden', 'modal-closed');
-  //   modal.classList.add('modal-open');
-  // }
-
-  // function closeModalProfile() {
-  //   const modal = document.getElementById('updateProfileModal');
-  //   modal.classList.remove('modal-open');
-  //   modal.classList.add('modal-closed');
-  //   setTimeout(() => modal.classList.add('hidden'), 300);
-  // }
-
-  // // Preview Avatar
-  // document.getElementById('avatarInput').addEventListener('change', function(event) {
-  //   const file = event.target.files[0];
-  //   if (file) {
-  //     const reader = new FileReader();
-  //     reader.onload = function(e) {
-  //       document.getElementById('avatarPreview').src = e.target.result;
-  //       document.getElementById('avatar-img').src = e.target.result;
-  //     };
-  //     reader.readAsDataURL(file);
-  //   }
-  // });
-
-  // // Submit Profile Update
-  // document.getElementById('updateProfileForm').addEventListener('submit', function(event) {
-  //   event.preventDefault();
-  //   const formData = new FormData(this);
-
-  //   // Validation
-  //   const username = formData.get('TEN_NGUOI_DUNG').trim();
-  //   const email = formData.get('EMAIL_').trim();
-  //   if (!username || !email) {
-  //     alert('Vui lòng nhập đầy đủ tên người dùng và email!');
-  //     return;
-  //   }
-  //   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-  //     alert('Email không hợp lệ!');
-  //     return;
-  //   }
-
-  //   fetch('/api/profile', {
-  //     method: 'PUT',
-  //     body: formData
-  //   })
-  //     .then(response => response.json())
-  //     .then(data => {
-  //       if (data.error) {
-  //         alert(data.error);
-  //         return;
-  //       }
-  //       alert(data.message || 'Cập nhật hồ sơ thành công!');
-  //       closeModalProfile();
-  //       if (data.user) {
-  //         document.getElementById('avatar-img').src = data.user.AVARTAR_URL || 'https://i.imgur.com/2Nv5jVb.png';
-  //         document.querySelector('h2.text-2xl').textContent = data.user.TEN_NGUOI_DUNG;
-  //         document.querySelector('p.text-gray-600').textContent = `📧 ${data.user.EMAIL_}`;
-  //       }
-  //     })
-  //     .catch(error => {
-  //       console.error('Lỗi:', error);
-  //       alert('Có lỗi khi cập nhật hồ sơ!');
-  //     });
-  // });
-
-  // // Tab Switching
-  // function switchTab(tab) {
-  //   const favoriteTab = document.getElementById('tab-favorite');
-  //   const myRecipesTab = document.getElementById('tab-my-recipes');
-  //   const favoriteContent = document.getElementById('favorite-content');
-  //   const myRecipesContent = document.getElementById('my-recipes-content');
-
-  //   if (tab === 'favorite') {
-  //     favoriteTab.classList.add('tab-active');
-  //     myRecipesTab.classList.remove('tab-active');
-  //     favoriteContent.classList.remove('hidden');
-  //     myRecipesContent.classList.add('hidden');
-  //   } else {
-  //     favoriteTab.classList.remove('tab-active');
-  //     myRecipesTab.classList.add('tab-active');
-  //     favoriteContent.classList.add('hidden');
-  //     myRecipesContent.classList.remove('hidden');
-  //   }
-  // }
-
-  // // Toggle Favorite
-  // function toggleFavorite(recipeId) {
-  //   fetch(`/api/yeu-thich/${recipeId}`, {
-  //     method: 'POST',
-  //   })
-  //     .then(response => response.json())
-  //     .then(data => {
-  //       alert(data.message);
-  //       window.location.reload();
-  //     })
-  //     .catch(error => {
-  //       console.error('Lỗi:', error);
-  //       alert('Có lỗi khi thay đổi trạng thái yêu thích!');
-  //     });
-  // }
-
-  // // Placeholder functions
-  // function editRecipe(id) {
-  //   alert('Chức năng chỉnh sửa công thức đang được phát triển!');
-  // }
-
-  // function deleteRecipe(id) {
-  //   if (confirm('Bạn có chắc muốn xóa công thức này?')) {
-  //     fetch(`/cong-thuc-cua-toi/${id}`, {
-  //       method: 'DELETE',
-  //     })
-  //       .then(response => response.json())
-  //       .then(data => {
-  //         alert(data.message);
-  //         window.location.reload();
-  //       })
-  //       .catch(error => {
-  //         console.error('Lỗi:', error);
-  //         alert('Có lỗi khi xóa công thức!');
-  //       });
-  //   }
-  // }
+    // Các phần JS bị comment hoặc các phần riêng biệt chỉ dùng trên một trang cụ thể
+    // nên được xóa khỏi index.js hoặc chỉ được include trên trang đó.
+    // Ví dụ: logic modal profile, tab switching, toggle favorite, edit/delete recipe
+    // thường chỉ cần thiết trên trang profile hoặc trang quản lý công thức.
+});

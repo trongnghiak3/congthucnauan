@@ -206,53 +206,47 @@
     </table>
   </div>
 <div class="flex items-center justify-center space-x-1 mt-4"> <% const visiblePages = 2; %>
+<div id="pagination" class="flex flex-wrap justify-center items-center gap-2 mt-6">
+  <% if (currentPage > 1) { %>
+    <a href="#" data-page="<%= currentPage - 1 %>"
+       class="page-link px-3 py-1 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-100 text-sm transition">
+      ‹ Trước
+    </a>
+  <% } %>
 
-    <% if (currentPage > 1) { %>
-        <a href="#"
-            onclick="goToPage(<%= currentPage - 1 %>); return false;"
-            class="
-                px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 text-sm transition
-                flex items-center justify-center
-            ">
-            ‹ Trước
-        </a>
-    <% } %>
+  <% if (currentPage > visiblePages + 2) { %>
+    <a href="#" data-page="1"
+       class="page-link px-3 py-1 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-100 text-sm transition">
+      1
+    </a>
+    <span class="px-2 py-1 text-gray-500">...</span>
+  <% } %>
 
-    <% if (currentPage > visiblePages + 2) { %>
-        <a href="#"
-            onclick="goToPage(1); return false;"
-            class="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 text-sm transition">
-            1
-        </a>
-        <span class="px-2 py-1 text-gray-500">...</span> <% } %>
+  <% for (let i = Math.max(1, currentPage - visiblePages); i <= Math.min(totalPages, currentPage + visiblePages); i++) { %>
+    <a href="#" data-page="<%= i %>"
+       class="page-link px-3 py-1 rounded-lg border border-gray-300 text-sm transition
+              <%= i === currentPage ? 'bg-yellow-500 text-white font-semibold' : 'bg-white text-gray-700 hover:bg-gray-100' %>">
+      <%= i %>
+    </a>
+  <% } %>
 
-    <% for (let i = Math.max(1, currentPage - visiblePages); i <= Math.min(totalPages, currentPage + visiblePages); i++) { %>
-        <a href="#"
-            onclick="goToPage(<%= i %>); return false;"
-            class="px-3 py-1 rounded-lg border text-sm transition
-            <%= i === currentPage ? 'bg-yellow-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100' %>">
-            <%= i %>
-        </a>
-    <% } %>
+  <% if (currentPage < totalPages - visiblePages - 1) { %>
+    <span class="px-2 py-1 text-gray-500">...</span>
+    <a href="#" data-page="<%= totalPages %>"
+       class="page-link px-3 py-1 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-100 text-sm transition">
+      <%= totalPages %>
+    </a>
+  <% } %>
 
-    <% if (currentPage < totalPages - visiblePages - 1) { %>
-        <span class="px-2 py-1 text-gray-500">...</span> <a href="#"
-            onclick="goToPage(<%= totalPages %>); return false;"
-            class="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 text-sm transition">
-            <%= totalPages %>
-        </a>
-    <% } %>
+  <% if (currentPage < totalPages) { %>
+    <a href="#" data-page="<%= currentPage + 1 %>"
+       class="page-link px-3 py-1 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-100 text-sm transition">
+      Sau ›
+    </a>
+  <% } %>
+</div>
 
-    <% if (currentPage < totalPages) { %>
-        <a href="#"
-            onclick="goToPage(<%= currentPage + 1 %>); return false;"
-            class="
-                px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 text-sm transition
-                flex items-center justify-center
-            ">
-            Sau ›
-        </a>
-    <% } %>
+
 
 </div>
 

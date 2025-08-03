@@ -19,60 +19,76 @@
           <th class="px-4 py-2 text-center">Ngày</th>
         </tr>
       </thead>
-      <tbody>
-        <% if (groupedEmotions && Object.keys(groupedEmotions).length > 0) { %>
-          <% Object.keys(groupedEmotions).forEach((tenCT, index) => {
-            const list = groupedEmotions[tenCT];
-          %>
-            <tr class="hover:bg-yellow-50 cursor-pointer bg-gray-50" onclick="toggleReplyEmotions('<%= tenCT %>')">
-              <td colspan="5" class="text-center font-medium py-2 text-sm">
-                🍽 Công thức: <%= tenCT %>
-              </td>
-            </tr>
-            <% list.forEach((emo, i) => { %>
-              <tr class="emotion-row hidden border-b border-gray-100 text-sm" data-group="<%= tenCT %>">
-                <td class="p-2 text-center"><%= i + 1 %></td>
-                <td class="p-2"><%= emo.TEN_NGUOI_DUNG %> – <%= emo.EMAIL_ %></td>
-                <td class="p-2 comment-content leading-relaxed">
-                  <div class="font-normal text-gray-800 text-sm" title="<%= emo.NOI_DUNG_PH %>">
-                    <%= emo.NOI_DUNG_PH %>
-                  </div>
-                  <% if (emo.NOI_DUNG_PH_CHA) { %>
-                    <div class="text-gray-500 italic text-xs mt-0.5" title="<%= emo.NOI_DUNG_PH_CHA %>">
-                      ↪ Trả lời: <%= emo.NOI_DUNG_PH_CHA %>
-                    </div>
-                  <% } else if (emo.NOI_DUNG_BL) { %>
-                    <div class="text-gray-500 italic text-xs mt-0.5" title="<%= emo.NOI_DUNG_BL %>">
-                      🗨 Bình luận: <%= emo.NOI_DUNG_BL %>
-                    </div>
-                  <% } %>
-                </td>
-                <td class="p-2">
-                  <%
-                    const emotionIcons = {
-                      like: '👍',
-                      love: '❤️',
-                      haha: '😂',
-                      wow: '😮',
-                      sad: '😢',
-                      angry: '😣'
-                    };
-                    const emotion = emo.LOAI_CAM_XUC.toLowerCase();
-                  %>
-                  <%= emotionIcons[emotion] || emotion %>
-                </td>
-                <td class="p-2 text-center">
-                  <%= new Date(emo.NGAY_TAO_CX_PH).toLocaleDateString('vi-VN') %>
-                </td>
-              </tr>
-            <% }) %>
-          <% }) %>
-        <% } else { %>
-          <tr>
-            <td colspan="5" class="text-center py-4 text-gray-400 italic text-sm">Không có phản hồi cảm xúc nào.</td>
-          </tr>
-        <% } %>
-      </tbody>
+   <tbody>
+  <% if (groupedEmotions && Object.keys(groupedEmotions).length > 0) { %>
+    <% Object.keys(groupedEmotions).forEach((tenCT) => {
+         const ct = groupedEmotions[tenCT];
+         const list = ct.phản_hồi;
+    %>
+      <tr class="hover:bg-yellow-50 cursor-pointer bg-gray-50" onclick="toggleReplyEmotions('<%= tenCT %>')">
+        <td colspan="5" class="text-center font-medium py-4 text-sm">
+          🍽 Công thức: <%= tenCT %>
+        </td>
+      </tr>
+
+      <% list.forEach((ph, i) => { %>
+        <tr class="emotion-row hidden border-b border-gray-100 text-sm" data-group="<%= tenCT %>">
+          <td class="p-2 text-center"><%= i + 1 %></td>
+          <td class="p-2">
+            <% const người = ph.cảm_xúc?.[0]?.người || "Ẩn danh"; %>
+            <%= người %>
+          </td>
+          <td class="p-2 comment-content leading-relaxed">
+            <div class="font-normal text-gray-800 text-sm" title="<%= ph.NOI_DUNG_PH %>">
+              <%= ph.NOI_DUNG_PH %>
+            </div>
+            <% if (ph.NOI_DUNG_BL) { %>
+              <div class="text-gray-500 italic text-xs mt-0.5" title="<%= ph.NOI_DUNG_BL %>">
+                🗨 Bình luận: <%= ph.NOI_DUNG_BL %>
+              </div>
+            <% } %>
+          </td>
+     <td class="p-2 whitespace-nowrap">
+  <%
+    const icons = {
+      like: '👍', love: '❤️', haha: '😂',
+      wow: '😮', sad: '😢', angry: '😣'
+    };
+
+    // Đếm số lượng cảm xúc
+    const emotionCounts = {};
+    ph.cảm_xúc.forEach(c => {
+      const type = c.loại?.toLowerCase();
+      if (!emotionCounts[type]) {
+        emotionCounts[type] = { count: 0, icon: icons[type] || type };
+      }
+      emotionCounts[type].count++;
+    });
+  %>
+
+  <% for (const [type, data] of Object.entries(emotionCounts)) { %>
+    <span title="<%= data.count %> người chọn '<%= type %>'">
+      <%= data.icon %> <%= data.count %>
+    </span>&nbsp;
+  <% } %>
+</td>
+
+<td class="p-2 text-center">
+  <%= new Date(ph.cảm_xúc?.[0]?.ngày).toLocaleDateString('vi-VN') %>
+</td>
+
+        </tr>
+      <% }) %>
+    <% }) %>
+  <% } else { %>
+    <tr>
+      <td colspan="5" class="text-center py-4 text-gray-400 italic text-sm">
+        Không có phản hồi cảm xúc nào.
+      </td>
+    </tr>
+  <% } %>
+</tbody>
+
     </table>
   </div>
 

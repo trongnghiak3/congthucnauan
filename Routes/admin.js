@@ -61,27 +61,32 @@ router.get("/admin", ensureAdmin, async (req, res) => {
         const mon_an = await query("SELECT COUNT(*) AS count FROM mon_an");
         const binh_luan = await query("SELECT COUNT(*) AS count FROM binh_luan");
         const phan_hoi_binh_luan = await query("SELECT COUNT(*) AS count FROM phan_hoi_binh_luan");
+        const binh_luan_cam_xuc = await query("SELECT COUNT(*) AS count FROM binh_luan_cam_xuc");
+        const phan_hoi_cam_xuc = await query("SELECT COUNT(*) AS count FROM phan_hoi_cam_xuc");
         const nguyen_lieu = await query("SELECT COUNT(*) AS count FROM nguyen_lieu");
         const danh_gia = await query("SELECT COUNT(*) AS count FROM danh_gia");
         const yeu_thich = await query("SELECT COUNT(*) AS count FROM yeu_thich");
-        const nguoi_dung = await query("SELECT COUNT(*) AS count FROM nguoi_dung");
+        const nguoi_dung = await query("SELECT COUNT(*) AS count FROM nguoi_dung WHERE VAI_TRO = 'nguoidung'");
+
 
         const stats = {
-            cong_thuc: cong_thuc && cong_thuc[0] && cong_thuc[0].count ? cong_thuc[0].count : 0,
-            loai_mon: loai_mon && loai_mon[0] && loai_mon[0].count ? loai_mon[0].count : 0,
-            mon_an: mon_an && mon_an[0] && mon_an[0].count ? mon_an[0].count : 0,
-            binh_luan: binh_luan && binh_luan[0] && binh_luan[0].count ? binh_luan[0].count : 0,
-            phan_hoi_binh_luan: phan_hoi_binh_luan && phan_hoi_binh_luan[0] && phan_hoi_binh_luan[0].count ? phan_hoi_binh_luan[0].count : 0,
-            nguyen_lieu: nguyen_lieu && nguyen_lieu[0] && nguyen_lieu[0].count ? nguyen_lieu[0].count : 0,
-            danh_gia: danh_gia && danh_gia[0] && danh_gia[0].count ? danh_gia[0].count : 0,
-            yeu_thich: yeu_thich && yeu_thich[0] && yeu_thich[0].count ? yeu_thich[0].count : 0,
-            nguoi_dung: nguoi_dung && nguoi_dung[0] && nguoi_dung[0].count ? nguoi_dung[0].count : 0,
+            cong_thuc: cong_thuc[0]?.count || 0,
+            loai_mon: loai_mon[0]?.count || 0,
+            mon_an: mon_an[0]?.count || 0,
+            binh_luan: binh_luan[0]?.count || 0,
+            phan_hoi_binh_luan: phan_hoi_binh_luan[0]?.count || 0,
+            binh_luan_cam_xuc: binh_luan_cam_xuc[0]?.count || 0,
+            phan_hoi_cam_xuc: phan_hoi_cam_xuc[0]?.count || 0,
+            nguyen_lieu: nguyen_lieu[0]?.count || 0,
+            danh_gia: danh_gia[0]?.count || 0,
+            yeu_thich: yeu_thich[0]?.count || 0,
+            nguoi_dung: nguoi_dung[0]?.count || 0,
         };
 
         res.render("admin/admin", {
             title: "Trang Quản Lý",
             user: req.session.user,
-            content: 'admin/trang-chu', // <--- THAY ĐỔI TẠI ĐÂY
+            content: 'admin/trang-chu',
             data: { stats },
             error: null,
         });
@@ -90,12 +95,13 @@ router.get("/admin", ensureAdmin, async (req, res) => {
         res.render("admin/admin", {
             title: "Trang Quản Lý",
             user: req.session.user,
-            content: null, // Giữ null hoặc chuyển hướng đến một trang lỗi nếu muốn
+            content: null,
             data: { stats: {} },
             error: "Không thể tải dữ liệu thống kê",
         });
     }
 });
+
 
 
 router.get("/admin/cong-thuc", ensureAdmin, async (req, res) => {
@@ -2214,18 +2220,38 @@ router.delete("/admin/nguoi-dung/:id", ensureAdmin, async (req, res) => {
 router.get('/admin/yeu-thich', ensureAdmin, async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const limit = 7;
+    const limit = 9; // Số lượng người dùng/nhóm yêu thích mỗi trang
     const offset = (page - 1) * limit;
 
-    const favorites = await query(`
-      SELECT yt.ID_CHINH_YT, yt.ID_CHINH_CT, yt.ID_CHINH_ND, yt.NGAY_TAO_YT,
-             nd.TEN_NGUOI_DUNG, nd.EMAIL_, ct.TEN_CT
-      FROM yeu_thich yt
-      JOIN nguoi_dung nd ON yt.ID_CHINH_ND = nd.ID_CHINH_ND
-      JOIN cong_thuc ct ON yt.ID_CHINH_CT = ct.ID_CHINH_CT
-      ORDER BY yt.NGAY_TAO_YT DESC
-      LIMIT ? OFFSET ?
+    // SỬA ĐỔI QUAN TRỌNG TẠI ĐÂY:
+    // 1. Đếm tổng số người dùng duy nhất đã thêm mục yêu thích
+    const countUniqueUsersQuery = await query('SELECT COUNT(DISTINCT ID_CHINH_ND) AS totalUniqueUsers FROM yeu_thich');
+    const totalUniqueUsers = countUniqueUsersQuery[0]?.totalUniqueUsers || 0;
+    const totalPages = Math.ceil(totalUniqueUsers / limit); // Tính totalPages dựa trên số người dùng duy nhất
+
+    // 2. Lấy danh sách các ID người dùng duy nhất theo phân trang
+    const distinctUserIdsQuery = await query(`
+        SELECT DISTINCT ID_CHINH_ND
+        FROM yeu_thich
+        ORDER BY ID_CHINH_ND ASC
+        LIMIT ? OFFSET ?
     `, [limit, offset]);
+
+    const paginatedUserIds = distinctUserIdsQuery.map(row => row.ID_CHINH_ND);
+
+    let favorites = [];
+    if (paginatedUserIds.length > 0) {
+        // 3. Lấy tất cả các mục yêu thích cho các người dùng trên trang hiện tại
+        favorites = await query(`
+            SELECT yt.ID_CHINH_YT, yt.ID_CHINH_CT, yt.ID_CHINH_ND, yt.NGAY_TAO_YT,
+                   nd.TEN_NGUOI_DUNG, nd.EMAIL_, ct.TEN_CT
+            FROM yeu_thich yt
+            JOIN nguoi_dung nd ON yt.ID_CHINH_ND = nd.ID_CHINH_ND
+            JOIN cong_thuc ct ON yt.ID_CHINH_CT = ct.ID_CHINH_CT
+            WHERE yt.ID_CHINH_ND IN (?)
+            ORDER BY nd.TEN_NGUOI_DUNG ASC, yt.NGAY_TAO_YT DESC
+        `, [paginatedUserIds]); // Truyền mảng các ID vào IN clause
+    }
 
     const groupedFavorites = {};
     favorites.forEach(fav => {
@@ -2233,10 +2259,6 @@ router.get('/admin/yeu-thich', ensureAdmin, async (req, res) => {
       if (!groupedFavorites[userId]) groupedFavorites[userId] = [];
       groupedFavorites[userId].push(fav);
     });
-
-    const countResult = await query(`SELECT COUNT(*) AS total FROM yeu_thich`);
-    const total = countResult[0]?.total || 0;
-    const totalPages = Math.ceil(total / limit);
 
     res.render("admin/admin", {
       title: "Danh sách yêu thích",
@@ -2263,23 +2285,40 @@ router.get('/admin/yeu-thich', ensureAdmin, async (req, res) => {
 router.get('/admin/danh-gia', ensureAdmin, async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const limit = 10;
+    const limit = 9; // Bạn muốn hiển thị tối đa 10 người dùng/nhóm đánh giá mỗi trang
     const offset = (page - 1) * limit;
 
-    const count = await query('SELECT COUNT(*) AS total FROM danh_gia');
-    const total = count[0]?.total || 0;
-    const totalPages = Math.ceil(total / limit);
+    // SỬA ĐỔI QUAN TRỌNG TẠI ĐÂY:
+    // Đếm tổng số người dùng duy nhất đã đánh giá, chứ không phải tổng số đánh giá.
+    const countQuery = await query('SELECT COUNT(DISTINCT ID_CHINH_ND) AS totalUniqueUsers FROM danh_gia');
+    const totalUniqueUsers = countQuery[0]?.totalUniqueUsers || 0;
+    const totalPages = Math.ceil(totalUniqueUsers / limit); // Tính totalPages dựa trên số người dùng
 
-    const reviews = await query(`
-      SELECT dg.ID_CHINH_DG, dg.DANH_GIA, dg.NOI_DUNG_DG, dg.NGAY_TAO_DG,
-             nd.ID_CHINH_ND, nd.TEN_NGUOI_DUNG, nd.EMAIL_,
-             ct.TEN_CT
-      FROM danh_gia dg
-      JOIN nguoi_dung nd ON dg.ID_CHINH_ND = nd.ID_CHINH_ND
-      JOIN cong_thuc ct ON dg.ID_CHINH_CT = ct.ID_CHINH_CT
-      ORDER BY dg.NGAY_TAO_DG DESC
-      LIMIT ? OFFSET ?
+    // Lấy danh sách các ID người dùng duy nhất theo phân trang
+    const distinctUserIdsQuery = await query(`
+        SELECT DISTINCT ID_CHINH_ND
+        FROM danh_gia
+        ORDER BY ID_CHINH_ND ASC
+        LIMIT ? OFFSET ?
     `, [limit, offset]);
+
+    const paginatedUserIds = distinctUserIdsQuery.map(row => row.ID_CHINH_ND);
+
+    let reviews = [];
+    if (paginatedUserIds.length > 0) {
+        // Lấy tất cả đánh giá cho các người dùng trên trang hiện tại
+        reviews = await query(`
+            SELECT dg.ID_CHINH_DG, dg.DANH_GIA, dg.NOI_DUNG_DG, dg.NGAY_TAO_DG,
+                   nd.ID_CHINH_ND, nd.TEN_NGUOI_DUNG, nd.EMAIL_,
+                   ct.TEN_CT
+            FROM danh_gia dg
+            JOIN nguoi_dung nd ON dg.ID_CHINH_ND = nd.ID_CHINH_ND
+            JOIN cong_thuc ct ON dg.ID_CHINH_CT = ct.ID_CHINH_CT
+            WHERE dg.ID_CHINH_ND IN (?)
+            ORDER BY nd.TEN_NGUOI_DUNG ASC, dg.NGAY_TAO_DG DESC
+        `, [paginatedUserIds]); // Truyền mảng các ID vào IN clause
+    }
+
 
     const groupedReviews = {};
     reviews.forEach(row => {
@@ -2293,7 +2332,7 @@ router.get('/admin/danh-gia', ensureAdmin, async (req, res) => {
       user: req.session.user,
       content: "admin/danh-gia",
       groupedReviews,
-      reviews,
+      reviews, // reviews này bây giờ chỉ chứa các đánh giá của người dùng trên trang hiện tại
       currentPage: page,
       totalPages,
       error: null,
@@ -2334,30 +2373,56 @@ router.delete('/admin/danh-gia/:id', ensureAdmin, async (req, res) => {
 router.get('/admin/binh-luan', ensureAdmin, async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const limit = 10;
+    const limit = 9; // Số lượng công thức/nhóm bình luận mỗi trang
     const offset = (page - 1) * limit;
 
-    const count = await query('SELECT COUNT(*) AS total FROM binh_luan');
-    const total = count[0]?.total || 0;
-    const totalPages = Math.ceil(total / limit);
+    // 1. Đếm tổng số công thức duy nhất có bình luận
+    const countUniqueRecipesQuery = await query('SELECT COUNT(DISTINCT ID_CHINH_CT) AS totalUniqueRecipes FROM binh_luan');
+    const totalUniqueRecipes = countUniqueRecipesQuery[0]?.totalUniqueRecipes || 0;
+    const totalPages = Math.ceil(totalUniqueRecipes / limit); // Tính totalPages dựa trên số công thức duy nhất
 
-    const comments = await query(`
-      SELECT bl.ID_CHINH_BL, bl.NOI_DUNG_BL, bl.NGAY_TAO_BL,
-             ct.TEN_CT, nd.TEN_NGUOI_DUNG, nd.EMAIL_
-      FROM binh_luan bl
-      JOIN cong_thuc ct ON bl.ID_CHINH_CT = ct.ID_CHINH_CT
-      JOIN nguoi_dung nd ON bl.ID_CHINH_ND = nd.ID_CHINH_ND
-      ORDER BY bl.NGAY_TAO_BL DESC
-      LIMIT ? OFFSET ?
+    // 2. Lấy danh sách các ID công thức duy nhất theo phân trang
+    const distinctRecipeIdsQuery = await query(`
+        SELECT DISTINCT bl.ID_CHINH_CT, ct.TEN_CT
+        FROM binh_luan bl
+        JOIN cong_thuc ct ON bl.ID_CHINH_CT = ct.ID_CHINH_CT
+        ORDER BY ct.TEN_CT ASC, bl.ID_CHINH_CT ASC -- Sắp xếp theo tên để phân trang logic
+        LIMIT ? OFFSET ?
     `, [limit, offset]);
 
+    const paginatedRecipeInfo = distinctRecipeIdsQuery;
+
+    let comments = [];
+    if (paginatedRecipeInfo.length > 0) {
+        const paginatedRecipeIds = paginatedRecipeInfo.map(row => row.ID_CHINH_CT);
+        // 3. Lấy tất cả các bình luận cho các công thức trên trang hiện tại
+        comments = await query(`
+            SELECT bl.ID_CHINH_BL, bl.NOI_DUNG_BL, bl.NGAY_TAO_BL,
+                   ct.TEN_CT, nd.TEN_NGUOI_DUNG, nd.EMAIL_,
+                   ct.ID_CHINH_CT
+            FROM binh_luan bl
+            JOIN cong_thuc ct ON bl.ID_CHINH_CT = ct.ID_CHINH_CT
+            JOIN nguoi_dung nd ON bl.ID_CHINH_ND = nd.ID_CHINH_ND
+            WHERE bl.ID_CHINH_CT IN (?)
+            ORDER BY ct.TEN_CT ASC, bl.NGAY_TAO_BL DESC
+        `, [paginatedRecipeIds]);
+    }
+
     const groupedComments = {};
-    comments.forEach(cmt => {
-      const ct = cmt.TEN_CT;
-      if (!groupedComments[ct]) groupedComments[ct] = [];
-      groupedComments[ct].push(cmt);
+    paginatedRecipeInfo.forEach(recipe => {
+        groupedComments[recipe.ID_CHINH_CT] = {
+            name: recipe.TEN_CT,
+            comments: []
+        };
     });
-    
+
+    comments.forEach(cmt => {
+        const ctId = cmt.ID_CHINH_CT;
+        if (groupedComments[ctId]) {
+            groupedComments[ctId].comments.push(cmt);
+        }
+    });
+
     res.render("admin/admin", {
       title: "Danh sách bình luận",
       user: req.session.user,
@@ -2405,24 +2470,59 @@ router.delete("/admin/binh-luan/:id", ensureAdmin, async (req, res) => {
 // Route hiển thị giao diện quản lý phản hồi bình luận (có phân cấp)
 router.get('/admin/phan-hoi-binh-luan', ensureAdmin, async (req, res) => {
   try {
-    const replies = await query(`
-      SELECT 
-        ph.ID_CHINH_PHBL, ph.NOI_DUNG_PH, ph.NGAY_TAO_PH,
-        ph.ID_CHINH_PHBL_CHA,
-        nd.TEN_NGUOI_DUNG AS TEN_NGUOI_DUNG_PH, nd.EMAIL_ AS EMAIL_,
-        bl.NOI_DUNG_BL, bl.ID_CHINH_BL,
-        nd_bl.TEN_NGUOI_DUNG AS TEN_NGUOI_DUNG_BL,
-        ct.TEN_CT
-      FROM phan_hoi_binh_luan ph
-      JOIN nguoi_dung nd ON ph.ID_CHINH_ND = nd.ID_CHINH_ND
-      JOIN binh_luan bl ON ph.ID_CHINH_BL = bl.ID_CHINH_BL
-      JOIN nguoi_dung nd_bl ON bl.ID_CHINH_ND = nd_bl.ID_CHINH_ND
-      JOIN cong_thuc ct ON bl.ID_CHINH_CT = ct.ID_CHINH_CT
-      ORDER BY ph.NGAY_TAO_PH ASC;
-    `);
+    const page = parseInt(req.query.page) || 1;
+    const limit = 9;
+    const offset = (page - 1) * limit;
 
-    const groupedReplies = {};
+    // Đếm tổng công thức có phản hồi
+    const countRecipes = await query(`
+      SELECT COUNT(DISTINCT ct.ID_CHINH_CT) AS total
+      FROM phan_hoi_binh_luan ph
+      JOIN binh_luan bl ON ph.ID_CHINH_BL = bl.ID_CHINH_BL
+      JOIN cong_thuc ct ON bl.ID_CHINH_CT = ct.ID_CHINH_CT
+    `);
+    const totalPages = Math.ceil((countRecipes[0]?.total || 0) / limit);
+
+    // Lấy danh sách công thức trên trang hiện tại
+    const recipeList = await query(`
+      SELECT DISTINCT ct.ID_CHINH_CT, ct.TEN_CT
+      FROM phan_hoi_binh_luan ph
+      JOIN binh_luan bl ON ph.ID_CHINH_BL = bl.ID_CHINH_BL
+      JOIN cong_thuc ct ON bl.ID_CHINH_CT = ct.ID_CHINH_CT
+      ORDER BY ct.ID_CHINH_CT DESC
+      LIMIT ? OFFSET ?
+    `, [limit, offset]);
+
+    const recipeIds = recipeList.map(r => r.ID_CHINH_CT);
+
+    // Lấy phản hồi liên quan đến công thức trên trang hiện tại
+    let replies = [];
+    if (recipeIds.length > 0) {
+replies = await query(`
+  SELECT
+    ph.ID_CHINH_PHBL, ph.NOI_DUNG_PH, ph.NGAY_TAO_PH, ph.ID_CHINH_PHBL_CHA,
+    nd.TEN_NGUOI_DUNG AS TEN_NGUOI_DUNG_PH, nd.EMAIL_,
+    bl.NOI_DUNG_BL AS BINH_LUAN_GOC, bl.ID_CHINH_BL,
+    nd_bl.TEN_NGUOI_DUNG AS TEN_NGUOI_DUNG_BL,
+    ct.ID_CHINH_CT, ct.TEN_CT
+  FROM phan_hoi_binh_luan ph
+  JOIN nguoi_dung nd ON ph.ID_CHINH_ND = nd.ID_CHINH_ND
+  JOIN binh_luan bl ON ph.ID_CHINH_BL = bl.ID_CHINH_BL
+  JOIN nguoi_dung nd_bl ON bl.ID_CHINH_ND = nd_bl.ID_CHINH_ND
+  JOIN cong_thuc ct ON bl.ID_CHINH_CT = ct.ID_CHINH_CT
+  WHERE ct.ID_CHINH_CT IN (?)
+  ORDER BY ct.ID_CHINH_CT DESC, bl.NGAY_TAO_BL DESC, ph.NGAY_TAO_PH ASC
+`, [recipeIds]);
+    }
+
     const replyMap = {};
+    const groupedByRecipe = {};
+    recipeList.forEach(r => {
+      groupedByRecipe[r.ID_CHINH_CT] = {
+        TEN_CT: r.TEN_CT,
+        replies: []
+      };
+    });
 
     for (const reply of replies) {
       reply.con = [];
@@ -2434,22 +2534,23 @@ router.get('/admin/phan-hoi-binh-luan', ensureAdmin, async (req, res) => {
         const parent = replyMap[reply.ID_CHINH_PHBL_CHA];
         if (parent) parent.con.push(reply);
       } else {
-        const binhLuanId = reply.ID_CHINH_BL;
-        if (!groupedReplies[binhLuanId]) groupedReplies[binhLuanId] = [];
-        groupedReplies[binhLuanId].push(reply);
+        groupedByRecipe[reply.ID_CHINH_CT]?.replies.push(reply);
       }
     }
 
     res.render("admin/admin", {
-      title: "Phản hồi bình luận",
+      title: "Phản hồi theo món ăn",
       user: req.session.user,
       content: "admin/phan-hoi-binh-luan",
-      groupedReplies,
+      groupedByRecipe,
+      currentPage: page,
+      totalPages,
       error: null,
       success: null
     });
+
   } catch (err) {
-    console.error('Lỗi lấy phản hồi:', err);
+    console.error('Lỗi phản hồi theo món:', err);
     res.status(500).render("admin/admin", {
       title: "Lỗi",
       user: req.session.user,
@@ -2458,6 +2559,7 @@ router.get('/admin/phan-hoi-binh-luan', ensureAdmin, async (req, res) => {
     });
   }
 });
+
 
 
 // Xóa phản hồi
@@ -2510,30 +2612,97 @@ router.delete('/admin/phan-hoi-binh-luan/:id', ensureAdmin, async (req, res) => 
 });
 router.get('/admin/binh-luan-cam-xuc', ensureAdmin, async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = 10;
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = 9;
     const offset = (page - 1) * limit;
 
-    const count = await query('SELECT COUNT(*) AS total FROM binh_luan_cam_xuc');
-    const total = count[0]?.total || 0;
-    const totalPages = Math.ceil(total / limit);
-
-    const emotions = await query(`
-      SELECT cxbl.ID_CHINH_CXBL, cxbl.LOAI_CAM_XUC_BL, cxbl.NGAY_TAO_CX_BL,
-             ct.TEN_CT, nd.TEN_NGUOI_DUNG, nd.EMAIL_, bl.NOI_DUNG_BL
+    // Đếm tổng số công thức có cảm xúc
+    const countResult = await query(`
+      SELECT COUNT(DISTINCT ct.ID_CHINH_CT) AS total
       FROM binh_luan_cam_xuc cxbl
       JOIN binh_luan bl ON cxbl.ID_CHINH_BL = bl.ID_CHINH_BL
       JOIN cong_thuc ct ON bl.ID_CHINH_CT = ct.ID_CHINH_CT
-      JOIN nguoi_dung nd ON cxbl.ID_CHINH_ND = nd.ID_CHINH_ND
+    `);
+    const total = countResult[0]?.total || 0;
+    const totalPages = Math.ceil(total / limit);
+
+    if (total === 0 || offset >= total) {
+      return res.render("admin/admin", {
+        title: "Cảm xúc bình luận",
+        user: req.session.user,
+        content: "admin/binh-luan-cam-xuc",
+        groupedEmotions: {},
+        currentPage: page,
+        totalPages: 0,
+        error: total === 0 ? "Không có cảm xúc nào." : "Trang không hợp lệ",
+        success: null
+      });
+    }
+
+    // Lấy ID các công thức cần hiển thị trong trang hiện tại
+    const ctIdsResult = await query(`
+      SELECT DISTINCT ct.ID_CHINH_CT
+      FROM binh_luan_cam_xuc cxbl
+      JOIN binh_luan bl ON cxbl.ID_CHINH_BL = bl.ID_CHINH_BL
+      JOIN cong_thuc ct ON bl.ID_CHINH_CT = ct.ID_CHINH_CT
       ORDER BY cxbl.NGAY_TAO_CX_BL DESC
       LIMIT ? OFFSET ?
     `, [limit, offset]);
 
+    const ctIds = ctIdsResult.map(row => row.ID_CHINH_CT);
+    if (ctIds.length === 0) ctIds.push(0); // tránh lỗi SQL IN ()
+
+    // Truy vấn toàn bộ cảm xúc của các công thức đó
+    const emotions = await query(`
+      SELECT 
+        cxbl.ID_CHINH_CXBL, 
+        cxbl.LOAI_CAM_XUC_BL, 
+        cxbl.NGAY_TAO_CX_BL,
+        bl.ID_CHINH_BL,                                
+        ct.TEN_CT, ct.ID_CHINH_CT,
+        nguoi_gui.TEN_NGUOI_DUNG AS TEN_NGUOI_DUNG, 
+        nguoi_gui.EMAIL_ AS EMAIL_,
+        bl.NOI_DUNG_BL,
+        nguoi_nhan.TEN_NGUOI_DUNG AS TEN_NGUOI_NHAN,
+        nguoi_nhan.EMAIL_ AS EMAIL_NGUOI_NHAN
+      FROM binh_luan_cam_xuc cxbl
+      JOIN binh_luan bl ON cxbl.ID_CHINH_BL = bl.ID_CHINH_BL
+      JOIN cong_thuc ct ON bl.ID_CHINH_CT = ct.ID_CHINH_CT
+      JOIN nguoi_dung nguoi_gui ON cxbl.ID_CHINH_ND = nguoi_gui.ID_CHINH_ND
+      JOIN nguoi_dung nguoi_nhan ON bl.ID_CHINH_ND = nguoi_nhan.ID_CHINH_ND
+      WHERE ct.ID_CHINH_CT IN (?)
+      ORDER BY cxbl.NGAY_TAO_CX_BL DESC
+    `, [ctIds]);
+
+    // Gộp dữ liệu theo công thức → bình luận → cảm xúc
     const groupedEmotions = {};
     emotions.forEach(emo => {
-      const ct = emo.TEN_CT;
-      if (!groupedEmotions[ct]) groupedEmotions[ct] = [];
-      groupedEmotions[ct].push(emo);
+      const tenCT = emo.TEN_CT || "Không xác định";
+      if (!groupedEmotions[tenCT]) {
+        groupedEmotions[tenCT] = [];
+      }
+
+      const ctGroup = groupedEmotions[tenCT];
+      let existing = ctGroup.find(e => e.ID_CHINH_BL === emo.ID_CHINH_BL);
+
+      if (!existing) {
+        existing = {
+          ID_CHINH_BL: emo.ID_CHINH_BL,
+          NOI_DUNG_BL: emo.NOI_DUNG_BL,
+          TEN_NGUOI_DUNG: emo.TEN_NGUOI_DUNG,
+          EMAIL_: emo.EMAIL_,
+          TEN_NGUOI_NHAN: emo.TEN_NGUOI_NHAN,
+          EMAIL_NGUOI_NHAN: emo.EMAIL_NGUOI_NHAN,
+          cảm_xúc: []
+        };
+        ctGroup.push(existing);
+      }
+
+      existing.cảm_xúc.push({
+        loại: emo.LOAI_CAM_XUC_BL,
+        ngày: emo.NGAY_TAO_CX_BL,
+        người: emo.TEN_NGUOI_DUNG
+      });
     });
 
     res.render("admin/admin", {
@@ -2557,38 +2726,103 @@ router.get('/admin/binh-luan-cam-xuc', ensureAdmin, async (req, res) => {
   }
 });
 
+
 router.get('/admin/phan-hoi-cam-xuc', ensureAdmin, async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = 10;
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = 9;
     const offset = (page - 1) * limit;
 
-    const count = await query('SELECT COUNT(*) AS total FROM phan_hoi_cam_xuc');
-    const total = count[0]?.total || 0;
+    // Bước 1: Đếm tổng số công thức có cảm xúc phản hồi
+    const countResult = await query(`
+      SELECT COUNT(DISTINCT ct.ID_CHINH_CT) AS total
+      FROM phan_hoi_cam_xuc phcx
+      JOIN phan_hoi_binh_luan phbl ON phcx.ID_CHINH_PHBL = phbl.ID_CHINH_PHBL
+      JOIN binh_luan bl ON phbl.ID_CHINH_BL = bl.ID_CHINH_BL
+      JOIN cong_thuc ct ON bl.ID_CHINH_CT = ct.ID_CHINH_CT
+    `);
+
+    const total = countResult[0]?.total || 0;
     const totalPages = Math.ceil(total / limit);
 
+    if (total === 0 || offset >= total) {
+      return res.render("admin/admin", {
+        title: "Cảm xúc phản hồi",
+        user: req.session.user,
+        content: "admin/phan-hoi-cam-xuc",
+        groupedEmotions: {},
+        currentPage: page,
+        totalPages: 0,
+        error: total === 0 ? "Không có cảm xúc nào." : "Trang không hợp lệ",
+        success: null
+      });
+    }
+
+    // Bước 2: Lấy danh sách công thức trên trang hiện tại
+    const recipeResult = await query(`
+      SELECT DISTINCT ct.ID_CHINH_CT, ct.TEN_CT
+      FROM phan_hoi_cam_xuc phcx
+      JOIN phan_hoi_binh_luan phbl ON phcx.ID_CHINH_PHBL = phbl.ID_CHINH_PHBL
+      JOIN binh_luan bl ON phbl.ID_CHINH_BL = bl.ID_CHINH_BL
+      JOIN cong_thuc ct ON bl.ID_CHINH_CT = ct.ID_CHINH_CT
+      ORDER BY ct.ID_CHINH_CT DESC
+      LIMIT ? OFFSET ?
+    `, [limit, offset]);
+
+    const recipeIds = recipeResult.map(r => r.ID_CHINH_CT);
+    if (recipeIds.length === 0) recipeIds.push(0); // để tránh lỗi IN ()
+
+    // Bước 3: Truy vấn cảm xúc phản hồi thuộc các công thức đã lấy
     const emotions = await query(`
       SELECT phcx.ID_CHINH_PHCX, phcx.LOAI_CAM_XUC, phcx.NGAY_TAO_CX_PH,
-             ct.TEN_CT, nd.TEN_NGUOI_DUNG, nd.EMAIL_, 
-             phbl.NOI_DUNG_PH, phbl.ID_CHINH_PHBL_CHA,
-             bl.NOI_DUNG_BL, parent_ph.NOI_DUNG_PH AS NOI_DUNG_PH_CHA
+             ct.TEN_CT, ct.ID_CHINH_CT,
+             nd.TEN_NGUOI_DUNG AS TEN_NGUOI_DUNG_CX, nd.EMAIL_ AS EMAIL_CX,
+             phbl.NOI_DUNG_PH, phbl.ID_CHINH_PHBL,
+             bl.NOI_DUNG_BL
       FROM phan_hoi_cam_xuc phcx
       JOIN phan_hoi_binh_luan phbl ON phcx.ID_CHINH_PHBL = phbl.ID_CHINH_PHBL
       JOIN binh_luan bl ON phbl.ID_CHINH_BL = bl.ID_CHINH_BL
       JOIN cong_thuc ct ON bl.ID_CHINH_CT = ct.ID_CHINH_CT
       JOIN nguoi_dung nd ON phcx.ID_CHINH_ND = nd.ID_CHINH_ND
-      LEFT JOIN phan_hoi_binh_luan parent_ph ON phbl.ID_CHINH_PHBL_CHA = parent_ph.ID_CHINH_PHBL
-      ORDER BY phcx.NGAY_TAO_CX_PH DESC
-      LIMIT ? OFFSET ?
-    `, [limit, offset]);
+      WHERE ct.ID_CHINH_CT IN (?)
+      ORDER BY ct.ID_CHINH_CT DESC, phcx.NGAY_TAO_CX_PH DESC
+    `, [recipeIds]);
 
+    // Bước 4: Gộp dữ liệu theo công thức → phản hồi → cảm xúc
     const groupedEmotions = {};
-    emotions.forEach(emo => {
-      const ct = emo.TEN_CT;
-      if (!groupedEmotions[ct]) groupedEmotions[ct] = [];
-      groupedEmotions[ct].push(emo);
+
+    emotions.forEach(e => {
+      const ct = e.TEN_CT || "Không xác định";
+
+      if (!groupedEmotions[ct]) {
+        groupedEmotions[ct] = {
+          TEN_CT: ct,
+          phản_hồi: {}
+        };
+      }
+
+      if (!groupedEmotions[ct].phản_hồi[e.ID_CHINH_PHBL]) {
+        groupedEmotions[ct].phản_hồi[e.ID_CHINH_PHBL] = {
+          ID_CHINH_PHBL: e.ID_CHINH_PHBL,
+          NOI_DUNG_PH: e.NOI_DUNG_PH,
+          NOI_DUNG_BL: e.NOI_DUNG_BL,
+          cảm_xúc: []
+        };
+      }
+
+      groupedEmotions[ct].phản_hồi[e.ID_CHINH_PHBL].cảm_xúc.push({
+        loại: e.LOAI_CAM_XUC,
+        người: e.TEN_NGUOI_DUNG_CX,
+        ngày: e.NGAY_TAO_CX_PH
+      });
     });
 
+    // Chuyển phản hồi từ object → array
+    Object.values(groupedEmotions).forEach(ct => {
+      ct.phản_hồi = Object.values(ct.phản_hồi);
+    });
+
+    // Bước 5: Render ra trang quản trị
     res.render("admin/admin", {
       title: "Cảm xúc phản hồi",
       user: req.session.user,
@@ -2599,8 +2833,9 @@ router.get('/admin/phan-hoi-cam-xuc', ensureAdmin, async (req, res) => {
       error: null,
       success: null
     });
+
   } catch (err) {
-    console.error('Lỗi khi lấy phản hồi cảm xúc:', err);
+    console.error('Lỗi khi lấy cảm xúc phản hồi:', err);
     res.status(500).render("admin/admin", {
       title: "Lỗi",
       user: req.session.user,
@@ -2609,6 +2844,8 @@ router.get('/admin/phan-hoi-cam-xuc', ensureAdmin, async (req, res) => {
     });
   }
 });
+
+
 
 
 router.get('/admin/trang-ca-nhan', ensureAdmin, async (req, res) => {
@@ -2695,35 +2932,30 @@ router.get('/admin/thong-bao', ensureAdmin, async (req, res) => {
     const search = req.query.search || '';
     const adminId = req.session.user.ID_CHINH_ND;
 
-    // Điều kiện lọc: chỉ thông báo gửi đến admin đang đăng nhập
     let whereClause = `WHERE tb.DA_XOA = FALSE AND tb.ID_MUC_TIEU = ? AND nd.VAI_TRO = 'nguoidung'`;
-    const params = [adminId];
+    const queryParams = [adminId];
 
-    // Lọc theo nội dung tìm kiếm
     if (search) {
       whereClause += ` AND tb.NOI_DUNG_TB LIKE ?`;
-      params.push(`%${search}%`);
+      queryParams.push(`%${search}%`);
     }
 
-    // Lọc theo trạng thái đọc
-    if (filter === 'unread') {
-      whereClause += ` AND tb.DA_DOC = FALSE`;
-    } else if (filter === 'read') {
+    if (filter === 'read') {
       whereClause += ` AND tb.DA_DOC = TRUE`;
+    } else if (filter === 'unread') {
+      whereClause += ` AND tb.DA_DOC = FALSE`;
     }
 
-    // Đếm tổng số bản ghi
     const countQuery = `
       SELECT COUNT(*) AS total
       FROM THONG_BAO tb
       JOIN nguoi_dung nd ON tb.ID_CHINH_ND = nd.ID_CHINH_ND
       ${whereClause}
     `;
-    const countResult = await query(countQuery, params);
-    const total = countResult[0]?.total || 0;
+    const [countResult] = await query(countQuery, queryParams);
+    const total = countResult.total || 0;
     const totalPages = Math.ceil(total / limit);
 
-    // Truy vấn lấy dữ liệu thực tế
     const dataQuery = `
       SELECT tb.ID_CHINH_TB, tb.LOAI_TB, tb.NOI_DUNG_TB, tb.NGAY_TAO_TB, tb.DA_DOC
       FROM THONG_BAO tb
@@ -2732,32 +2964,51 @@ router.get('/admin/thong-bao', ensureAdmin, async (req, res) => {
       ORDER BY tb.NGAY_TAO_TB DESC
       LIMIT ? OFFSET ?
     `;
-    const dataParams = [...params, limit, offset];
-    const thongBao = await query(dataQuery, dataParams);
+    const thongBao = await query(dataQuery, [...queryParams, limit, offset]);
 
-    res.render("admin/admin", {
-      title: "Danh sách thông báo",
-      user: req.session.user,
-      content: "admin/thong-bao",
-      thong_bao: thongBao,
-      currentPage: page,
-      totalPages,
-      filter,
-      search,
-      error: null,
-      success: null,
-      stats: {},
-    });
+    console.log('Tham số:', { page, filter, search, total, totalPages });
+    console.log('Dữ liệu trả về:', thongBao);
 
+    // Kiểm tra nếu là yêu cầu AJAX
+    if (req.headers['x-requested-with'] === 'XMLHttpRequest') {
+      res.render('admin/thong-bao', {
+        thong_bao: thongBao,
+        currentPage: page,
+        totalPages,
+        filter,
+        search,
+        urlPrefix: '/admin',
+        layout: false // Không sử dụng layout để chỉ trả về nội dung
+      });
+    } else {
+      res.render('admin/admin', {
+        title: 'Danh sách thông báo',
+        user: req.session.user,
+        content: 'admin/thong-bao',
+        thong_bao: thongBao,
+        currentPage: page,
+        totalPages,
+        filter,
+        search,
+        urlPrefix: '/admin',
+        error: null,
+        success: null,
+        stats: {}
+      });
+    }
   } catch (err) {
-    console.error("❌ Lỗi khi lấy thông báo:", err);
-    res.status(500).render("admin/admin", {
-      title: "Lỗi",
-      user: req.session.user,
-      content: null,
-      error: "Không thể tải danh sách thông báo: " + err.message,
-      stats: {}
-    });
+    console.error('❌ Lỗi khi lấy thông báo:', err);
+    if (req.headers['x-requested-with'] === 'XMLHttpRequest') {
+      res.status(500).send('Lỗi server khi tải thông báo.');
+    } else {
+      res.status(500).render('admin/admin', {
+        title: 'Lỗi',
+        user: req.session.user,
+        content: null,
+        error: 'Không thể tải danh sách thông báo: ' + err.message,
+        stats: {}
+      });
+    }
   }
 });
 
