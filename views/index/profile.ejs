@@ -145,13 +145,13 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       <% if (favoriteRecipes && favoriteRecipes.length > 0) { %>
         <% favoriteRecipes.forEach(function(recipe) { %>
-          <%- include('../partials/recipeCard.ejs', { recipe: recipe }) %>
+          <%- include('../partials/recipeCardHorizontal.ejs', { recipe: recipe }) %>
         <% }); %>
       <% } else { %>
         <div class="text-center col-span-full py-16">
           <i class="fas fa-utensils text-gray-400 text-6xl mb-4 animate-pulse"></i>
           <p class="text-gray-600 text-xl font-medium">Bạn chưa có công thức yêu thích nào.</p>
-          <a href="/cong-thucs" class="text-yellow-500 hover:text-yellow-700 text-lg font-semibold mt-3 inline-block transition">
+          <a href="/cong-thuc" class="text-yellow-500 hover:text-yellow-700 text-lg font-semibold mt-3 inline-block transition">
             Khám phá công thức ngay!
           </a>
         </div>

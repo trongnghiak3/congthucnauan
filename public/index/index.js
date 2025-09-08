@@ -288,7 +288,7 @@ document.addEventListener("DOMContentLoaded", function () {
                                     </span>
                                 </div>
                                 <a href="/cong-thuc/${todayRecipe.SLUG_CT || todayRecipe.ID_CHINH_CT}" 
-                                   class="mt-6 inline-block bg-stone-600 text-white px-6 py-3 rounded-full text-lg font-bold shadow-xl hover:bg-stone-700 transition-all duration-300 transform hover:scale-105">
+                                   class="mt-6 inline-block bg-yellow-500 text-white px-6 py-3 rounded-full text-lg font-bold shadow-xl hover:bg-stone-700 transition-all duration-300 transform hover:scale-105">
                                     Xem công thức <i class="fas fa-arrow-right ml-2"></i>
                                 </a>
                             </div>

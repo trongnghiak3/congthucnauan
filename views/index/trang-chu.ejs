@@ -1,29 +1,44 @@
 <main class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
+<section class="relative w-full h-[300px] sm:h-[400px] md:h-[450px] lg:h-[550px] bg-cover bg-center flex items-center justify-center text-center rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg mb-8 sm:mb-12"
+         style="background-image: url('https://images.pexels.com/photos/4551832/pexels-photo-4551832.jpeg');">
+    <div class="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center p-2 sm:p-4">
+        <div class="p-4 sm:p-6 md:p-10 max-w-xs sm:max-w-md md:max-w-2xl text-white">
+            <h1 class="text-2xl sm:text-3xl md:text-4xl lg:text-6xl font-extrabold leading-tight mb-2 sm:mb-4 drop-shadow-lg animate__animated animate__fadeInDown">
+                Khám phá Thế Giới Ẩm Thực Tuyệt Vời
+            </h1>
+            <p class="text-sm sm:text-base md:text-lg text-gray-200 mb-4 sm:mb-6 drop-shadow animate__animated animate__fadeInUp animate__delay-1s">
+                Hàng ngàn công thức nấu ăn ngon miệng, dễ làm, đang chờ bạn khám phá và chinh phục.
+            </p>
 
-    <section class="relative w-full h-[300px] sm:h-[400px] md:h-[450px] lg:h-[550px] bg-cover bg-center flex items-center justify-center text-center rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg mb-8 sm:mb-12"
-             style="background-image: url('https://images.pexels.com/photos/4551832/pexels-photo-4551832.jpeg');">
-        <div class="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center p-2 sm:p-4">
-            <div class="p-4 sm:p-6 md:p-10 max-w-xs sm:max-w-md md:max-w-2xl text-white">
-                <h1 class="text-2xl sm:text-3xl md:text-4xl lg:text-6xl font-extrabold leading-tight mb-2 sm:mb-4 drop-shadow-lg animate__animated animate__fadeInDown">
-                    Khám phá Thế Giới Ẩm Thực Tuyệt Vời
-                </h1>
-                <p class="text-sm sm:text-base md:text-lg text-gray-200 mb-4 sm:mb-6 drop-shadow animate__animated animate__fadeInUp animate__delay-1s">
-                    Hàng ngàn công thức nấu ăn ngon miệng, dễ làm, đang chờ bạn khám phá và chinh phục.
-                </p>
-                <a href="/cong-thuc"
-                   class="inline-block bg-yellow-500 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-full text-sm sm:text-base font-bold shadow-lg hover:bg-yellow-600 transition-all duration-300 transform hover:scale-105 animate__animated animate__zoomIn animate__delay-1s">
-                    Bắt đầu nấu ngay <i class="fas fa-arrow-right ml-1 sm:ml-2"></i>
-                </a>
-            </div>
+            <!-- Form tìm kiếm tổng quát -->
+            <form action="/cong-thuc" method="GET" 
+                  class="w-full relative mx-auto mt-6 animate__animated animate__fadeInUp animate__delay-1s">
+                <input type="text" id="timKiem" name="timKiem" 
+                       placeholder="Tìm món ăn, nguyên liệu hoặc công thức..."
+                       class="w-full p-3.5 pl-11 pr-4 border border-gray-200 rounded-full shadow-sm 
+                              focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm bg-gray-50 
+                              text-gray-800 transition"
+                       value="<%= typeof filters !== 'undefined' && filters.timKiem || '' %>" />
+                <i class="fas fa-search absolute left-3.5 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm"></i>
+                <button type="submit" class="hidden">Tìm</button>
+            </form>
+
+            <!-- Nút bắt đầu -->
+            <a href="/cong-thuc"
+               class="inline-block mt-6 bg-yellow-500 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-full text-sm sm:text-base font-bold shadow-lg hover:bg-yellow-600 transition-all duration-300 transform hover:scale-105 animate__animated animate__zoomIn animate__delay-1s">
+                Bắt đầu nấu ngay <i class="fas fa-arrow-right ml-1 sm:ml-2"></i>
+            </a>
         </div>
-    </section>
+    </div>
+</section>
 
-   
-    <section class="mb-6 sm:mb-10">
-        <div class="flex flex-col sm:flex-row justify-between items-center mb-4 sm:mb-6">
-            <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold text-stone-800 animate__animated animate__fadeInLeft">Hôm nay ăn gì?</h2>
-            <button id="refresh-today-recipe" class="text-sm sm:text-base md:text-lg text-stone-600 hover:text-stone-700 transition-colors duration-200 flex items-center group animate__animated animate__fadeInRight mt-2 sm:mt-0">
-                Làm mới <i class="fas fa-sync-alt ml-1 sm:ml-2 text-xs sm:text-sm group-hover:rotate-180 transition-transform duration-500"></i>
+
+
+    <section class="mb-10 lg:mb-16">
+        <div class="flex flex-col sm:flex-row justify-between items-center mb-6 lg:mb-8">
+            <h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-stone-800 animate__animated animate__fadeInLeft">Hôm nay ăn gì?</h2>
+            <button id="refresh-today-recipe" class="text-base sm:text-lg lg:text-xl text-stone-600 hover:text-stone-700 transition-colors duration-200 flex items-center group animate__animated animate__fadeInRight mt-4 sm:mt-0">
+                Làm mới <i class="fas fa-sync-alt ml-2 text-sm sm:text-base group-hover:rotate-180 transition-transform duration-500"></i>
             </button>
         </div>
         <div id="today-recipe-container">
@@ -39,48 +54,50 @@
                         timeDisplay = `${totalMinutes} phút`;
                     }
                 %>
-                <div class="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 border border-stone-100 animate__animated animate__fadeInUp animate__delay-0.5s">
+                <div class="bg-white rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-stone-100 animate__animated animate__fadeInUp animate__delay-0.5s">
                     <div class="flex flex-col md:flex-row">
-                      <div class="w-full md:w-1/2 h-48 sm:h-56 md:h-64 overflow-hidden relative">
-    <img src="<%= todayRecipe.HINH_ANH_CT || 'https://via.placeholder.com/600x400/F0F0F0/B0B0B0?text=No+Image' %>" 
-         alt="<%= todayRecipe.TEN_CT %>" 
-         class="w-full h-full object-cover transition-transform duration-500 hover:scale-110" />
-    <span class="absolute top-2 sm:top-3 left-2 sm:left-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white text-xs sm:text-sm font-semibold px-2 sm:px-3 py-1 rounded-full shadow-md">
-        <%= todayRecipe.TEN_MON_AN || 'Ẩm thực' %>
-    </span>
-    <% if (todayRecipe.DANH_GIA && todayRecipe.DANH_GIA !== 'Chưa có') { %>
-        <div class="absolute bottom-2 sm:bottom-3 right-2 sm:right-3 bg-stone-800 bg-opacity-80 text-white text-xs sm:text-sm font-semibold px-2 sm:px-3 py-1 rounded-full flex items-center shadow-md">
-            <i class="fas fa-star text-yellow-400 mr-1"></i>
-            <%= todayRecipe.DANH_GIA %>
-        </div>
-    <% } %>
-</div>
-                        <div class="w-full md:w-1/2 p-4 sm:p-6 flex flex-col justify-center bg-stone-50">
-                            <h3 class="text-xl sm:text-2xl md:text-3xl font-bold text-stone-800 mb-2 sm:mb-4 hover:text-amber-600 transition-colors duration-300">
+                        <div class="w-full md:w-1/2 h-64 sm:h-80 md:h-96 overflow-hidden relative">
+                            <img src="<%= todayRecipe.HINH_ANH_CT || 'https://via.placeholder.com/800x600/F0F0F0/B0B0B0?text=No+Image' %>" 
+                                alt="<%= todayRecipe.TEN_CT %>" 
+                                class="w-full h-full object-cover transition-transform duration-500 hover:scale-110" />
+                            <span class="absolute top-4 left-4 bg-gradient-to-r from-amber-600 to-orange-600 text-white text-sm md:text-base font-semibold px-4 py-2 rounded-full shadow-md">
+                                <%= todayRecipe.TEN_MON_AN || 'Ẩm thực' %>
+                            </span>
+                            <% if (todayRecipe.DANH_GIA && todayRecipe.DANH_GIA !== 'Chưa có') { %>
+                                <div class="absolute bottom-4 right-4 bg-stone-800 bg-opacity-80 text-white text-sm md:text-base font-semibold px-4 py-2 rounded-full flex items-center shadow-md">
+                                    <i class="fas fa-star text-yellow-400 mr-2"></i>
+                                    <%= todayRecipe.DANH_GIA %>
+                                </div>
+                            <% } %>
+                        </div>
+                        <div class="w-full md:w-1/2 p-6 sm:p-8 lg:p-10 flex flex-col justify-center bg-stone-50">
+                            <h3 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-stone-800 mb-4 lg:mb-6 hover:text-amber-600 transition-colors duration-300">
                                 <%= todayRecipe.TEN_CT %>
                             </h3>
-                            <p class="text-gray-600 mb-4 sm:mb-6 line-clamp-3 text-sm sm:text-base">
+                            <p class="text-gray-600 mb-6 lg:mb-8 line-clamp-3 text-base sm:text-lg">
                                 <%= todayRecipe.MO_TA || 'Thưởng thức món ăn tuyệt vời này với công thức đơn giản và dễ thực hiện!' %>
                             </p>
-                            <div class="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm md:text-base text-stone-600 font-medium">
-                                <span class="flex items-center gap-1"><i class="fas fa-clock text-amber-500"></i> <%= timeDisplay %></span>
-                                <span class="flex items-center gap-1"><i class="fas fa-fire text-red-500"></i> <%= todayRecipe.DO_KHO || 'Dễ' %></span>
-                                <span class="flex items-center gap-1"><i class="fas fa-utensils text-green-500"></i> <%= todayRecipe.SO_PHAN_AN || todayRecipe.KHOI_LUONG || '4' %> người</span>
+                            <div class="flex flex-wrap items-center gap-4 text-sm sm:text-base lg:text-lg text-stone-600 font-medium">
+                                <span class="flex items-center gap-2"><i class="fas fa-clock text-amber-500 text-lg"></i> <%= timeDisplay %></span>
+                                <span class="flex items-center gap-2"><i class="fas fa-fire text-red-500 text-lg"></i> <%= todayRecipe.DO_KHO || 'Dễ' %></span>
+                                <span class="flex items-center gap-2"><i class="fas fa-utensils text-green-500 text-lg"></i> <%= todayRecipe.SO_PHAN_AN || todayRecipe.KHOI_LUONG || '4' %> người</span>
                             </div>
                             <a href="/cong-thuc/<%= todayRecipe.SLUG_CT || todayRecipe.ID_CHINH_CT %>" 
-                               class="mt-4 sm:mt-6 inline-block bg-yellow-500 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-full text-sm sm:text-lg font-bold shadow-xl transform transition-transform duration-300 hover:scale-105">
-                                Xem công thức <i class="fas fa-arrow-right ml-1 sm:ml-2"></i>
+                               class="mt-6 lg:mt-8 inline-block bg-yellow-500 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full text-base sm:text-xl font-bold shadow-xl transform transition-transform duration-300 hover:scale-105">
+                                Xem công thức <i class="fas fa-arrow-right ml-2 sm:ml-3"></i>
                             </a>
                         </div>
                     </div>
                 </div>
             <% } else { %>
-                <p class="text-center text-gray-600 p-4 sm:p-6 bg-stone-50 rounded-lg shadow-inner border border-stone-200 animate__animated animate__fadeInUp">
+                <p class="text-center text-gray-600 p-6 sm:p-8 bg-stone-50 rounded-lg shadow-inner border border-stone-200 animate__animated animate__fadeInUp">
                     Chưa có gợi ý món ăn cho hôm nay. Hãy thử tìm kiếm một công thức yêu thích!
                 </p>
             <% } %>
         </div>
     </section>
+
+    <% const delayClasses = ['delay-[0s]', 'delay-[0.1s]', 'delay-[0.2s]', 'delay-[0.3s]', 'delay-[0.4s]', 'delay-[0.5s]', 'delay-[0.6s]', 'delay-[0.7s]']; %>
 
     <section class="mb-6 sm:mb-10">
         <div class="flex flex-col sm:flex-row justify-between items-center mb-4 sm:mb-6">
@@ -89,23 +106,24 @@
                 Xem tất cả <i class="fas fa-chevron-right ml-1 sm:ml-2 text-xs sm:text-sm transition-transform duration-200 group-hover:translate-x-1"></i>
             </a>
         </div>
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-6 gap-3 sm:gap-4">
             <% if (categories && categories.length > 0) { %>
-                <% categories.slice(0, 6).forEach((cat, index) => { %>
+                <% categories.slice(0, 8).forEach((cat, index) => { %>
                     <a href="/danh-muc/<%= cat.SLUG_LM %>"
-                       class="group block bg-white rounded-lg sm:rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 relative border border-stone-100 animate__animated animate__fadeInUp"
-                       style="animation-delay: <%= (index * 0.1).toFixed(1) %>s;">
-                        <div class="h-24 sm:h-28 md:h-32 overflow-hidden">
-                            <img src="<%= cat.HINH_ANH_LM_URL || 'https://via.placeholder.com/400x300/F0F0F0/B0B0B0?text=No+Image' %>" 
-                                 alt="<%= cat.TEN_LM %>" 
-                                 class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                        </div>
-                        <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-stone-900 via-stone-900/70 to-transparent p-1 sm:p-2 text-center">
-                            <h3 class="font-bold text-sm sm:text-base text-white group-hover:text-stone-300 transition-colors duration-200">
-                                <%= cat.TEN_LM %>
-                            </h3>
-                        </div>
-                    </a>
+                       class="group block bg-white rounded-lg sm:rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 relative border border-stone-100 animate__animated animate__fadeInUp <%= delayClasses[index] || 'delay-[0.8s]' %>
+                                 <% if (index >= 6) { %> xl:hidden <% } %>">
+                       <div class="h-24 sm:h-28 md:h-32 overflow-hidden">
+                           <img src="<%= cat.HINH_ANH_LM_URL || 'https://via.placeholder.com/400x300/F0F0F0/B0B0B0?text=No+Image' %>"
+                                alt="<%= cat.TEN_LM %>"
+                                class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                       </div>
+                       <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-stone-900 via-stone-900/70 to-transparent p-1 sm:p-2 text-center">
+                           <h3 class="font-bold text-sm sm:text-base text-white group-hover:text-stone-300 transition-colors duration-200">
+                               <%= cat.TEN_LM %>
+                           </h3>
+                       </div>
+                   </a>
                 <% }) %>
             <% } else { %>
                 <p class="col-span-full text-center text-gray-600 p-4 sm:p-6 bg-stone-50 rounded-lg shadow-inner border border-stone-200 animate__animated animate__fadeInUp">Chưa có danh mục nào để hiển thị.</p>
@@ -120,10 +138,10 @@
                 Xem tất cả <i class="fas fa-chevron-right ml-1 sm:ml-2 text-xs sm:text-sm transition-transform duration-200 group-hover:translate-x-1"></i>
             </a>
         </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
             <% if (recipesNewest && recipesNewest.length > 0) { %>
                 <% recipesNewest.forEach((recipe, index) => { %>
-                    <%- include("../partials/recipeCard", { recipe: recipe, user: user, animationDelay: index * 0.1 }) %>
+                    <%- include("../partials/recipeCardHorizontal", { recipe: recipe, user: user, animationDelay: index * 0.1 }) %>
                 <% }) %>
             <% } else { %>
                 <p class="col-span-full text-center text-gray-600 p-4 sm:p-6 bg-stone-50 rounded-lg shadow-inner border border-stone-200 animate__animated animate__fadeInUp">Chưa có công thức mới nào.</p>
@@ -138,10 +156,10 @@
                 Khám phá thêm <i class="fas fa-chevron-right ml-1 sm:ml-2 text-xs sm:text-sm transition-transform duration-200 group-hover:translate-x-1"></i>
             </a>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
             <% if (recipesHot && recipesHot.length > 0) { %>
                 <% recipesHot.forEach((recipe, index) => { %>
-                    <%- include("../partials/recipeCard", { recipe: recipe, user: user, animationDelay: index * 0.1 }) %>
+                    <%- include("../partials/recipeCardHorizontal", { recipe: recipe, user: user, animationDelay: index * 0.1 }) %>
                 <% }) %>
             <% } else { %>
                 <p class="col-span-full text-center text-gray-600 p-4 sm:p-6 bg-yellow-50 rounded-lg shadow-inner border border-stone-200 animate__animated animate__fadeInUp">Chưa có công thức nổi bật nào.</p>
@@ -165,7 +183,7 @@
                     <% if (catData.recipes && catData.recipes.length > 0) { %>
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                             <% catData.recipes.forEach((recipe, recipeIndex) => { %>
-                                <%- include("../partials/recipeCard", { recipe: recipe, user: user, animationDelay: recipeIndex * 0.1 }) %>
+                                <%- include("../partials/recipeCardHorizontal", { recipe: recipe, user: user, animationDelay: recipeIndex * 0.1 }) %>
                             <% }) %>
                         </div>
                     <% } else { %>
@@ -188,7 +206,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
             <% if (recipesLikedRecently && recipesLikedRecently.length > 0) { %>
                 <% recipesLikedRecently.forEach((recipe, index) => { %>
-                    <%- include("../partials/recipeCard", { recipe: recipe, user: user, animationDelay: index * 0.1 }) %>
+                    <%- include("../partials/recipeCardHorizontal", { recipe: recipe, user: user, animationDelay: index * 0.1 }) %>
                 <% }) %>
             <% } else { %>
                 <p class="col-span-full text-center text-gray-600 p-4 sm:p-6 bg-yellow-50 rounded-lg shadow-inner border border-stone-200 animate__animated animate__fadeInUp">Chưa có công thức nào được yêu thích gần đây.</p>
@@ -208,3 +226,8 @@
     </section>
 
 </main>
+<style>
+    .delay-0 { animation-delay: 0s; }
+    .delay-1 { animation-delay: 0.1s; }
+    .delay-2 { animation-delay: 0.2s; }
+</style>

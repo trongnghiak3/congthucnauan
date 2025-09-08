@@ -11,7 +11,7 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
         <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
-        
+        <!-- <link rel="icon" href="/favicon2.png" type="image/png"> -->
     </head>
     <style>
         body { font-family: 'Montserrat Alternates', sans-serif; }
@@ -36,7 +36,7 @@
     <div class="flex items-center space-x-2 md:space-x-3 lg:space-x-4">
       <% if (typeof user !== 'undefined' && user) { %>
         <div class="relative hidden md:flex items-center gap-2 cursor-pointer" id="user-avatar">
-          <img src="<%= user.avatar || '/default-avatar.png' %>" class="w-8 h-8 rounded-full border object-cover" alt="Avatar" />
+          <img src="<%= user.avatar || '/default-avatar.jpg' %>" class="w-8 h-8 rounded-full border object-cover" alt="Avatar" />
           <span class="truncate max-w-[80px] md:max-w-[120px] lg:max-w-[150px] text-gray-700 font-medium"><%= user.TEN_NGUOI_DUNG %></span>
           <div id="user-dropdown" class="absolute right-0 top-full mt-2 w-44 bg-white shadow rounded-md text-sm hidden z-50">
             <a href="/profile" class="block px-4 py-2 hover:text-yellow-500"><i class="fa-solid fa-user mr-2"></i>Thông tin cá nhân</a>
@@ -69,7 +69,7 @@
         </a>
       <% } else { %>
         <a href="/dang-nhap" class="hidden md:flex bg-yellow-500 text-white text-sm px-3 py-1.5 rounded-md hover:bg-yellow-600 transition lg:px-4">
-          <i class="fa-solid fa-right-to-bracket mr-2"></i>Đăng nhập
+          <i class="fa-solid fa-right-to-bracket mr-2 mt-1"></i>Đăng nhập
         </a>
       <% } %>
 
@@ -79,25 +79,79 @@
     </div>
   </div>
 
-  <ul id="mobile-menu" class="lg:hidden hidden flex-col space-y-2 py-3 px-4 bg-white shadow mt-2 text-gray-600 text-sm font-medium">
-    <li><a href="/" class="block py-2 px-3 rounded-md hover:text-yellow-500 hover:bg-yellow-100"><i class="fa-solid fa-house mr-1"></i>Trang chủ</a></li>
-    <li><a href="/mon-an" class="block py-2 px-3 rounded-md hover:text-yellow-500 hover:bg-yellow-100"><i class="fa-solid fa-mug-hot mr-1"></i>Món ăn</a></li>
-    <li><a href="/cong-thuc" class="block py-2 px-3 rounded-md hover:text-yellow-500 hover:bg-yellow-100"><i class="fa-solid fa-utensils mr-1"></i>Công thức</a></li>
-    <li><a href="/danh-muc" class="block py-2 px-3 rounded-md hover:text-yellow-500 hover:bg-yellow-100"><i class="fa-solid fa-folder-open mr-1"></i>Danh mục</a></li>
-    <li><a href="/gioi-thieu" class="block py-2 px-3 rounded-md hover:text-yellow-500 hover:bg-yellow-100"><i class="fa-solid fa-circle-info mr-1"></i>Giới thiệu</a></li>
-    <li><a href="/lien-he" class="block py-2 px-3 rounded-md hover:text-yellow-500 hover:bg-yellow-100"><i class="fa-solid fa-envelope mr-1"></i>Liên hệ</a></li>
+<ul id="mobile-menu" class="lg:hidden hidden flex-col py-3 px-4 bg-white shadow-lg rounded-xl mt-2 text-gray-700 font-medium space-y-2">
+  <li>
+    <a href="/" class="flex items-center gap-3 py-2 px-3 rounded-lg hover:text-yellow-600 hover:bg-yellow-50 transition-colors duration-200">
+      <i class="fa-solid fa-house w-5 text-center"></i> Trang chủ
+    </a>
+  </li>
+  <li>
+    <a href="/mon-an" class="flex items-center gap-3 py-2 px-3 rounded-lg hover:text-yellow-600 hover:bg-yellow-50 transition-colors duration-200">
+      <i class="fa-solid fa-mug-hot w-5 text-center"></i> Món ăn
+    </a>
+  </li>
+  <li>
+    <a href="/cong-thuc" class="flex items-center gap-3 py-2 px-3 rounded-lg hover:text-yellow-600 hover:bg-yellow-50 transition-colors duration-200">
+      <i class="fa-solid fa-utensils w-5 text-center"></i> Công thức
+    </a>
+  </li>
+  <li>
+    <a href="/danh-muc" class="flex items-center gap-3 py-2 px-3 rounded-lg hover:text-yellow-600 hover:bg-yellow-50 transition-colors duration-200">
+      <i class="fa-solid fa-folder-open w-5 text-center"></i> Danh mục
+    </a>
+  </li>
+  <li>
+    <a href="/gioi-thieu" class="flex items-center gap-3 py-2 px-3 rounded-lg hover:text-yellow-600 hover:bg-yellow-50 transition-colors duration-200">
+      <i class="fa-solid fa-circle-info w-5 text-center"></i> Giới thiệu
+    </a>
+  </li>
+  <li>
+    <a href="/lien-he" class="flex items-center gap-3 py-2 px-3 rounded-lg hover:text-yellow-600 hover:bg-yellow-50 transition-colors duration-200">
+      <i class="fa-solid fa-envelope w-5 text-center"></i> Liên hệ
+    </a>
+  </li>
 
-    <% if (typeof user !== 'undefined' && user) { %>
-      <li><a href="/profile" class="block py-2 px-3 rounded-md hover:text-yellow-500 hover:bg-yellow-100"><i class="fa-solid fa-user mr-1"></i>Thông tin cá nhân</a></li>
-      <li><a href="/cong-thuc-cua-toi" class="block py-2 px-3 rounded-md hover:text-yellow-500 hover:bg-yellow-100"><i class="fa-solid fa-receipt mr-1"></i>Công thức của tôi</a></li>
-      <li><a href="/dang-cong-thuc" class="block py-2 px-3 rounded-md hover:text-yellow-500 hover:bg-yellow-100"><i class="fa-solid fa-plus mr-1"></i>Đăng công thức</a></li>
-      <li><a href="/doi-mat-khau" class="block py-2 px-3 rounded-md hover:text-yellow-500 hover:bg-yellow-100"><i class="fa-solid fa-key mr-1"></i>Đổi mật khẩu</a></li>
-      <li><a href="/thong-bao" class="block py-2 px-3 rounded-md hover:text-yellow-500 hover:bg-yellow-100"><i class="fa-solid fa-bell mr-1"></i>Thông báo</a></li>
-      <li><a href="/dang-xuat" class="block py-2 px-3 rounded-md hover:text-yellow-500 hover:bg-yellow-100"><i class="fa-solid fa-right-from-bracket mr-1"></i>Đăng xuất</a></li>
-    <% } else { %>
-      <li><a href="/dang-nhap" class="block py-2 px-3 text-white bg-yellow-500 rounded-md hover:bg-yellow-600"><i class="fa-solid fa-right-to-bracket mr-1"></i>Đăng nhập</a></li>
-    <% } %>
-  </ul>
+  <div class="border-t border-gray-200 my-2"></div>
+
+  <% if (typeof user !== 'undefined' && user) { %>
+  <li>
+    <a href="/profile" class="flex items-center gap-3 py-2 px-3 rounded-lg hover:text-yellow-600 hover:bg-yellow-50 transition-colors duration-200">
+      <i class="fa-solid fa-user w-5 text-center"></i> Thông tin cá nhân
+    </a>
+  </li>
+  <li>
+    <a href="/cong-thuc-cua-toi" class="flex items-center gap-3 py-2 px-3 rounded-lg hover:text-yellow-600 hover:bg-yellow-50 transition-colors duration-200">
+      <i class="fa-solid fa-receipt w-5 text-center"></i> Công thức của tôi
+    </a>
+  </li>
+  <li>
+    <a href="/dang-cong-thuc" class="flex items-center gap-3 py-2 px-3 rounded-lg hover:text-yellow-600 hover:bg-yellow-50 transition-colors duration-200">
+      <i class="fa-solid fa-plus w-5 text-center"></i> Đăng công thức
+    </a>
+  </li>
+  <li>
+    <a href="/doi-mat-khau" class="flex items-center gap-3 py-2 px-3 rounded-lg hover:text-yellow-600 hover:bg-yellow-50 transition-colors duration-200">
+      <i class="fa-solid fa-key w-5 text-center"></i> Đổi mật khẩu
+    </a>
+  </li>
+  <li>
+    <a href="/thong-bao" class="flex items-center gap-3 py-2 px-3 rounded-lg hover:text-yellow-600 hover:bg-yellow-50 transition-colors duration-200">
+      <i class="fa-solid fa-bell w-5 text-center"></i> Thông báo
+    </a>
+  </li>
+  <li class="mt-2">
+    <a href="/dang-xuat" class="flex items-center gap-3 py-2 px-3 rounded-lg hover:text-yellow-600 hover:bg-yellow-50 transition-colors duration-200">
+      <i class="fa-solid fa-right-from-bracket w-5 text-center"></i> Đăng xuất
+    </a>
+  </li>
+  <% } else { %>
+  <li class="mt-2">
+    <a href="/dang-nhap" class="flex items-center justify-center py-2 px-3 text-white bg-yellow-500 rounded-lg hover:bg-yellow-600 transition-colors duration-200">
+      <i class="fa-solid fa-right-to-bracket mr-2"></i> Đăng nhập
+    </a>
+  </li>
+  <% } %>
+</ul>
 </nav>
 
 

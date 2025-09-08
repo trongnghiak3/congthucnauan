@@ -357,7 +357,32 @@ router.get("/admin/cong-thuc/edit/:id", ensureLoggedIn, async (req, res) => {
     });
   }
 });
+router.get("/admin/cong-thuc/:id/nguyen-lieu", ensureAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
 
+    const ingredients = await query(`
+      SELECT 
+        ctnl.ID_CHINH_NL,
+        nl.TEN_NL,
+        ctnl.SO_LUONG,
+        ctnl.GHI_CHU,
+        nl.DON_VI
+      FROM cong_thuc_nguyen_lieu ctnl
+      JOIN nguyen_lieu nl ON ctnl.ID_CHINH_NL = nl.ID_CHINH_NL
+      WHERE ctnl.ID_CHINH_CT = ?
+    `, [id]);
+
+    if (!ingredients.length) {
+      return res.status(404).json({ message: "Không tìm thấy nguyên liệu cho công thức này." });
+    }
+
+    return res.status(200).json(ingredients);
+  } catch (err) {
+    console.error("Lỗi khi lấy danh sách nguyên liệu:", err);
+    return res.status(500).json({ message: "Lỗi server: " + err.message });
+  }
+});
 // Thêm công thức mới
 router.post(
   "/admin/cong-thuc",

@@ -40,54 +40,55 @@ const upload = multer({
 });
 
 router.get("/profile", ensureLoggedIn, async (req, res) => {
-  const userId = req.session.user.ID_CHINH_ND;
-  try {
-    // Lấy công thức của người dùng (This should be 'yourRecipes' for consistency with EJS)
-    const yourRecipes = await query("SELECT * FROM cong_thuc WHERE ID_CHINH_ND = ?", [userId]);
+  const userId = req.session.user.ID_CHINH_ND;
+  try {
+  // Lấy công thức của người dùng
+const yourRecipes = await query(
+    `SELECT ct.*, ma.TEN_MON_AN FROM cong_thuc ct JOIN mon_an ma ON ct.ID_CHINH_MA = ma.ID_CHINH_MA WHERE ct.ID_CHINH_ND = ?`,
+    [userId]
+);
 
-    // Lấy công thức yêu thích
-    const favoriteRecipes = await query(`
-      SELECT c.* FROM yeu_thich y
-      JOIN cong_thuc c ON y.ID_CHINH_CT = c.ID_CHINH_CT 
-      WHERE y.ID_CHINH_ND = ?`, [userId]);
+// Lấy công thức yêu thích
+const favoriteRecipes = await query(
+    `SELECT c.*, ma.TEN_MON_AN FROM yeu_thich y JOIN cong_thuc c ON y.ID_CHINH_CT = c.ID_CHINH_CT JOIN mon_an ma ON c.ID_CHINH_MA = ma.ID_CHINH_MA WHERE y.ID_CHINH_ND = ?`,
+    [userId]
+);
 
-    // Lấy danh sách loại món (Consider if you truly need this here)
-    const categories = await query("SELECT ID_CHINH_LM AS ID_CHINH_MA, TEN_LM AS TEN_MON_AN FROM loai_mon");
+    // Lấy danh sách loại món
+    const categories = await query("SELECT ID_CHINH_LM AS ID_CHINH_MA, TEN_LM AS TEN_MON_AN FROM loai_mon");
 
-    // Lấy danh sách nguyên liệu
-    const nguyen_lieu = await query("SELECT ID_CHINH_NL, TEN_NL, DON_VI FROM nguyen_lieu");
-    const mon_an = await query("SELECT * FROM mon_an");
+    // Lấy danh sách nguyên liệu
+    const nguyen_lieu = await query("SELECT ID_CHINH_NL, TEN_NL, DON_VI FROM nguyen_lieu");
+    const mon_an = await query("SELECT * FROM mon_an");
 
-    // Lấy thông tin chi tiết người dùng
-    const [userInfo] = await query("SELECT * FROM nguoi_dung WHERE ID_CHINH_ND = ?", [userId]);
+    // Lấy thông tin chi tiết người dùng
+    const [userInfo] = await query("SELECT * FROM nguoi_dung WHERE ID_CHINH_ND = ?", [userId]);
 
-    if (!userInfo) {
-      return res.status(404).send("Không tìm thấy thông tin người dùng");
-    }
+    if (!userInfo) {
+      return res.status(404).send("Không tìm thấy thông tin người dùng");
+    }
 
-    // Cập nhật session với thông tin mới từ userInfo
-    req.session.user = {
-      ...req.session.user,
-      TEN_NGUOI_DUNG: userInfo.TEN_NGUOI_DUNG,
-      EMAIL_: userInfo.EMAIL_,
-      AVARTAR_URL: userInfo.AVARTAR_URL,
-    };
+    // Cập nhật session với thông tin mới từ userInfo
+    req.session.user = {
+      ...req.session.user,
+      TEN_NGUOI_DUNG: userInfo.TEN_NGUOI_DUNG,
+      EMAIL_: userInfo.EMAIL_,
+      AVARTAR_URL: userInfo.AVARTAR_URL,
+    };
 
-    res.render("index/index_layout", {
-      viewPath: "profile",
-      user: req.session.user,
-      userInfo,
-      // Pass the renamed 'yourRecipes' here
-      yourRecipes, // This was 'userRecipes' before
-      favoriteRecipes,
-      mon_an,
-      nguyen_lieu,
-      // categories, // Add this if you decided to keep and use categories
-    });
-  } catch (err) {
-    console.error("Lỗi truy vấn:", err);
-    res.status(500).send("Lỗi server");
-  }
+    res.render("index/index_layout", {
+      viewPath: "profile",
+      user: req.session.user,
+      userInfo,
+      yourRecipes,
+      favoriteRecipes,
+      mon_an,
+      nguyen_lieu,
+    });
+  } catch (err) {
+    console.error("Lỗi truy vấn:", err);
+    res.status(500).send("Lỗi server");
+  }
 });
 
 

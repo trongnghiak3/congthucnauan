@@ -12,6 +12,7 @@
   </style>
 </head>
 <body class="bg-yellow-50 m-0 p-0">
+  <div id="admin-notification" class="hidden"></div>
   <div class="w-screen h-screen flex overflow-hidden">
     <div class="hidden md:block md:w-1/2 h-full">
       <img
@@ -87,6 +88,52 @@
 
     togglePasswordVisibility('password', 'togglePassword');
     togglePasswordVisibility('confirmPassword', 'toggleConfirmPassword');
+     function showAdminNotification(message, type = 'success') {
+    const notif = document.getElementById('admin-notification');
+    notif.innerHTML = '';
+
+    const icons = {
+      success: '✅',
+      error: '❌',
+      info: 'ℹ️',
+      warning: '⚠️'
+    };
+    const bgColors = {
+      success: 'bg-green-500',
+      error: 'bg-red-500',
+      info: 'bg-blue-500',
+      warning: 'bg-yellow-500'
+    };
+
+    notif.className = `fixed top-5 right-5 z-50 flex items-start gap-3 px-4 py-3 rounded-xl text-white shadow-xl transform transition-all duration-300 ease-in-out opacity-0 ${bgColors[type] || bgColors.success}`;
+    notif.innerHTML = `
+      <div class="text-2xl">${icons[type] || icons.success}</div>
+      <div class="text-sm font-medium">${message}</div>
+    `;
+
+    notif.classList.remove('hidden');
+    setTimeout(() => {
+      notif.classList.add('opacity-100', 'translate-y-0');
+    }, 10);
+
+    setTimeout(() => {
+      notif.classList.remove('opacity-100');
+      notif.classList.add('opacity-0');
+    }, 3000);
+
+    setTimeout(() => {
+      notif.classList.add('hidden');
+    }, 3500);
+  }
+</script>
+
+<% if (typeof notify !== 'undefined') { %>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      showAdminNotification("<%= notify.message %>", "<%= notify.type %>");
+    });
+  </script>
+<% } %>
   </script>
 </body>
 </html>

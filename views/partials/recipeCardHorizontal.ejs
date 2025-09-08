@@ -1,0 +1,78 @@
+<%
+  const totalMinutes = parseInt(recipe.THOI_GIAN_NAU) || 0;
+  let timeDisplay = "";
+  if (totalMinutes >= 60) {
+    const hours = Math.floor(totalMinutes / 60);
+    const mins = totalMinutes % 60;
+    timeDisplay = `${hours} giờ${mins > 0 ? ' ' + mins + ' phút' : ''}`;
+  } else {
+    timeDisplay = `${totalMinutes} phút`;
+  }
+%>
+
+<div class="recipe-card bg-white rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer group "
+     data-id="<%= recipe.ID_CHINH_CT %>" <%# Thêm data-id %>
+     data-category-id="<%= recipe.loai_mon_ids %>"
+     data-portion="<%= recipe.SO_PHAN_AN %>"
+     data-time="<%= Math.floor(recipe.THOI_GIAN_NAU / 60) %>"
+     data-difficulty="<%= recipe.DO_KHO %>"
+     onclick="window.location.href='/cong-thuc/<%= recipe.ID_CHINH_CT %>'">
+     
+  <%# --- Hình ảnh --- %>
+  <div class="relative h-48 sm:h-52 overflow-hidden rounded-t-3xl">
+    <% if (recipe.HINH_ANH_CT) { %>
+      <img src="<%= recipe.HINH_ANH_CT %>" 
+           alt="<%= recipe.TEN_CT %>" 
+           class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-in-out" />
+    <% } else { %>
+      <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 text-gray-400 text-sm font-medium animate-pulse">
+        <i class="fas fa-image mr-2 text-xl"></i>Không có ảnh
+      </div>
+    <% } %>
+
+    <%# --- Tag loại món --- %>
+    <span class="absolute top-3 left-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[11px] sm:text-xs font-semibold px-3 py-1 rounded-full shadow">
+      <%= recipe.TEN_MON_AN %>
+    </span>
+
+    <%# --- Đánh giá sao --- %>
+       <div class="absolute bottom-3 right-3 bg-black bg-opacity-70 text-white text-xs font-semibold px-2 py-1 rounded-full flex items-center shadow">
+      <% 
+        const rating = parseFloat(recipe.DANH_GIA);
+        // Kiểm tra xem rating có phải là một số hợp lệ và lớn hơn 0 không
+        if (!isNaN(rating) && rating > 0) {
+          const fullStars = Math.floor(rating);
+          const halfStar = rating % 1 >= 0.5;
+          const emptyStars = 5 - fullStars - (halfStar ? 1 : 0);
+      %>
+          <% for (let i = 0; i < fullStars; i++) { %>
+            <i class="fas fa-star text-yellow-400"></i>
+          <% } %>
+          <% if (halfStar) { %>
+            <i class="fas fa-star-half-alt text-yellow-400"></i>
+          <% } %>
+          <% for (let i = 0; i < emptyStars; i++) { %>
+            <i class="far fa-star text-yellow-400"></i>
+          <% } %>
+          <span class="ml-1"><%= rating.toFixed(1) %></span>
+      <% } else { %>
+          <i class="fas fa-star text-yellow-400 mr-1"></i>
+          <span> Chưa có</span>
+      <% } %>
+    </div>
+  </div>
+
+  <%# --- Nội dung --- %>
+  <div class="p-4 sm:p-5 space-y-3">
+    <h3 class="text-base sm:text-lg font-semibold text-gray-800 truncate group-hover:text-amber-600 transition-colors duration-300"
+        title="<%= recipe.TEN_CT %>">
+      <%= recipe.TEN_CT %>
+    </h3>
+
+    <div class="flex justify-between items-center text-xs sm:text-sm text-gray-600 font-medium pt-2 border-t border-gray-100">
+      <span class="flex items-center gap-1"><i class="fas fa-clock text-amber-500"></i> <%= timeDisplay %></span>
+      <span class="flex items-center gap-1"><i class="fas fa-fire text-red-500"></i> <%= recipe.DO_KHO %></span>
+      <span class="flex items-center gap-1"><i class="fas fa-utensils text-green-500"></i> <%= recipe.SO_PHAN_AN %> người</span>
+    </div>
+  </div>
+</div>

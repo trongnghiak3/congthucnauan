@@ -1,93 +1,94 @@
 
-
-<form id="add-recipe-form" method="POST" enctype="multipart/form-data" class="flex flex-col h-full p-6" data-recipe-id="<%= recipe ? recipe.ID_CHINH_CT : '' %>">
-    <!-- BƯỚC 1 -->
- <section id="step1" class="block grid grid-cols-1 md:grid-cols-2 gap-8 w-full min-h-[500px]"> 
+<form id="add-recipe-form" method="POST" enctype="multipart/form-data" class="flex flex-col h-full" data-recipe-id="<%= recipe ? recipe.ID_CHINH_CT : '' %>">
+    <section id="step1" class="block grid grid-cols-1 md:grid-cols-2 gap-8 w-full">
         <div class="space-y-6">
-            
-            <div class="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-                <div class="flex-shrink-0">
-                    <label class="block text-sm font-semibold text-yellow-600 mb-2">📸 Hình Ảnh</label>
-                    <img id="image_preview" src="<%= recipe && recipe.HINH_ANH_CT ? recipe.HINH_ANH_CT : '/default.jpg' %>" 
-                         class="w-40 h-40 object-cover rounded-lg border border-gray-300 shadow-sm cursor-pointer hover:border-yellow-500 transition-all duration-200" 
-                         onclick="document.getElementById('hinh_anh').click()" />
-                    <input type="file" id="hinh_anh" name="hinh_anh" accept="image/*" class="hidden" />
+            <div class="bg-white p-6 md:p-8 rounded-2xl shadow-lg border border-gray-200">
+                <h2 class="text-xl md:text-2xl font-bold text-gray-800 mb-6">Thông Tin Cơ Bản</h2>
+
+                <div class="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+                    <div class="flex-shrink-0">
+                        <label class="block text-sm font-semibold text-yellow-600 mb-2">📸 Hình Ảnh</label>
+                        <img id="image_preview" src="<%= recipe && recipe.HINH_ANH_CT ? recipe.HINH_ANH_CT : '/default.jpg' %>" 
+                             class="w-40 h-40 object-cover rounded-lg border border-gray-300 shadow-sm cursor-pointer hover:border-yellow-500 transition-all duration-200" 
+                             onclick="document.getElementById('hinh_anh').click()" />
+                        <input type="file" id="hinh_anh" name="hinh_anh" accept="image/*" class="hidden" />
+                    </div>
+                    <div class="flex-grow">
+                        <label class="block text-sm font-semibold text-yellow-600 mb-2">▶️ Video (MP4)</label>
+                        <video id="video_preview" controls 
+                               class="w-full h-32 md:h-40 object-cover rounded-lg border border-gray-300 shadow-sm cursor-pointer bg-gray-100" 
+                               src="<%= recipe && recipe.VIDEO ? recipe.VIDEO : '' %>" 
+                               onclick="document.getElementById('video_file').click()"></video>
+                        <input type="file" id="video_file" name="video_file" accept="video/mp4" class="hidden" />
+                        <button type="button" onclick="removeVideo()" 
+                                class="mt-2 text-red-600 hover:text-red-800 text-sm flex items-center gap-1 <%= recipe && recipe.VIDEO ? '' : 'hidden' %>" 
+                                id="remove_video_btn">
+                            <span class="text-lg">🗑️</span> Xóa video
+                        </button>
+                        <input type="hidden" name="remove_video" id="remove_video" value="0" />
+                    </div>
                 </div>
-                <div class="flex-grow">
-                    <label class="block text-sm font-semibold text-yellow-600 mb-2">▶️ Video (MP4)</label>
-                    <video id="video_preview" controls 
-                           class="w-full h-32 md:h-40 object-cover rounded-lg border border-gray-300 shadow-sm cursor-pointer bg-gray-100" 
-                           src="<%= recipe && recipe.VIDEO ? recipe.VIDEO : '' %>" 
-                           onclick="document.getElementById('video_file').click()"></video>
-                    <input type="file" id="video_file" name="video_file" accept="video/mp4" class="hidden" />
-                    <button type="button" onclick="removeVideo()" 
-                            class="mt-2 text-red-600 hover:text-red-800 text-sm flex items-center gap-1 <%= recipe && recipe.VIDEO ? '' : 'hidden' %>" 
-                            id="remove_video_btn">
-                        <span class="text-lg">🗑️</span> Xóa video
-                    </button>
-                    <input type="hidden" name="remove_video" id="remove_video" value="0" />
-                </div>
-            </div>
 
-            <div>
-                <label for="ten_ct" class="block text-sm font-semibold text-yellow-600 mb-2">📌 Tên Công Thức</label>
-                <input type="text" name="TEN_CT" id="ten_ct" value="<%= recipe ? recipe.TEN_CT || '' : '' %>" 
-                       class="w-full p-3 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-200" 
-                       placeholder="Ví dụ: Phở Bò Truyền Thống"
-                       required />
-            </div>
-
-            <div>
-                <label for="mota" class="block text-sm font-semibold text-yellow-600 mb-2">📝 Mô Tả</label>
-                <textarea name="MOTA" id="mota" rows="4" 
-                          class="w-full p-3 border border-gray-300 rounded-lg text-base resize-y focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-200" 
-                          placeholder="Mô tả ngắn gọn về món ăn, hương vị, hoặc nguồn gốc..."
-                          required><%= recipe ? recipe.MOTA || '' : '' %></textarea>
-            </div>
-
-            <div>
-                <label for="id_chinh_ma" class="block text-sm font-semibold text-yellow-600 mb-2">🍴 Loại Món Ăn</label>
-                <select name="ID_CHINH_MA" id="id_chinh_ma" 
-                        class="w-full p-3 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-200" 
-                        required>
-                    <option value="">Chọn loại món ăn</option>
-                    <% mon_an.forEach(ma => { %>
-                        <option value="<%= ma.ID_CHINH_MA %>" <%= recipe && recipe.ID_CHINH_MA == ma.ID_CHINH_MA ? 'selected' : '' %>><%= ma.TEN_MON_AN %></option>
-                    <% }) %>
-                </select>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                    <label for="thoi_gian_nau" class="block text-sm font-semibold text-yellow-600 mb-2">⏱ Thời Gian (phút)</label>
-                    <input type="number" name="THOI_GIAN_NAU" id="thoi_gian_nau" value="<%= recipe ? recipe.THOI_GIAN_NAU || '' : '' %>" 
+                <div class="mt-6">
+                    <label for="ten_ct" class="block text-sm font-semibold text-yellow-600 mb-2">📌 Tên Công Thức</label>
+                    <input type="text" name="TEN_CT" id="ten_ct" value="<%= recipe ? recipe.TEN_CT || '' : '' %>" 
                            class="w-full p-3 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-200" 
-                           placeholder="Ví dụ: 30"
+                           placeholder="Ví dụ: Phở Bò Truyền Thống"
                            required />
                 </div>
-                <div>
-                    <label for="do_kho" class="block text-sm font-semibold text-yellow-600 mb-2">📊 Độ Khó</label>
-                    <select name="DO_KHO" id="do_kho" 
+
+                <div class="mt-6">
+                    <label for="mota" class="block text-sm font-semibold text-yellow-600 mb-2">📝 Mô Tả</label>
+                    <textarea name="MOTA" id="mota" rows="4" 
+                              class="w-full p-3 border border-gray-300 rounded-lg text-base resize-y focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-200" 
+                              placeholder="Mô tả ngắn gọn về món ăn, hương vị, hoặc nguồn gốc..."
+                              required><%= recipe ? recipe.MOTA || '' : '' %></textarea>
+                </div>
+
+                <div class="mt-6">
+                    <label for="id_chinh_ma" class="block text-sm font-semibold text-yellow-600 mb-2">🍴 Loại Món Ăn</label>
+                    <select name="ID_CHINH_MA" id="id_chinh_ma" 
                             class="w-full p-3 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-200" 
                             required>
-                        <option value="Dễ" <%= recipe && recipe.DO_KHO === 'Dễ' ? 'selected' : '' %>>Dễ</option>
-                        <option value="Trung bình" <%= recipe && recipe.DO_KHO === 'Trung bình' ? 'selected' : '' %>>Trung bình</option>
-                        <option value="Khó" <%= recipe && recipe.DO_KHO === 'Khó' ? 'selected' : '' %>>Khó</option>
+                        <option value="">Chọn loại món ăn</option>
+                        <% mon_an.forEach(ma => { %>
+                            <option value="<%= ma.ID_CHINH_MA %>" <%= recipe && recipe.ID_CHINH_MA == ma.ID_CHINH_MA ? 'selected' : '' %>><%= ma.TEN_MON_AN %></option>
+                        <% }) %>
                     </select>
                 </div>
-                <div>
-                    <label for="so_phan_an" class="block text-sm font-semibold text-yellow-600 mb-2">🍽 Số Phần Ăn</label>
-                    <input type="number" name="SO_PHAN_AN" id="so_phan_an" value="<%= recipe ? recipe.SO_PHAN_AN || '' : '' %>" 
-                           class="w-full p-3 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-200" 
-                           placeholder="Ví dụ: 4"
-                           required />
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
+                    <div>
+                        <label for="thoi_gian_nau" class="block text-sm font-semibold text-yellow-600 mb-2">⏱ Thời Gian (phút)</label>
+                        <input type="number" name="THOI_GIAN_NAU" id="thoi_gian_nau" value="<%= recipe ? recipe.THOI_GIAN_NAU || '' : '' %>" 
+                               class="w-full p-3 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-200" 
+                               placeholder="Ví dụ: 30"
+                               required />
+                    </div>
+                    <div>
+                        <label for="do_kho" class="block text-sm font-semibold text-yellow-600 mb-2">📊 Độ Khó</label>
+                        <select name="DO_KHO" id="do_kho" 
+                                class="w-full p-3 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-200" 
+                                required>
+                            <option value="Dễ" <%= recipe && recipe.DO_KHO === 'Dễ' ? 'selected' : '' %>>Dễ</option>
+                            <option value="Trung bình" <%= recipe && recipe.DO_KHO === 'Trung bình' ? 'selected' : '' %>>Trung bình</option>
+                            <option value="Khó" <%= recipe && recipe.DO_KHO === 'Khó' ? 'selected' : '' %>>Khó</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="so_phan_an" class="block text-sm font-semibold text-yellow-600 mb-2">🍽 Số Phần Ăn</label>
+                        <input type="number" name="SO_PHAN_AN" id="so_phan_an" value="<%= recipe ? recipe.SO_PHAN_AN || '' : '' %>" 
+                               class="w-full p-3 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-200" 
+                               placeholder="Ví dụ: 4"
+                               required />
+                    </div>
                 </div>
             </div>
         </div>
 
         <div class="space-y-6">
-            <div class="w-full">
-                <label class="block text-sm font-semibold text-yellow-600 mb-2">👨‍🍳 Các Bước Nấu</label>
+            <div class="bg-white p-6 md:p-8 rounded-2xl shadow-lg border border-gray-200">
+                <h2 class="text-xl md:text-2xl font-bold text-gray-800 mb-6">👨‍🍳 Các Bước Nấu</h2>
                 <div id="buoc_nau_container" class="border border-gray-300 p-4 rounded-lg space-y-4 bg-gray-50 shadow-inner max-h-[600px] overflow-y-auto">
                     <% if (recipe && recipe.HUONG_DAN) { %>
                         <% recipe.HUONG_DAN.split('\n\n').forEach((step, index) => { 
@@ -124,94 +125,91 @@
                     <span class="text-lg">➕</span> Thêm bước
                 </button>
             </div>
-            <div class="text-right pt-4"> <button type="button" id="btnNextStep" 
+            
+            <div class="text-right pt-4">
+                <button type="button" id="btnNextStep" 
                         class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-6 py-3 rounded-lg shadow-md text-base transition-colors duration-200">
                     ➡️ Tiếp Theo
                 </button>
             </div>
         </div>
     </section>
-    <!-- BƯỚC 2 -->
-    <section id="step2" class="hidden space-y-6 border-t pt-6">
-        <!-- Tiêu đề -->
-        <label class="block text-sm font-semibold text-yellow-600 mb-2">🥕 Nguyên Liệu</label>
 
-        <!-- Template ẩn để thêm nguyên liệu -->
-        <template id="template_nguyen_lieu">
-            <div class="grid grid-cols-12 gap-2 items-center nguyen_lieu_item">
-                <div class="col-span-2">
-                    <select name="nguyen_lieu_id[]" class="tom-select w-full p-2 border rounded-lg text-base">
-                        <option disabled selected>Chọn nguyên liệu</option>
-                        <% nguyen_lieu.forEach(n => { %>
-                            <option value="<%= n.ID_CHINH_NL %>" data-donvi="<%= n.DON_VI %>"><%= n.TEN_NL %></option>
-                        <% }) %>
-                        <option value="khac">Khác (nhập tay)</option>
-                    </select>
+    <section id="step2" class="hidden space-y-6">
+        <div class="bg-white p-6 md:p-8 rounded-2xl shadow-lg border border-gray-200">
+            <h2 class="text-xl md:text-2xl font-bold text-gray-800 mb-6">🥕 Nguyên Liệu</h2>
+            <template id="template_nguyen_lieu">
+                <div class="grid grid-cols-12 gap-2 items-center nguyen_lieu_item">
+                    <div class="col-span-2">
+                        <select name="nguyen_lieu_id[]" class="tom-select w-full p-2 border rounded-lg text-base">
+                            <option disabled selected>Chọn nguyên liệu</option>
+                            <% nguyen_lieu.forEach(n => { %>
+                                <option value="<%= n.ID_CHINH_NL %>" data-donvi="<%= n.DON_VI %>"><%= n.TEN_NL %></option>
+                            <% }) %>
+                            <option value="khac">Khác (nhập tay)</option>
+                        </select>
+                    </div>
+                    <input type="text" name="ten_nguyen_lieu_khac[]" placeholder="Tên mới" class="hidden col-span-2 p-2 border rounded-lg text-base" />
+                    <input type="number" name="so_luong[]" step="0.01" placeholder="Số lượng" class="col-span-2 p-2 border rounded-lg text-base" required />
+                    <input type="text" name="don_vi[]" placeholder="Đơn vị" class="col-span-1 p-2 border rounded-lg text-base" readonly />
+                    <input type="text" name="don_vi_khac[]" placeholder="Đơn vị" class="hidden col-span-1 p-2 border rounded-lg text-base" />
+                    <input type="text" name="ghi_chu[]" placeholder="Ghi chú" class="col-span-3 p-2 border rounded-lg text-base" />
+                    <button type="button" onclick="removeNguyenLieu(this)" class="col-span-1 text-red-500 hover:text-red-700 font-bold text-base">❌</button>
                 </div>
-                <input type="text" name="ten_nguyen_lieu_khac[]" placeholder="Tên mới" class="hidden col-span-2 p-2 border rounded-lg text-base" />
-                <input type="number" name="so_luong[]" step="0.01" placeholder="Số lượng" class="col-span-2 p-2 border rounded-lg text-base" required />
-                <input type="text" name="don_vi[]" placeholder="Đơn vị" class="col-span-1 p-2 border rounded-lg text-base" readonly />
-                <input type="text" name="don_vi_khac[]" placeholder="Đơn vị" class="hidden col-span-1 p-2 border rounded-lg text-base" />
-                <input type="text" name="ghi_chu[]" placeholder="Ghi chú" class="col-span-3 p-2 border rounded-lg text-base" />
-                <button type="button" onclick="removeNguyenLieu(this)" class="col-span-1 text-red-500 hover:text-red-700 font-bold text-base">❌</button>
-            </div>
-        </template>
-
-        <!-- Khối scroll nguyên liệu -->
-        <div class="border border-gray-200 rounded-md max-h-[500px] overflow-y-auto p-3 bg-gray-50">
-            <div id="nguyen_lieu_container" class="space-y-3">
-                <% if (recipe && recipeIngredients && recipeIngredients.length > 0) { %>
-                    <% recipeIngredients.forEach(ing => { %>
-                        <div class="grid grid-cols-12 gap-2 items-center nguyen_lieu_item">
-                            <div class="col-span-2">
-                                <select name="nguyen_lieu_id[]" class="tom-select w-full p-2 border rounded-lg text-base">
-                                    <option disabled>Chọn nguyên liệu</option>
-                                    <% nguyen_lieu.forEach(n => { %>
-                                        <option value="<%= n.ID_CHINH_NL %>" data-donvi="<%= n.DON_VI || '' %>" <%= n.ID_CHINH_NL == ing.ID_CHINH_NL ? 'selected' : '' %>><%= n.TEN_NL %></option>
-                                    <% }) %>
-                                    <option value="khac" <%= ing.ID_CHINH_NL ? '' : 'selected' %>>Khác (nhập tay)</option>
-                                </select>
+            </template>
+            <div class="border border-gray-200 rounded-md max-h-[500px] overflow-y-auto p-3 bg-gray-50">
+                <div id="nguyen_lieu_container" class="space-y-3">
+                    <% if (recipe && recipeIngredients && recipeIngredients.length > 0) { %>
+                        <% recipeIngredients.forEach(ing => { %>
+                            <div class="grid grid-cols-12 gap-2 items-center nguyen_lieu_item">
+                                <div class="col-span-2">
+                                    <select name="nguyen_lieu_id[]" class="tom-select w-full p-2 border rounded-lg text-base">
+                                        <option disabled>Chọn nguyên liệu</option>
+                                        <% nguyen_lieu.forEach(n => { %>
+                                            <option value="<%= n.ID_CHINH_NL %>" data-donvi="<%= n.DON_VI || '' %>" <%= n.ID_CHINH_NL == ing.ID_CHINH_NL ? 'selected' : '' %>><%= n.TEN_NL %></option>
+                                        <% }) %>
+                                        <option value="khac" <%= ing.ID_CHINH_NL ? '' : 'selected' %>>Khác (nhập tay)</option>
+                                    </select>
+                                </div>
+                                <input type="text" name="ten_nguyen_lieu_khac[]" value="<%= ing.ID_CHINH_NL ? '' : (ing.TEN_NL || '') %>" placeholder="Tên mới" class="col-span-2 p-2 border rounded-lg text-base <%= ing.ID_CHINH_NL ? 'hidden' : '' %>" <%= ing.ID_CHINH_NL ? '' : 'required' %> />
+                                <input type="number" name="so_luong[]" step="0.01" value="<%= ing.SO_LUONG || '' %>" placeholder="Số lượng" class="col-span-2 p-2 border rounded-lg text-base" required />
+                                <input type="text" name="don_vi[]" value="<%= ing.DON_VI || '' %>" placeholder="Đơn vị" class="col-span-1 p-2 border rounded-lg text-base" readonly />
+                                <input type="text" name="don_vi_khac[]" value="<%= ing.ID_CHINH_NL ? '' : (ing.DON_VI || '') %>" placeholder="Đơn vị" class="col-span-1 p-2 border rounded-lg text-base <%= ing.ID_CHINH_NL ? 'hidden' : '' %>" <%= ing.ID_CHINH_NL ? '' : 'required' %> />
+                                <input type="text" name="ghi_chu[]" value="<%= ing.GHI_CHU || '' %>" placeholder="Ghi chú" class="col-span-3 p-2 border rounded-lg text-base" />
+                                <button type="button" onclick="removeNguyenLieu(this)" class="col-span-1 text-red-500 hover:text-red-700 font-bold text-base">❌</button>
                             </div>
-                            <input type="text" name="ten_nguyen_lieu_khac[]" value="<%= ing.ID_CHINH_NL ? '' : (ing.TEN_NL || '') %>" placeholder="Tên mới" class="col-span-2 p-2 border rounded-lg text-base <%= ing.ID_CHINH_NL ? 'hidden' : '' %>" <%= ing.ID_CHINH_NL ? '' : 'required' %> />
-                            <input type="number" name="so_luong[]" step="0.01" value="<%= ing.SO_LUONG || '' %>" placeholder="Số lượng" class="col-span-2 p-2 border rounded-lg text-base" required />
-                            <input type="text" name="don_vi[]" value="<%= ing.DON_VI || '' %>" placeholder="Đơn vị" class="col-span-1 p-2 border rounded-lg text-base" readonly />
-                            <input type="text" name="don_vi_khac[]" value="<%= ing.ID_CHINH_NL ? '' : (ing.DON_VI || '') %>" placeholder="Đơn vị" class="col-span-1 p-2 border rounded-lg text-base <%= ing.ID_CHINH_NL ? 'hidden' : '' %>" <%= ing.ID_CHINH_NL ? '' : 'required' %> />
-                            <input type="text" name="ghi_chu[]" value="<%= ing.GHI_CHU || '' %>" placeholder="Ghi chú" class="col-span-3 p-2 border rounded-lg text-base" />
-                            <button type="button" onclick="removeNguyenLieu(this)" class="col-span-1 text-red-500 hover:text-red-700 font-bold text-base">❌</button>
-                        </div>
-                    <% }) %>
-                <% } else { %>
-                    <% for (let i = 0; i < 6; i++) { %>
-                        <div class="grid grid-cols-12 gap-2 items-center nguyen_lieu_item">
-                            <div class="col-span-2">
-                                <select name="nguyen_lieu_id[]" class="tom-select w-full p-2 border rounded-lg text-base">
-                                    <option disabled selected>Chọn nguyên liệu</option>
-                                    <% nguyen_lieu.forEach(n => { %>
-                                        <option value="<%= n.ID_CHINH_NL %>" data-donvi="<%= n.DON_VI || '' %>"><%= n.TEN_NL %></option>
-                                    <% }) %>
-                                    <option value="khac">Khác (nhập tay)</option>
-                                </select>
+                        <% }) %>
+                    <% } else { %>
+                        <% for (let i = 0; i < 6; i++) { %>
+                            <div class="grid grid-cols-12 gap-2 items-center nguyen_lieu_item">
+                                <div class="col-span-2">
+                                    <select name="nguyen_lieu_id[]" class="tom-select w-full p-2 border rounded-lg text-base">
+                                        <option disabled selected>Chọn nguyên liệu</option>
+                                        <% nguyen_lieu.forEach(n => { %>
+                                            <option value="<%= n.ID_CHINH_NL %>" data-donvi="<%= n.DON_VI || '' %>"><%= n.TEN_NL %></option>
+                                        <% }) %>
+                                        <option value="khac">Khác (nhập tay)</option>
+                                    </select>
+                                </div>
+                                <input type="text" name="ten_nguyen_lieu_khac[]" placeholder="Tên mới" class="hidden col-span-2 p-2 border rounded-lg text-base" />
+                                <input type="number" name="so_luong[]" step="0.01" placeholder="Số lượng" class="col-span-2 p-2 border rounded-lg text-base" required />
+                                <input type="text" name="don_vi[]" placeholder="Đơn vị" class="col-span-1 p-2 border rounded-lg text-base" readonly />
+                                <input type="text" name="don_vi_khac[]" placeholder="Đơn vị" class="hidden col-span-1 p-2 border rounded-lg text-base" />
+                                <input type="text" name="ghi_chu[]" placeholder="Ghi chú" class="col-span-3 p-2 border rounded-lg text-base" />
+                                <button type="button" onclick="removeNguyenLieu(this)" class="col-span-1 text-red-500 hover:text-red-700 font-bold text-base">❌</button>
                             </div>
-                            <input type="text" name="ten_nguyen_lieu_khac[]" placeholder="Tên mới" class="hidden col-span-2 p-2 border rounded-lg text-base" />
-                            <input type="number" name="so_luong[]" step="0.01" placeholder="Số lượng" class="col-span-2 p-2 border rounded-lg text-base" required />
-                            <input type="text" name="don_vi[]" placeholder="Đơn vị" class="col-span-1 p-2 border rounded-lg text-base" readonly />
-                            <input type="text" name="don_vi_khac[]" placeholder="Đơn vị" class="hidden col-span-1 p-2 border rounded-lg text-base" />
-                            <input type="text" name="ghi_chu[]" placeholder="Ghi chú" class="col-span-3 p-2 border rounded-lg text-base" />
-                            <button type="button" onclick="removeNguyenLieu(this)" class="col-span-1 text-red-500 hover:text-red-700 font-bold text-base">❌</button>
-                        </div>
+                        <% } %>
                     <% } %>
-                <% } %>
+                </div>
+            </div>
+
+            <div>
+                <button type="button" onclick="addNguyenLieu()" class="text-yellow-600 hover:text-yellow-800 font-semibold text-base">➕ Thêm nguyên liệu</button>
             </div>
         </div>
 
-        <!-- Nút thêm nguyên liệu -->
-        <div>
-            <button type="button" onclick="addNguyenLieu()" class="text-yellow-600 hover:text-yellow-800 font-semibold text-base">➕ Thêm nguyên liệu</button>
-        </div>
-
-        <!-- Nút cố định ở dưới -->
         <div class="sticky bottom-0 bg-white border-t pt-4 mt-6 z-10">
-            <div class="flex justify-between">
+            <div class="flex justify-between items-center">
                 <button type="button" id="btnPrevStep" class="bg-gray-500 hover:bg-gray-600 text-white font-semibold px-4 py-2 rounded-lg shadow-md text-base">⬅️ Quay Lại</button>
                 <div class="flex gap-4">
                     <% if (recipe && recipe.TRANG_THAI_DUYET_ === 'Đang chờ duyệt') { %>

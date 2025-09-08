@@ -12,6 +12,7 @@
   </style>
 </head>
 <body class="bg-yellow-50 m-0 p-0">
+  <div id="admin-notification" class="hidden"></div>
   <div class="w-screen h-screen flex overflow-hidden">
     <div class="hidden md:block w-1/2 h-full">
       <img
@@ -38,7 +39,7 @@
               id="email"
               name="email"
               required
-              placeholder="ban@vidu.com"
+              placeholder="NguyenvanA@vidu.com"
               class="w-full p-3.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-3 focus:ring-yellow-400 transition text-sm" />
           </div>
 
@@ -89,15 +90,64 @@
     </div>
   </div>
 
-  <script>
-    const passwordInput = document.getElementById("password");
-    const togglePasswordBtn = document.getElementById("togglePassword");
+<!-- JS hiển thị thông báo -->
+<script>
+  const passwordInput = document.getElementById("password");
+  const togglePasswordBtn = document.getElementById("togglePassword");
 
-    togglePasswordBtn.addEventListener("click", function () {
-      const type = passwordInput.getAttribute("type") === "password" ? "text" : "password";
-      passwordInput.setAttribute("type", type);
-      this.textContent = type === "password" ? "👁️" : "🙈";
+  togglePasswordBtn.addEventListener("click", function () {
+    const type = passwordInput.getAttribute("type") === "password" ? "text" : "password";
+    passwordInput.setAttribute("type", type);
+    this.textContent = type === "password" ? "👁️" : "🙈";
+  });
+
+  function showAdminNotification(message, type = 'success') {
+    const notif = document.getElementById('admin-notification');
+    notif.innerHTML = '';
+
+    const icons = {
+        success: '✅',
+        error: '❌',
+        info: 'ℹ️',
+        warning: '⚠️'
+    };
+    const bgColors = {
+        success: 'bg-green-500',
+        error: 'bg-red-500',
+        info: 'bg-blue-500',
+        warning: 'bg-yellow-500'
+    };
+
+    notif.className = `fixed top-5 right-5 z-50 flex items-start gap-3 px-4 py-3 rounded-xl text-white shadow-xl transform transition-all duration-300 ease-in-out opacity-0 ${bgColors[type] || bgColors.success}`;
+    notif.innerHTML = `
+      <div class="text-2xl">${icons[type] || icons.success}</div>
+      <div class="text-sm font-medium">${message}</div>
+    `;
+
+    notif.classList.remove('hidden');
+    setTimeout(() => {
+        notif.classList.add('opacity-100', 'translate-y-0');
+    }, 10);
+
+    setTimeout(() => {
+        notif.classList.remove('opacity-100');
+        notif.classList.add('opacity-0');
+    }, 3000);
+
+    setTimeout(() => {
+        notif.classList.add('hidden');
+    }, 3500);
+  }
+</script>
+
+<!-- Tách đoạn EJS ra riêng -->
+<% if (typeof notify !== 'undefined') { %>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      showAdminNotification("<%= notify.message %>", "<%= notify.type %>");
     });
   </script>
+<% } %>
+
 </body>
 </html>

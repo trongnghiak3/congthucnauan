@@ -1,5 +1,5 @@
 <div 
-  class="group bg-white rounded-2xl overflow-hidden shadow hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 cursor-pointer"
+  class="group bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer"
   onclick="window.location.href='/cong-thuc?monAnId=<%= mon.ID_CHINH_MA %>'"
 >
   <!-- Ảnh món ăn -->
@@ -7,15 +7,19 @@
     <% if (mon.HINH_ANH_MA) { %>
       <img src="<%= mon.HINH_ANH_MA %>"
            alt="<%= mon.TEN_MON_AN %>"
-           class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+           class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
     <% } else { %>
       <div class="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400 text-sm">
         <i class="fas fa-image mr-1.5"></i> Không có ảnh
       </div>
     <% } %>
 
+    <!-- Overlay mờ -->
+    <div class="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent"></div>
+
+    <!-- Loại món ăn -->
     <% if (mon.LOAI_MON) { %>
-      <span class="absolute top-2 left-2 bg-amber-500 text-white text-xs font-semibold px-2 py-0.5 rounded-full shadow">
+      <span class="absolute top-2 left-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-semibold px-2 py-0.5 rounded-full shadow">
         <%= mon.LOAI_MON %>
       </span>
     <% } %>

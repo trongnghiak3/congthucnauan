@@ -13,7 +13,7 @@
     <% if (userRecipes && userRecipes.length > 0) { %>
       <% userRecipes.forEach(function(recipe) { %>
         <div class="relative group animate-slide-up bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden">
-          <%- include('../partials/recipeCard.ejs', { recipe: recipe }) %>
+          <%- include('../partials/recipeCardHorizontal.ejs', { recipe: recipe }) %>
           
        <div class="absolute inset-0 bg-black bg-opacity-60 rounded-xl flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 p-4 space-y-3">
   <% if (recipe.TRANG_THAI_DUYET_ === 'Đang chờ duyệt' || recipe.TRANG_THAI_DUYET_ === 'Từ chối') { %>

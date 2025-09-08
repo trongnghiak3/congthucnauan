@@ -42,110 +42,140 @@ const upload = multer({
 // Route trang chủ
 router.get("/", async (req, res) => {
     try {
-        // 1. Lấy danh mục
-        const categories = await query("SELECT * FROM loai_mon");
-
-        // 2. Lấy Công thức mới nhất
-        const recipesNewestRaw = await query(`
-            SELECT ct.*, ma.TEN_MON_AN
+        const { nguyenLieu } = req.query;
+        let params = [];
+        let sql = `
+            SELECT ct.*, ma.TEN_MON_AN,
+                   COALESCE(AVG(dg.DANH_GIA), 0) AS avg_rating
             FROM cong_thuc ct
             JOIN mon_an ma ON ct.ID_CHINH_MA = ma.ID_CHINH_MA
+            LEFT JOIN danh_gia dg ON ct.ID_CHINH_CT = dg.ID_CHINH_CT
             WHERE ct.TRANG_THAI_DUYET_ = 'Đã duyệt'
+        `;
+
+        if (nguyenLieu && nguyenLieu.trim() !== "") {
+            sql += ` AND EXISTS (
+                SELECT 1 FROM cong_thuc_nguyen_lieu ctnl
+                JOIN nguyen_lieu nl ON ctnl.ID_CHINH_NL = nl.ID_CHINH_NL
+                WHERE ctnl.ID_CHINH_CT = ct.ID_CHINH_CT 
+                  AND nl.TEN_NL LIKE ?
+            )`;
+            params.push(`%${nguyenLieu}%`);
+        }
+
+        if (nguyenLieu) {
+            sql += " GROUP BY ct.ID_CHINH_CT ORDER BY ct.NGAY_TAO_CT DESC";
+            const recipes = await query(sql, params);
+
+            recipes.forEach(recipe => {
+                const fileName = recipe.HINH_ANH_CT?.split('/').pop();
+                recipe.HINH_ANH_CT = fileName
+                    ? `/Uploads/images/congthuc/${recipe.ID_CHINH_CT}/${fileName}`
+                    : null;
+                recipe.DANH_GIA = recipe.avg_rating
+                    ? parseFloat(recipe.avg_rating).toFixed(1)
+                    : "Chưa có";
+            });
+
+            return res.render("index/index_layout", {
+                title: "Kết quả tìm kiếm",
+                viewPath: "trang-chu",
+                categories: [],
+                recipesNewest: recipes,
+                recipesHot: [],
+                recipesLikedRecently: [],
+                featuredCategoriesData: [],
+                todayRecipe: null,
+                user: req.session.user,
+                timKiem: nguyenLieu || ""
+            });
+        }
+
+        // ========== Nếu không có tìm kiếm thì chạy logic trang chủ ==========
+        const categories = await query("SELECT * FROM loai_mon");
+
+        const recipesNewest = await query(`
+            SELECT ct.*, ma.TEN_MON_AN,
+                   COALESCE(AVG(dg.DANH_GIA), 0) as avg_rating
+            FROM cong_thuc ct
+            JOIN mon_an ma ON ct.ID_CHINH_MA = ma.ID_CHINH_MA
+            LEFT JOIN danh_gia dg ON ct.ID_CHINH_CT = dg.ID_CHINH_CT
+            WHERE ct.TRANG_THAI_DUYET_ = 'Đã duyệt'
+            GROUP BY ct.ID_CHINH_CT
             ORDER BY ct.NGAY_TAO_CT DESC
-            LIMIT 6; 
+            LIMIT 8
         `);
+        recipesNewest.forEach(r => {
+            const fileName = r.HINH_ANH_CT?.split('/').pop();
+            r.HINH_ANH_CT = fileName ? `/Uploads/images/congthuc/${r.ID_CHINH_CT}/${fileName}` : null;
+            r.DANH_GIA = r.avg_rating ? parseFloat(r.avg_rating).toFixed(1) : "Chưa có";
+        });
 
-        const recipesNewest = await Promise.all(recipesNewestRaw.map(async recipe => {
-            const fileName = recipe.HINH_ANH_CT?.split('/').pop();
-            const image = fileName ? `/Uploads/images/congthuc/${recipe.ID_CHINH_CT}/${fileName}` : null;
-            const [ratingRes] = await query("SELECT AVG(DANH_GIA) as avg FROM danh_gia WHERE ID_CHINH_CT = ?", [recipe.ID_CHINH_CT]);
-            const avgRating = ratingRes?.avg ? parseFloat(ratingRes.avg).toFixed(1) : "Chưa có";
-            return {
-                ...recipe,
-                HINH_ANH_CT: image,
-                DANH_GIA: avgRating
-            };
-        }));
-
-        // 3. Lấy Công thức nổi bật
-        const recipesHotQuery = `
-            SELECT
-                ct.*,
-                ma.TEN_MON_AN,
-                COUNT(DISTINCT bl.ID_CHINH_BL) as total_comments,
-                COUNT(DISTINCT yt.ID_CHINH_YT) as total_favorites
+        const recipesHot = await query(`
+            SELECT ct.*, ma.TEN_MON_AN,
+                   COALESCE(COUNT(DISTINCT bl.ID_CHINH_BL), 0) as total_comments,
+                   COALESCE(COUNT(DISTINCT yt.ID_CHINH_YT), 0) as total_favorites,
+                   COALESCE(AVG(dg.DANH_GIA), 0) as avg_rating
             FROM cong_thuc ct
             JOIN mon_an ma ON ct.ID_CHINH_MA = ma.ID_CHINH_MA
             LEFT JOIN binh_luan bl ON ct.ID_CHINH_CT = bl.ID_CHINH_CT
             LEFT JOIN yeu_thich yt ON ct.ID_CHINH_CT = yt.ID_CHINH_CT
+            LEFT JOIN danh_gia dg ON ct.ID_CHINH_CT = dg.ID_CHINH_CT
             WHERE ct.TRANG_THAI_DUYET_ = 'Đã duyệt'
             GROUP BY ct.ID_CHINH_CT, ma.TEN_MON_AN
-            ORDER BY (COUNT(DISTINCT bl.ID_CHINH_BL) * 2 + COUNT(DISTINCT yt.ID_CHINH_YT)) DESC, ct.NGAY_TAO_CT DESC
-            LIMIT 6; 
-        `;
-        const recipesHotRaw = await query(recipesHotQuery);
-
-        const recipesHot = await Promise.all(recipesHotRaw.map(async recipe => {
-            const fileName = recipe.HINH_ANH_CT?.split('/').pop();
-            const image = fileName ? `/Uploads/images/congthuc/${recipe.ID_CHINH_CT}/${fileName}` : null;
-            const [ratingRes] = await query("SELECT AVG(DANH_GIA) as avg FROM danh_gia WHERE ID_CHINH_CT = ?", [recipe.ID_CHINH_CT]);
-            const avgRating = ratingRes?.avg ? parseFloat(ratingRes.avg).toFixed(1) : "Chưa có";
-            return {
-                ...recipe,
-                HINH_ANH_CT: image,
-                DANH_GIA: avgRating
-            };
-        }));
-
-        // 4. Lấy Công thức được yêu thích gần đây
-        const recipesLikedRecentlyRaw = await query(`
-           SELECT ct.*, ma.TEN_MON_AN, MAX(yt.NGAY_TAO_YT) AS NGAY_TAO_YT
-FROM yeu_thich yt
-JOIN cong_thuc ct ON yt.ID_CHINH_CT = ct.ID_CHINH_CT
-JOIN mon_an ma ON ct.ID_CHINH_MA = ma.ID_CHINH_MA
-WHERE ct.TRANG_THAI_DUYET_ = 'Đã duyệt'
-GROUP BY ct.ID_CHINH_CT, ma.TEN_MON_AN
-ORDER BY NGAY_TAO_YT DESC
-LIMIT 8;
-
+            ORDER BY (
+                COALESCE(COUNT(DISTINCT bl.ID_CHINH_BL), 0) * 2 + 
+                COALESCE(COUNT(DISTINCT yt.ID_CHINH_YT), 0) +
+                COALESCE(AVG(dg.DANH_GIA), 0) * 3
+            ) DESC, ct.NGAY_TAO_CT DESC
+            LIMIT 6
         `);
-        const recipesLikedRecently = await Promise.all(recipesLikedRecentlyRaw.map(async recipe => {
-            const fileName = recipe.HINH_ANH_CT?.split('/').pop();
-            const image = fileName ? `/Uploads/images/congthuc/${recipe.ID_CHINH_CT}/${fileName}` : null;
-            const [ratingRes] = await query("SELECT AVG(DANH_GIA) as avg FROM danh_gia WHERE ID_CHINH_CT = ?", [recipe.ID_CHINH_CT]);
-            const avgRating = ratingRes?.avg ? parseFloat(ratingRes.avg).toFixed(1) : "Chưa có";
-            return {
-                ...recipe,
-                HINH_ANH_CT: image,
-                DANH_GIA: avgRating
-            };
-        }));
+        recipesHot.forEach(r => {
+            const fileName = r.HINH_ANH_CT?.split('/').pop();
+            r.HINH_ANH_CT = fileName ? `/Uploads/images/congthuc/${r.ID_CHINH_CT}/${fileName}` : null;
+            r.DANH_GIA = r.avg_rating ? parseFloat(r.avg_rating).toFixed(1) : "Chưa có";
+        });
 
-        // 5. Lấy Món ăn gợi ý theo danh mục nổi bật
+        const recipesLikedRecently = await query(`
+            SELECT ct.*, ma.TEN_MON_AN,
+                   MAX(yt.NGAY_TAO_YT) AS NGAY_TAO_YT,
+                   COALESCE(AVG(dg.DANH_GIA), 0) as avg_rating
+            FROM yeu_thich yt
+            JOIN cong_thuc ct ON yt.ID_CHINH_CT = ct.ID_CHINH_CT
+            JOIN mon_an ma ON ct.ID_CHINH_MA = ma.ID_CHINH_MA
+            LEFT JOIN danh_gia dg ON ct.ID_CHINH_CT = dg.ID_CHINH_CT
+            WHERE ct.TRANG_THAI_DUYET_ = 'Đã duyệt'
+            GROUP BY ct.ID_CHINH_CT, ma.TEN_MON_AN
+            ORDER BY NGAY_TAO_YT DESC
+            LIMIT 8
+        `);
+        recipesLikedRecently.forEach(r => {
+            const fileName = r.HINH_ANH_CT?.split('/').pop();
+            r.HINH_ANH_CT = fileName ? `/Uploads/images/congthuc/${r.ID_CHINH_CT}/${fileName}` : null;
+            r.DANH_GIA = r.avg_rating ? parseFloat(r.avg_rating).toFixed(1) : "Chưa có";
+        });
+
         const featuredCategoriesData = [];
         const topCategories = await query("SELECT * FROM loai_mon LIMIT 3");
         for (const cat of topCategories) {
-            const recipesInCatRaw = await query(`
-                SELECT ct.*, ma.TEN_MON_AN
+            const recipesInCat = await query(`
+                SELECT ct.*, ma.TEN_MON_AN,
+                       COALESCE(AVG(dg.DANH_GIA), 0) as avg_rating
                 FROM cong_thuc ct
                 JOIN mon_an ma ON ct.ID_CHINH_MA = ma.ID_CHINH_MA
                 JOIN mon_an_loai_mon malm ON ma.ID_CHINH_MA = malm.ID_CHINH_MA
+                LEFT JOIN danh_gia dg ON ct.ID_CHINH_CT = dg.ID_CHINH_CT
                 WHERE malm.ID_CHINH_LM = ? AND ct.TRANG_THAI_DUYET_ = 'Đã duyệt'
+                GROUP BY ct.ID_CHINH_CT
                 ORDER BY ct.NGAY_TAO_CT DESC
-                LIMIT 4; 
+                LIMIT 4
             `, [cat.ID_CHINH_LM]);
 
-            const recipesInCat = await Promise.all(recipesInCatRaw.map(async recipe => {
-                const fileName = recipe.HINH_ANH_CT?.split('/').pop();
-                const image = fileName ? `/Uploads/images/congthuc/${recipe.ID_CHINH_CT}/${fileName}` : null;
-                const [ratingRes] = await query("SELECT AVG(DANH_GIA) as avg FROM danh_gia WHERE ID_CHINH_CT = ?", [recipe.ID_CHINH_CT]);
-                const avgRating = ratingRes?.avg ? parseFloat(ratingRes.avg).toFixed(1) : "Chưa có";
-                return {
-                    ...recipe,
-                    HINH_ANH_CT: image,
-                    DANH_GIA: avgRating
-                };
-            }));
+            recipesInCat.forEach(r => {
+                const fileName = r.HINH_ANH_CT?.split('/').pop();
+                r.HINH_ANH_CT = fileName ? `/Uploads/images/congthuc/${r.ID_CHINH_CT}/${fileName}` : null;
+                r.DANH_GIA = r.avg_rating ? parseFloat(r.avg_rating).toFixed(1) : "Chưa có";
+            });
 
             featuredCategoriesData.push({
                 category: cat,
@@ -153,14 +183,16 @@ LIMIT 8;
             });
         }
 
-        // 6. Lấy Công thức cho "Hôm nay ăn gì"
         const todayRecipeRaw = await query(`
-            SELECT ct.*, ma.TEN_MON_AN
+            SELECT ct.*, ma.TEN_MON_AN,
+                   COALESCE(AVG(dg.DANH_GIA), 0) as avg_rating
             FROM cong_thuc ct
             JOIN mon_an ma ON ct.ID_CHINH_MA = ma.ID_CHINH_MA
+            LEFT JOIN danh_gia dg ON ct.ID_CHINH_CT = dg.ID_CHINH_CT
             WHERE ct.TRANG_THAI_DUYET_ = 'Đã duyệt'
+            GROUP BY ct.ID_CHINH_CT
             ORDER BY RAND()
-            LIMIT 1; 
+            LIMIT 1
         `);
 
         let todayRecipe = null;
@@ -168,16 +200,11 @@ LIMIT 8;
             const recipe = todayRecipeRaw[0];
             const fileName = recipe.HINH_ANH_CT?.split('/').pop();
             const image = fileName ? `/Uploads/images/congthuc/${recipe.ID_CHINH_CT}/${fileName}` : null;
-            const [ratingRes] = await query("SELECT AVG(DANH_GIA) as avg FROM danh_gia WHERE ID_CHINH_CT = ?", [recipe.ID_CHINH_CT]);
-            const avgRating = ratingRes?.avg ? parseFloat(ratingRes.avg).toFixed(1) : "Chưa có";
+            const avgRating = recipe.avg_rating ? parseFloat(recipe.avg_rating).toFixed(1) : "Chưa có";
             todayRecipe = {
                 ...recipe,
                 HINH_ANH_CT: image,
-                DANH_GIA: avgRating,
-                MO_TA: recipe.MO_TA || "Thưởng thức món ăn tuyệt vời này với công thức đơn giản và dễ thực hiện!",
-                THOI_GIAN: recipe.THOI_GIAN || "30 phút",
-                KHOI_LUONG: recipe.KHOI_LUONG || "4 người",
-                SLUG_CT: recipe.SLUG_CT || recipe.ID_CHINH_CT
+                DANH_GIA: avgRating
             };
         }
 
@@ -191,7 +218,7 @@ LIMIT 8;
             featuredCategoriesData,
             todayRecipe,
             user: req.session.user,
-            timKiem: ''
+            timKiem: ""
         });
 
     } catch (err) {
@@ -199,6 +226,7 @@ LIMIT 8;
         res.status(500).send("Lỗi server trang chủ");
     }
 });
+
 router.get("/api/random-recipe", async (req, res) => {
     try {
         const todayRecipeRaw = await query(`
@@ -281,7 +309,7 @@ router.get("/mon-an", async (req, res) => { // Giữ nguyên đường dẫn đ�
         // Lấy bộ lọc timKiem và loaiMon từ query string
         const { timKiem = "", loaiMon = "" } = req.query; // Bỏ sapXep và chuCai nếu không dùng
         const page = parseInt(req.query.page) || 1;
-        const limit = 8;
+        const limit = 12;
         const offset = (page - 1) * limit;
 
         // Câu truy vấn để đếm tổng số món ăn (dùng cho phân trang)
@@ -379,48 +407,48 @@ router.get("/mon-an", async (req, res) => { // Giữ nguyên đường dẫn đ�
 });
 
 router.get("/danh-muc", async (req, res) => {
-  try {
-    const perPage = 8; // Số danh mục mỗi trang
-    const page = parseInt(req.query.page) || 1;
-    const search = req.query.search || "";
+    try {
+        const perPage = 12; // Số danh mục tối đa cho mỗi trang
+        const page = parseInt(req.query.page) || 1;
+        const search = req.query.search || "";
 
-    let whereClause = "";
-    let params = [];
+        let whereClause = "";
+        let params = [];
 
-    // Nếu có từ khóa tìm kiếm
-    if (search.trim() !== "") {
-      whereClause = "WHERE TEN_LM LIKE ?";
-      params.push(`%${search}%`);
+        // Nếu có từ khóa tìm kiếm
+        if (search.trim() !== "") {
+            whereClause = "WHERE TEN_LM LIKE ?";
+            params.push(`%${search}%`);
+        }
+
+        // Lấy tổng số danh mục để tính tổng số trang
+        const countQuery = `SELECT COUNT(*) AS total FROM loai_mon ${whereClause}`;
+        const countResult = await query(countQuery, params);
+        const totalItems = countResult[0].total;
+        const totalPages = Math.ceil(totalItems / perPage);
+
+        // Lấy dữ liệu trang hiện tại
+        const offset = (page - 1) * perPage;
+        const dataQuery = `
+            SELECT * FROM loai_mon
+            ${whereClause}
+            ORDER BY TEN_LM ASC
+            LIMIT ? OFFSET ?
+        `;
+        const categories = await query(dataQuery, [...params, perPage, offset]);
+
+        res.render("index/index_layout", {
+            viewPath: "danh-muc",
+            categories,
+            currentPage: page,
+            totalPages,
+            search,
+            user: req.session.user
+        });
+    } catch (err) {
+        console.error("Lỗi lấy danh mục:", err);
+        res.status(500).send("Lỗi server");
     }
-
-    // Lấy tổng số danh mục để tính tổng số trang
-    const countQuery = `SELECT COUNT(*) AS total FROM loai_mon ${whereClause}`;
-    const countResult = await query(countQuery, params);
-    const totalItems = countResult[0].total;
-    const totalPages = Math.ceil(totalItems / perPage);
-
-    // Lấy dữ liệu trang hiện tại
-    const offset = (page - 1) * perPage;
-    const dataQuery = `
-      SELECT * FROM loai_mon
-      ${whereClause}
-      ORDER BY TEN_LM ASC
-      LIMIT ? OFFSET ?
-    `;
-    const categories = await query(dataQuery, [...params, perPage, offset]);
-
-    res.render("index/index_layout", {
-      viewPath: "danh-muc",
-      categories,
-      currentPage: page,
-      totalPages,
-      search,
-      user: req.session.user
-    });
-  } catch (err) {
-    console.error("Lỗi lấy danh mục:", err);
-    res.status(500).send("Lỗi server");
-  }
 });
 
 router.get("/danh-muc/:slug", async (req, res) => {
@@ -520,10 +548,15 @@ router.get("/cong-thuc", async (req, res) => { // Giả sử query đã được
             conditions.push("mon_an.ID_CHINH_MA = ?");
             params.push(monAnId);
         }
-        if (timKiem) {
-            conditions.push("cong_thuc.TEN_CT LIKE ?");
-            params.push(`%${timKiem}%`);
-        }
+            if (timKiem) {
+        conditions.push(`(
+            cong_thuc.TEN_CT LIKE ?
+            OR mon_an.TEN_MON_AN LIKE ?
+            OR nguyen_lieu.TEN_NL LIKE ?
+        )`);
+        params.push(`%${timKiem}%`, `%${timKiem}%`, `%${timKiem}%`);
+    }
+
 
         // === THAY ĐỔI LỚN TẠI ĐÂY CHO LỌC SỐ PHẦN ĂN ===
         if (soPhan) {
@@ -899,35 +932,36 @@ router.get("/cong-thuc/:id", async (req, res) => {
         // 11. Lấy công thức tương tự
         const similarRecipes = await query(
             `
-            SELECT DISTINCT
-            cong_thuc.ID_CHINH_CT,
-            cong_thuc.TEN_CT,
-            cong_thuc.HINH_ANH_CT,
-            cong_thuc.THOI_GIAN_NAU,
-            cong_thuc.DO_KHO,
-            (
-                SELECT AVG(DANH_GIA)
-                FROM danh_gia
-                WHERE danh_gia.ID_CHINH_CT = cong_thuc.ID_CHINH_CT
-            ) AS DANH_GIA,
-            GROUP_CONCAT(DISTINCT loai_mon.TEN_LM) AS categories
-            FROM cong_thuc
-            JOIN mon_an ON cong_thuc.ID_CHINH_MA = mon_an.ID_CHINH_MA
-            JOIN mon_an_loai_mon ON mon_an.ID_CHINH_MA = mon_an_loai_mon.ID_CHINH_MA
-            JOIN loai_mon ON mon_an_loai_mon.ID_CHINH_LM = loai_mon.ID_CHINH_LM
-            WHERE cong_thuc.TRANG_THAI_DUYET_ = 'Đã duyệt'
-            AND cong_thuc.ID_CHINH_CT != ?
-            AND (
-                loai_mon.ID_CHINH_LM IN (
-                    SELECT ID_CHINH_LM
-                    FROM mon_an_loai_mon
-                    WHERE ID_CHINH_MA = ?
-                )
-                OR mon_an.ID_CHINH_MA = ?
-            )
-            GROUP BY cong_thuc.ID_CHINH_CT
-            ORDER BY RAND()
-            LIMIT 4
+         SELECT DISTINCT
+    cong_thuc.ID_CHINH_CT,
+    cong_thuc.TEN_CT,
+    cong_thuc.HINH_ANH_CT,
+    cong_thuc.THOI_GIAN_NAU,
+    cong_thuc.DO_KHO,
+    mon_an.TEN_MON_AN,
+    (
+        SELECT AVG(DANH_GIA)
+        FROM danh_gia
+        WHERE danh_gia.ID_CHINH_CT = cong_thuc.ID_CHINH_CT
+    ) AS DANH_GIA,
+    GROUP_CONCAT(DISTINCT loai_mon.TEN_LM) AS categories
+FROM cong_thuc
+JOIN mon_an ON cong_thuc.ID_CHINH_MA = mon_an.ID_CHINH_MA
+JOIN mon_an_loai_mon ON mon_an.ID_CHINH_MA = mon_an_loai_mon.ID_CHINH_MA
+JOIN loai_mon ON mon_an_loai_mon.ID_CHINH_LM = loai_mon.ID_CHINH_LM
+WHERE cong_thuc.TRANG_THAI_DUYET_ = 'Đã duyệt'
+AND cong_thuc.ID_CHINH_CT != ?
+AND (
+    loai_mon.ID_CHINH_LM IN (
+        SELECT ID_CHINH_LM
+        FROM mon_an_loai_mon
+        WHERE ID_CHINH_MA = ?
+    )
+    OR mon_an.ID_CHINH_MA = ?
+)
+GROUP BY cong_thuc.ID_CHINH_CT
+ORDER BY RAND()
+LIMIT 4
             `,
             [recipeId, recipe.ID_CHINH_MA, recipe.ID_CHINH_MA]
         );
@@ -2256,9 +2290,18 @@ router.get("/cong-thuc-cua-toi", ensureLoggedIn, async (req, res) => {
   const userId = req.session.user.ID_CHINH_ND;
 
   try {
-    // Lấy danh sách công thức của người dùng
+    // Lấy danh sách công thức của người dùng, JOIN với bảng mon_an để lấy TEN_MON_AN
     const userRecipes = await query(
-      `SELECT * FROM cong_thuc WHERE ID_CHINH_ND = ? ORDER BY NGAY_TAO_CT DESC`,
+      `SELECT
+        ct.*,
+        ma.TEN_MON_AN
+       FROM
+        cong_thuc AS ct
+       JOIN
+        mon_an AS ma ON ct.ID_CHINH_MA = ma.ID_CHINH_MA
+       WHERE
+        ct.ID_CHINH_ND = ?
+       ORDER BY ct.NGAY_TAO_CT DESC`,
       [userId]
     );
 
@@ -2281,7 +2324,7 @@ router.get("/cong-thuc-cua-toi", ensureLoggedIn, async (req, res) => {
     };
 
     res.render("index/index_layout", {
-      viewPath: "cong-thuc-cua-toi", // đường dẫn view bên trong views/index/
+      viewPath: "cong-thuc-cua-toi",
       user: req.session.user,
       userInfo,
       userRecipes,
@@ -2291,8 +2334,6 @@ router.get("/cong-thuc-cua-toi", ensureLoggedIn, async (req, res) => {
     console.error("Lỗi truy vấn công thức của tôi:", err);
     res.status(500).send("Lỗi server khi lấy danh sách công thức");
   }
-
-  
 });
 
 
